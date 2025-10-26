@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.js';
 import { useCategorias } from '../context/CategoriasContext.jsx';
 import '../assets/styles/notas.css';
+import { API_BASE_URL } from '../config/api.js'
 
 function Notas() {
   const [notas, setNotas] = useState([]);
@@ -26,7 +27,7 @@ function Notas() {
   const fetchArticulos = async () => {
     if (!token) return;
     try {
-      const response = await fetch('http://localhost:5000/api/articles/my', {
+      const response = await fetch(`${API_BASE_URL}/api/articles/my`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Error al cargar artículos');
@@ -49,7 +50,7 @@ function Notas() {
     if (!token) return;
     try {
       const response = await fetch(
-        'http://localhost:5000/api/articles/user/notifications',
+        `${API_BASE_URL}/api/articles/user/notifications`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (response.ok) {
@@ -99,7 +100,7 @@ function Notas() {
     }
     try {
       const response = await fetch(
-        `http://localhost:5000/api/articles/download/${id}`,
+        `${API_BASE_URL}/api/articles/download/${id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       if (!response.ok) throw new Error('Error al descargar');
@@ -124,7 +125,7 @@ function Notas() {
   const handleSendToReview = async (id, titulo) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/articles/${id}/send-to-review`,
+        `${API_BASE_URL}/api/articles/${id}/send-to-review`,
         {
           method: 'POST',
           headers: {
@@ -147,7 +148,7 @@ function Notas() {
   const handleDelete = async (id, titulo = 'este artículo') => {
     if (!window.confirm(`¿Eliminar "${titulo}" permanentemente?`)) return;
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -168,7 +169,7 @@ function Notas() {
       return;
     }
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/view/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Error al visualizar');

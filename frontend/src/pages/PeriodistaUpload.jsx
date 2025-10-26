@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext.js';
 import { useCategorias } from '../context/CategoriasContext.jsx'; // 👈 NUEVO
 import '../assets/styles/periodista-upload.css';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { API_BASE_URL } from '../config/api.js'
 
 export default function PeriodistaUpload() {
   const { token } = useContext(AuthContext);
@@ -17,6 +18,7 @@ export default function PeriodistaUpload() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isModoEdicion, setIsModoEdicion] = useState(false);
   const [articuloEditando, setArticuloEditando] = useState(null);
+  
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -89,7 +91,7 @@ export default function PeriodistaUpload() {
     setUploadStatus({ loading: true });
 
     try {
-      const response = await fetch('http://localhost:5000/api/articles/upload', {
+      const response = await fetch(`${API_BASE_URL}/api/articles/upload`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`

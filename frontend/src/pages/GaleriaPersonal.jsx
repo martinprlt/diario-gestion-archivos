@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/galeriaPersonal.css";
+import { API_BASE_URL } from '../config/api.js'
 
 function GaleriaPersonal() {
   const [fotos, setFotos] = useState([]);
@@ -15,7 +16,7 @@ function GaleriaPersonal() {
   useEffect(() => {
     const fetchFotos = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/fotos/my", {
+        const res = await fetch(`${API_BASE_URL}/api/fotos/my`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Error al cargar tus fotos personales");

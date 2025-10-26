@@ -2,6 +2,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import '../assets/styles/articulos-revision.css';
+import { API_BASE_URL } from '../config/api.js'
 
 function ArticulosEnRevision() {
   const [articulos, setArticulos] = useState([]);
@@ -16,7 +17,7 @@ function ArticulosEnRevision() {
 
   const fetchArticulosEnRevision = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/articles/my', {
+      const response = await fetch(`${API_BASE_URL}/api/articles/my`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!response.ok) throw new Error('Error al cargar artículos');
@@ -45,7 +46,7 @@ function ArticulosEnRevision() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/download/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/download/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Cache-Control': 'no-cache'
@@ -89,7 +90,7 @@ function ArticulosEnRevision() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/view/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Pragma': 'no-cache'
@@ -115,7 +116,7 @@ function ArticulosEnRevision() {
 
   const handleReenviar = async (id, titulo) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/${id}/send-to-review`, {
+      const response = await fetch(`${API_BASE_URL}/api/articles/${id}/send-to-review`, {
         method: 'POST',
         headers: { 
           'Authorization': `Bearer ${token}`,

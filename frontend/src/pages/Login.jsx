@@ -2,6 +2,7 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.js';
+import { API_BASE_URL } from '../config/api.js'
 import LoginForm from '../components/LoginForm';
 import '../assets/styles/login.css';
 
@@ -12,7 +13,7 @@ function Login() {
 
   const handleLogin = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../assets/styles/configuracion-usuario.css';
+import { API_BASE_URL } from '../config/api.js'
 
 export default function ConfiguracionUsuario() {
   const { usuario, token, setUsuario } = useContext(AuthContext);
@@ -32,7 +33,7 @@ export default function ConfiguracionUsuario() {
           return;
         }
 
-        const response = await fetch(`http://localhost:5000/api/usuarios/${usuario.id_usuario}`, {
+        const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuario.id_usuario}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -81,7 +82,7 @@ export default function ConfiguracionUsuario() {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch('http://localhost:5000/api/upload-avatar', {
+      const response = await fetch(`${API_BASE_URL}/api/upload-avatar`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -119,7 +120,7 @@ export default function ConfiguracionUsuario() {
         throw new Error('No hay token de autenticación');
       }
 
-      const response = await fetch(`http://localhost:5000/api/usuarios/${usuario.id_usuario}`, {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuario.id_usuario}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +178,7 @@ export default function ConfiguracionUsuario() {
               {preview ? (
                 <img src={preview} alt="Foto de perfil" className="imagen-perfil" />
               ) : usuario?.avatar_url ? (
-                <img src={`http://localhost:5000${usuario.avatar_url}`} alt="Foto de perfil" className="imagen-perfil" />
+                <img src={`${API_BASE_URL}${usuario.avatar_url}`} alt="Foto de perfil" className="imagen-perfil" />
               ) : (
                 <div className="imagen-perfil placeholder" />
               )}

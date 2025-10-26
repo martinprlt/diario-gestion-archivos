@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Header from '../components/Header';
 import '../assets/styles/login.css'; // Reutiliza o crea un CSS
+import { API_BASE_URL } from '../config/api.js'
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState('');
@@ -46,7 +47,7 @@ function ResetPassword() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/reset-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

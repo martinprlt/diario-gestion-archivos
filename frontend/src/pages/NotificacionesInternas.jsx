@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/notificaciones.css";
+import { API_BASE_URL } from '../config/api.js'
 
 export default function NotificacionesInternas() {
   const [titulo, setTitulo] = useState("");
@@ -24,7 +25,7 @@ export default function NotificacionesInternas() {
         setCargando(true);
         setError("");
 
-        const rU = await fetch("http://localhost:5000/api/usuarios", {
+        const rU = await fetch(`${API_BASE_URL}/api/usuarios`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!rU.ok) throw new Error(`Error ${rU.status}`);
@@ -38,7 +39,7 @@ export default function NotificacionesInternas() {
         }));
         setUsuarios(normalizados);
 
-        const rR = await fetch("http://localhost:5000/api/roles", {
+        const rR = await fetch(`${API_BASE_URL}/api/roles`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (rR.ok) {
@@ -95,7 +96,7 @@ export default function NotificacionesInternas() {
           ? usuarios.map((u) => u.id)
           : usuariosSeleccionados.map((u) => u.id);
 
-      const res = await fetch("http://localhost:5000/api/notificaciones/crear", {
+      const res = await fetch(`${API_BASE_URL}/api/notificaciones/crear`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

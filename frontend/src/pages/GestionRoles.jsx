@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import '../assets/styles/gestionRoles.css';
+import { API_BASE_URL } from '../config/api.js'
 
 export default function GestionRoles() {
   const [roles, setRoles] = useState([]);
@@ -20,7 +21,7 @@ export default function GestionRoles() {
       setError('');
       
       // Cargar roles
-      const rolesRes = await fetch('http://localhost:5000/api/roles', {
+      const rolesRes = await fetch(`${API_BASE_URL}/api/roles`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -29,7 +30,7 @@ export default function GestionRoles() {
       setRoles(rolesData);
 
       // Cargar usuarios
-      const usuariosRes = await fetch('http://localhost:5000/api/usuarios', {
+      const usuariosRes = await fetch(`${API_BASE_URL}/api/usuarios`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -47,7 +48,7 @@ export default function GestionRoles() {
   // 🔹 FUNCIÓN ÚTIL: Reasignar rol a usuario
   const reasignarRol = async (usuarioId, nuevoRolId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/usuarios/${usuarioId}/rol`, {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/rol`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

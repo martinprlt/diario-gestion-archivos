@@ -2,6 +2,7 @@ import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/articulos-revision.css";
+import { API_BASE_URL } from '../config/api.js'
 
 function RevisionEditor() {
   const [articulos, setArticulos] = useState([]);
@@ -20,7 +21,7 @@ function RevisionEditor() {
   const fetchArticulosEnRevision = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/articles/editor/review", {
+      const res = await fetch(`${API_BASE_URL}/api/articles/editor/review`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al cargar artículos en revisión");
@@ -69,8 +70,8 @@ function RevisionEditor() {
       const comentario = comentarios[articuloId] || "";
       const endpoint =
         decision === "approve"
-          ? `http://localhost:5000/api/articles/${articuloId}/approve`
-          : `http://localhost:5000/api/articles/${articuloId}/reject`;
+          ? `${API_BASE_URL}/api/articles/${articuloId}/approve`
+          : `${API_BASE_URL}/api/articles/${articuloId}/reject`;
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -98,7 +99,7 @@ function RevisionEditor() {
 
   // 🔹 Ver y descargar archivos
   const verArchivo = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/articles/view/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const blob = await res.blob();
@@ -107,7 +108,7 @@ function RevisionEditor() {
   };
 
   const descargarArchivo = async (id, nombreOriginal) => {
-    const res = await fetch(`http://localhost:5000/api/articles/download/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/articles/download/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const blob = await res.blob();

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import '../assets/styles/DashboardAdmin.css'; // CSS mejorado
+import { API_BASE_URL } from '../config/api.js'
 
 export function DashboardAdmin() {
   const [onlineUsers, setOnlineUsers] = useState([]);
@@ -15,7 +16,7 @@ export function DashboardAdmin() {
     if (!token) return;
 
     try {
-      const response = await fetch('http://localhost:5000/api/admin/online-users', {
+      const response = await fetch(`${API_BASE_URL}/api/admin/online-users`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'

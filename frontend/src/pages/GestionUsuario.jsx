@@ -3,6 +3,7 @@ import "../assets/styles/gestionUsuario.css";
 import UsuarioTabla from "../components/UsuarioTabla";
 import UsuarioForm from "../components/UsuarioForm";
 import { AuthContext } from "../context/AuthContext";
+import { API_BASE_URL } from '../config/api.js'
 
 export default function GestionUsuario() {
   const [usuarios, setUsuarios] = useState([]);
@@ -38,8 +39,8 @@ export default function GestionUsuario() {
       }
 
       const url = usuarioData.id 
-        ? `http://localhost:5000/api/usuarios/${usuarioData.id}`
-        : 'http://localhost:5000/api/usuarios';
+        ? `${API_BASE_URL}/api/usuarios/${usuarioData.id}`
+        : '${API_BASE_URL}/api/usuarios';
 
       const method = usuarioData.id ? 'PUT' : 'POST';
 
@@ -70,7 +71,7 @@ export default function GestionUsuario() {
     try {
       setCargando(true);
       
-      const response = await fetch('http://localhost:5000/api/usuarios', {
+      const response = await fetch(`${API_BASE_URL}/api/usuarios`, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -132,7 +133,7 @@ export default function GestionUsuario() {
 
     if (window.confirm("¿Seguro que quieres desactivar este usuario?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/usuarios/${id}`, {
+        const response = await fetch(`${API_BASE_URL}/api/usuarios/${id}`, {
           method: 'DELETE',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -155,7 +156,7 @@ export default function GestionUsuario() {
 
   const obtenerRolId = async (nombreRol) => {
     try {
-      const response = await fetch('http://localhost:5000/api/roles', {
+      const response = await fetch(`${API_BASE_URL}/api/roles`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }

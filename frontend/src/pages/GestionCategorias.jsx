@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/gestionCategorias.css";
+import { API_BASE_URL } from '../config/api.js'
 
 export default function GestionCategorias() {
   const { token } = useContext(AuthContext);
@@ -15,7 +16,7 @@ export default function GestionCategorias() {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch("http://localhost:5000/api/categorias", {
+      const res = await fetch(`${API_BASE_URL}/api/categorias`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al cargar categorías");
@@ -35,7 +36,7 @@ export default function GestionCategorias() {
     e.preventDefault();
     if (!nombre.trim()) return alert("Ingresá un nombre");
     try {
-      const res = await fetch("http://localhost:5000/api/categorias", {
+      const res = await fetch(`${API_BASE_URL}/api/categorias`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +60,7 @@ export default function GestionCategorias() {
     const ok = confirm(`¿Eliminar la categoría "${nombreCat}"?`);
     if (!ok) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/categorias/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/categorias/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

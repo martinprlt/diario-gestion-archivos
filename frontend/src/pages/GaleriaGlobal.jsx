@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/global.css";
+import { API_BASE_URL } from '../config/api.js'
 
 function GaleriaGlobal() {
   const [fotos, setFotos] = useState([]);
@@ -26,7 +27,7 @@ function GaleriaGlobal() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:5000/api/fotos/global", {
+        const res = await fetch(`${API_BASE_URL}/api/fotos/global`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: ac.signal,
         });

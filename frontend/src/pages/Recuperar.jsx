@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Header from '../components/Header'; // Si quieres mantener el Header aquí
 import '../assets/styles/login.css'; // Puedes reutilizar el CSS o crear uno específico
-
+import { API_BASE_URL } from '../config/api.js'
 
 function Recuperar() {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ function Recuperar() {
     setError('');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/forgot-password', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

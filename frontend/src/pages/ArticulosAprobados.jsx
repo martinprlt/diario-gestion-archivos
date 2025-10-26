@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api.js'
 import '../assets/styles/articulos-revision.css';
 
 const ArticulosAprobados = () => {

@@ -3,6 +3,7 @@ import { ChatProvider } from "../context/ChatContext.jsx";
 import ChatBox from "../components/ChatBox";
 import UserList from "../components/UserList";
 import "../assets/styles/chat-page.css";
+import { API_BASE_URL } from '../config/api.js'
 
 const ChatPage = ({ userId }) => {
   const [receptor, setReceptor] = useState(null);
