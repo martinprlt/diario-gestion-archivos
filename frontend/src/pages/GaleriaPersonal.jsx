@@ -1,222 +1,165 @@
-import React, { useState, useEffect, useContext, useCallback } from "react";
-import "../assets/styles/galeria.css";
-import axios from "axios";
+import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { useCategorias } from "../context/CategoriasContext.jsx";
+import "../assets/styles/galeriaPersonal.css";
 
-const ModalFoto = ({ foto, isOpen, onClose }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
-          ×
-        </button>
-        <img
-          src={`http://localhost:5000/${foto.ruta_archivo.replace(/\\/g, "/")}`}
-          alt={foto.titulo}
-          className="modal-image"
-        />
-        <div className="modal-info">
-          <h3>{foto.titulo}</h3>
-          <p>{foto.descripcion}</p>
-          <span className="modal-fecha">
-            Subida el: {new Date(foto.fecha_creacion).toLocaleDateString()}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FotoItem = ({ foto, onToggle, onDownload, onView }) => {
-  const [imageStatus, setImageStatus] = useState("loading");
-
-  return (
-    <div className="tarjeta-foto">
-      <div className="imagen-container" onClick={() => onView(foto)}>
-        {imageStatus === "loading" && (
-          <div className="skeleton-loader">
-            <div className="spinner"></div>
-          </div>
-        )}
-
-        <img
-          src={`http://localhost:5000/${foto.ruta_archivo.replace(/\\/g, "/")}`}
-          alt={foto.titulo}
-          className={`foto-imagen ${imageStatus === "loaded" ? "loaded" : ""}`}
-          onLoad={() => setImageStatus("loaded")}
-          onError={() => setImageStatus("error")}
-        />
-
-        {imageStatus === "error" && (
-          <div className="error-placeholder">
-            <span>❌ Error al cargar</span>
-          </div>
-        )}
-
-        <div className="overlay">
-          <span className="view-text">👁️ Ver</span>
-        </div>
-      </div>
-
-      <div className="tarjeta-info">
-        <h3 className="foto-titulo">{foto.titulo}</h3>
-        <p className="foto-descripcion">{foto.descripcion}</p>
-
-        <div className="botones-accion">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onToggle(foto.id_foto, foto.es_global);
-            }}
-            className={`btn-visibilidad ${
-              foto.es_global ? "global" : "personal"
-            }`}
-          >
-            {foto.es_global ? "🌍 Global" : "👤 Personal"}
-          </button>
-
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onDownload(foto.id_foto, foto.nombre_original);
-            }}
-            className="btn-descargar"
-          >
-            ⬇️ Descargar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const GaleriaPersonal = () => {
+function GaleriaPersonal() {
   const [fotos, setFotos] = useState([]);
-  const [cargando, setCargando] = useState(true);
-  const [fotoSeleccionada, setFotoSeleccionada] = useState(null);
-  const [modalAbierto, setModalAbierto] = useState(false);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [error, setError] = useState(null);
+  const [selectedFoto, setSelectedFoto] = useState(null);
   const { token } = useContext(AuthContext);
-
-  const cargarFotos = useCallback(async () => {
-    try {
-      const response = await axios.get("http://localhost:5000/api/fotos/my", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setFotos(response.data);
-    } catch (error) {
-      console.error("Error al cargar fotos:", error);
-    } finally {
-      setCargando(false);
-    }
-  }, [token]);
+  const { categorias } = useCategorias();
 
   useEffect(() => {
-    cargarFotos();
-  }, [cargarFotos]);
-
-  const toggleVisibilidad = async (fotoId, esGlobalActual) => {
-    try {
-      await axios.put(
-        `http://localhost:5000/api/fotos/${fotoId}/toggle-visibility`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setFotos(
-        fotos.map((foto) =>
-          foto.id_foto === fotoId
-            ? { ...foto, es_global: !esGlobalActual }
-            : foto
-        )
-      );
-    } catch (error) {
-      console.error("Error al cambiar visibilidad:", error);
-    }
-  };
-
-  const handleDescargar = async (fotoId, nombreOriginal) => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/fotos/download/${fotoId}`,
-        {
+    const fetchFotos = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/fotos/my", {
           headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob",
-        }
-      );
+        });
+        if (!res.ok) throw new Error("Error al cargar tus fotos personales");
+        const data = await res.json();
+        setFotos(data || []);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudieron cargar tus fotos personales");
+      }
+    };
+    fetchFotos();
+  }, [token]);
 
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = nombreOriginal || `foto_${fotoId}.jpg`;
-      document.body.appendChild(link);
-      link.click();
+  const fotosFiltradas = fotos.filter((foto) => {
+    const coincideCategoria =
+      !categoriaFiltro || foto.categoria_id?.toString() === categoriaFiltro;
+    const coincideBusqueda =
+      !searchTerm ||
+      foto.titulo?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      foto.descripcion?.toLowerCase().includes(searchTerm.toLowerCase());
+    return coincideCategoria && coincideBusqueda;
+  });
 
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-      }, 100);
-    } catch (error) {
-      console.error("Error al descargar:", error);
-      alert("Error al descargar la foto");
-    }
-  };
+  const abrirLightbox = (foto) => setSelectedFoto(foto);
+  const cerrarLightbox = () => setSelectedFoto(null);
+  const volverArriba = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  const abrirModal = (foto) => {
-    setFotoSeleccionada(foto);
-    setModalAbierto(true);
-  };
-
-  const cerrarModal = () => {
-    setModalAbierto(false);
-    setFotoSeleccionada(null);
-  };
-
-  if (cargando) {
-    return (
-      <div className="galeria-container">
-        <h1>Mi Galería</h1>
-        <div className="cargando-container">
-          <div className="spinner grande"></div>
-          <p>Cargando tus fotos...</p>
-        </div>
-      </div>
-    );
-  }
+  if (error) return <div className="error">{error}</div>;
 
   return (
-    <div className="galeria-container">
-      <h1>Mi Galería</h1>
+    <div className="galeria-personal-container">
+      <h2 className="titulo-galeria-personal">Mi Galería Personal</h2>
 
-      {fotos.length === 0 ? (
-        <div className="no-fotos">
-          <p>No tienes fotos subidas todavía.</p>
-          <button onClick={() => (window.location.href = "/fotografo-upload")}>
-            📸 Subir mi primera foto
-          </button>
+      {/* FILTROS */}
+      <div className="filtros-galeria-personal">
+        <div className="campo">
+          <label>Categoría:</label>
+          <select
+            value={categoriaFiltro}
+            onChange={(e) => setCategoriaFiltro(e.target.value)}
+          >
+            <option value="">Todas las categorías</option>
+            {categorias.map((cat) => (
+              <option key={cat.id_categoria} value={cat.id_categoria}>
+                {cat.nombre}
+              </option>
+            ))}
+          </select>
         </div>
-      ) : (
-        <div className="galeria-grid">
-          {fotos.map((foto) => (
-            <FotoItem
+
+        <div className="campo">
+          <label>Buscar:</label>
+          <input
+            type="text"
+            placeholder="Buscar por título o descripción..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* GRID DE FOTOS */}
+      <div className="masonry-grid-personal">
+        {fotosFiltradas.length > 0 ? (
+          fotosFiltradas.map((foto) => (
+            <div
               key={foto.id_foto}
-              foto={foto}
-              onToggle={toggleVisibilidad}
-              onDownload={handleDescargar}
-              onView={abrirModal}
+              className="masonry-item-personal"
+              onClick={() => abrirLightbox(foto)}
+            >
+              <div className="imagen-wrapper">
+                <img
+                  src={
+                    foto.url && foto.url.startsWith("http")
+                      ? foto.url
+                      : "https://placehold.co/600x400?text=Sin+imagen"
+                  }
+                  alt={foto.titulo || "Foto sin título"}
+                  className="imagen-galeria-personal"
+                />
+                {foto.categoria_nombre && (
+                  <span className="badge-categoria-personal">
+                    {foto.categoria_nombre}
+                  </span>
+                )}
+              </div>
+
+              <div className="info-foto-personal">
+                <h3>{foto.titulo || "Sin título"}</h3>
+                <p className="descripcion-personal">
+                  {foto.descripcion || "Sin descripción"}
+                </p>
+                <p className="autor-personal">
+                  📷 {foto.fotografo_nombre || "Autor desconocido"}
+                </p>
+                <p className="fecha-personal">
+                  📅{" "}
+                  {foto.fecha_publicacion
+                    ? new Date(foto.fecha_publicacion).toLocaleDateString(
+                        "es-AR"
+                      )
+                    : "Fecha desconocida"}
+                </p>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="sin-fotos-personal">No tenés fotos personales 😕</p>
+        )}
+      </div>
+
+      {/* LIGHTBOX */}
+      {selectedFoto && (
+        <div className="lightbox-personal" onClick={cerrarLightbox}>
+          <div
+            className="lightbox-content-personal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={
+                selectedFoto.url && selectedFoto.url.startsWith("http")
+                  ? selectedFoto.url
+                  : "https://placehold.co/800x600?text=Sin+imagen"
+              }
+              alt={selectedFoto.titulo || "Foto"}
+              className="lightbox-img-personal"
             />
-          ))}
+            <p className="lightbox-text-personal">
+              <strong>{selectedFoto.titulo}</strong> —{" "}
+              {selectedFoto.fotografo_nombre || "Autor desconocido"}
+            </p>
+            <button className="cerrar-btn-personal" onClick={cerrarLightbox}>
+              ✕
+            </button>
+          </div>
         </div>
       )}
 
-      <ModalFoto
-        foto={fotoSeleccionada}
-        isOpen={modalAbierto}
-        onClose={cerrarModal}
-      />
+      {/* BOTÓN VOLVER ARRIBA */}
+      <button className="volver-arriba-personal" onClick={volverArriba}>
+        ↑
+      </button>
     </div>
   );
-};
+}
 
 export default GaleriaPersonal;

@@ -15,26 +15,28 @@ function ArticulosEnRevision() {
   }, [token]);
 
   const fetchArticulosEnRevision = async () => {
-  try {
-    const response = await fetch('http://localhost:5000/api/articles/my', {
-      headers: { 'Authorization': `Bearer ${token}` }
-    });
-    if (!response.ok) throw new Error('Error al cargar artículos');
-    const data = await response.json();
-    
-    // ✅ Filtrar SOLO artículos en revisión
-    const articulosEnRevision = data.filter(articulo => 
-      articulo.estado === 'en_revision'
-    );
-    
-    setArticulos(articulosEnRevision);
-  } catch (err) {
-    console.error('Error:', err);
-    setError('No se pudieron cargar los artículos en revisión');
-  } finally {
-    setLoading(false);
-  }
-};
+    try {
+      const response = await fetch('http://localhost:5000/api/articles/my', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (!response.ok) throw new Error('Error al cargar artículos');
+      const data = await response.json();
+      
+      // ✅ Filtrar artículos en revisión, rechazados y aprobados
+      const articulosFiltrados = data.filter(articulo => 
+        articulo.estado === 'en_revision' || 
+        articulo.estado === 'rechazado' || 
+        articulo.estado === 'aprobado'
+      );
+      
+      setArticulos(articulosFiltrados);
+    } catch (err) {
+      console.error('Error:', err);
+      setError('No se pudieron cargar los artículos');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleDownload = async (id, articulo) => {
     if (!articulo?.ruta_archivo || !articulo?.nombre_archivo) {
@@ -43,7 +45,6 @@ function ArticulosEnRevision() {
     }
 
     try {
-      // ✅ CORREGIDO: Cambiado de /api/files/ a /api/articles/
       const response = await fetch(`http://localhost:5000/api/articles/download/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -88,7 +89,6 @@ function ArticulosEnRevision() {
     }
 
     try {
-      // ✅ CORREGIDO: Cambiado de /api/files/ a /api/articles/
       const response = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -115,7 +115,6 @@ function ArticulosEnRevision() {
 
   const handleReenviar = async (id, titulo) => {
     try {
-      // ✅ CORREGIDO: Cambiado de /api/files/ a /api/articles/
       const response = await fetch(`http://localhost:5000/api/articles/${id}/send-to-review`, {
         method: 'POST',
         headers: { 
@@ -145,6 +144,7 @@ function ArticulosEnRevision() {
     switch (estado) {
       case 'en_revision': return 'estado-revision';
       case 'rechazado': return 'estado-rechazado';
+      case 'aprobado': return 'estado-aprobado';
       default: return 'estado-default';
     }
   };
@@ -153,6 +153,7 @@ function ArticulosEnRevision() {
     switch (estado) {
       case 'en_revision': return 'En Revisión';
       case 'rechazado': return 'Rechazado';
+      case 'aprobado': return 'Aprobado';
       default: return estado;
     }
   };
@@ -174,13 +175,13 @@ function ArticulosEnRevision() {
     }
   };
 
-  if (loading) return <div className="loading">Cargando artículos en revisión...</div>;
+  if (loading) return <div className="loading">Cargando artículos...</div>;
   if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="articulos-revision-container">
       <div className="revision-header">
-        <h1>Artículos Enviados a Revisión</h1>
+        <h1>Estado de mis Artículos</h1>
         <p>Total: {articulos.length} artículos</p>
       </div>
 
@@ -230,10 +231,6 @@ function ArticulosEnRevision() {
                       >
                         Reenviar
                       </button>
-                      
-                      
-                      
-
                     )}
                   </td>
                 </tr>
@@ -243,8 +240,8 @@ function ArticulosEnRevision() {
         </div>
       ) : (
         <div className="no-articulos">
-          <p>No tienes artículos en revisión actualmente.</p>
-          <p>Todos tus artículos enviados a revisión aparecerán aquí.</p>
+          <p>No tienes artículos enviados actualmente.</p>
+          <p>Todos tus artículos aparecerán aquí.</p>
         </div>
       )}
     </div>

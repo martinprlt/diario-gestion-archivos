@@ -1,0 +1,98 @@
+/* Estilo general */
+.chat-page {
+  display: flex;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #e8f5e9 0%, #f1f8e9 100%);
+  font-family: "Segoe UI", "Poppins", sans-serif;
+  color: #1b5e20;
+}
+
+/* Sidebar (lista de usuarios) */
+.chat-sidebar {
+  width: 280px;
+  background: linear-gradient(180deg, #2e7d32, #1b5e20);
+  color: white;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-right: 2px solid #66bb6a;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: 0.3s ease;
+}
+
+.sidebar-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 15px;
+  border-bottom: 2px solid #81c784;
+  padding-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+/* Panel de chat */
+.chat-content {
+  flex: 1;
+  background-color: #fefefe;
+  border-radius: 16px 0 0 16px;
+  margin: 20px;
+  padding: 20px;
+  box-shadow: inset 0 0 8px rgba(0, 80, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+/* Placeholder (cuando no hay chat seleccionado) */
+.chat-placeholder {
+  margin: auto;
+  text-align: center;
+  color: #2e7d32;
+  background-color: #f1f8e9;
+  padding: 40px 60px;
+  border-radius: 16px;
+  border: 1px solid #a5d6a7;
+  box-shadow: 0 4px 15px rgba(0, 100, 0, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.chat-placeholder:hover {
+  transform: scale(1.03);
+  box-shadow: 0 6px 18px rgba(0, 100, 0, 0.2);
+}
+
+.chat-placeholder h3 {
+  font-size: 1.5rem;
+  color: #1b5e20;
+  margin-bottom: 8px;
+}
+
+.chat-placeholder p {
+  color: #388e3c;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+/* Efecto hover en sidebar */
+.chat-sidebar:hover {
+  background: linear-gradient(180deg, #357a38, #1b5e20);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .chat-page {
+    flex-direction: column;
+  }
+
+  .chat-sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 2px solid #81c784;
+    border-radius: 0;
+  }
+
+  .chat-content {
+    margin: 10px;
+    border-radius: 12px;
+  }
+}

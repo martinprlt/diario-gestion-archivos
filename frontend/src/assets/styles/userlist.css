@@ -1,0 +1,67 @@
+.userlist-panel {
+  background-color: #2e7d32;
+  color: white;
+  border-radius: 12px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 4px 12px rgba(0, 50, 0, 0.2);
+  overflow-y: auto;
+}
+
+.userlist-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 2px solid #81c784;
+  padding-bottom: 8px;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.userlist-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.userlist-vacio {
+  text-align: center;
+  color: #dcedc8;
+  font-size: 0.9rem;
+}
+
+.userlist-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #388e3c;
+  border-radius: 8px;
+  padding: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.userlist-item:hover {
+  background-color: #43a047;
+  transform: scale(1.03);
+}
+
+.userlist-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background-color: #66bb6a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #1b5e20;
+  font-size: 1.1rem;
+}
+
+.userlist-nombre {
+  font-weight: 500;
+  color: white;
+  font-size: 1rem;
+}

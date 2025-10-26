@@ -4,15 +4,17 @@ import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
 
-// Configuración de rutas relativas al directorio backend
+// --- RUTA DE SUBIDA CENTRALIZADA ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const backendRoot = path.join(__dirname, '..'); // Sube un nivel desde src/config
+// Apunta a la carpeta `backend/src/uploads`
+export const UPLOADS_PATH = path.resolve(__dirname, '..', 'uploads');
 
 const ensureUploadsDir = (subfolder) => {
-  const fullPath = path.join(backendRoot, 'uploads', subfolder);
+  const fullPath = path.join(UPLOADS_PATH, subfolder);
   if (!fs.existsSync(fullPath)) {
     fs.mkdirSync(fullPath, { recursive: true });
+    console.log(`📁 Directorio de subida asegurado: ${fullPath}`);
   }
   return fullPath;
 };
@@ -26,7 +28,13 @@ const isValidExtension = (filename, allowedExtensions) => {
 // Configuración para artículos
 const articlesStorage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, ensureUploadsDir('articles'));
+    const user = req.user;
+    if (!user || !user.usuario) {
+      // Esto no debería ocurrir si la ruta está protegida por verifyToken
+      return cb(new Error('No se pudo identificar al usuario para guardar el archivo.'));
+    }
+    const userFolderPath = path.join('articles', user.usuario);
+    cb(null, ensureUploadsDir(userFolderPath));
   },
   filename: (req, file, cb) => {
     // ✅ Sanitizar el nombre original (quitar caracteres peligrosos)

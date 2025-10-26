@@ -19,7 +19,7 @@ export default function Navbar() {
       { to: '/notas', texto: 'Mis Artículos' },
       { to: '/ArticulosEnRevision', texto: 'Enviados a Revisión' },
       { tipo: 'notificaciones', texto: 'Notificaciones' },
-      { to: '/mensajes', texto: 'Mensajes' },
+      { to: '/chat', texto: 'Chat' },
       { to: '/periodista-upload', texto: 'Subir Articulo' },
       { to: '/galeria-global', texto: 'Galeria' },
       
@@ -27,6 +27,7 @@ export default function Navbar() {
     fotografo: [
       { to: '/galeria', texto: 'Galería Personal' },
       { tipo: 'notificaciones', texto: 'Notificaciones' },
+      { to: '/chat', texto: 'Chat' },
       { to: '/ajustes', texto: 'Ajustes' },
       { to: '/FotografoUpload', texto: 'Subir foto' },
       { to: '/galeria-global', texto: 'Galeria' },
@@ -35,7 +36,9 @@ export default function Navbar() {
     ],
     editor: [
       { to: '/revisiones', texto: 'Revisiones' },
+      { to: '/articulos-aprobados', texto: 'Aprobados' },
       { tipo: 'notificaciones', texto: 'Notificaciones' },
+      { to: '/chat', texto: 'Chat' },
       { to: '/galeria-global', texto: 'Galeria' },
 
     ],
@@ -45,6 +48,7 @@ export default function Navbar() {
       { to: '/gestion-categorias', texto: 'Gestión de Categorías' },
       { to: '/notificaciones-internas', texto: 'Notificaciones Internas' },
       { tipo: 'notificaciones', texto: 'Notificaciones' },
+      { to: '/chat', texto: 'Chat' },
       { to: '/galeria-global', texto: 'Galeria' },
       { to: '/admin/dashboard', texto: 'dashboard' },
 

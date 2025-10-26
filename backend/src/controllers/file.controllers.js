@@ -461,8 +461,7 @@ export const sendToReview = async (req, res) => {
 
     const article = articleCheck.rows[0];
     
-    // Solo se puede enviar a revisión si está en estado borrador
-    if (article.estado !== 'borrador') {
+    if (article.estado !== 'borrador' && article.estado !== 'rechazado') {
       return res.status(400).json({ 
         message: `Solo los artículos en estado "borrador" pueden enviarse a revisión. Estado actual: ${article.estado}` 
       });
@@ -605,12 +604,6 @@ export const approveArticle = async (req, res) => {
 // ==========================
 // Rechazar artículo 
 // ==========================
-// ==========================
-// Rechazar artículo (MEJORADA)
-// ==========================
-// ==========================
-// Rechazar artículo (CORREGIDA - debe cambiar a estado 'rechazado')
-// ==========================
 export const rejectArticle = async (req, res) => {
   try {
     const { id } = req.params;
@@ -677,6 +670,27 @@ export const rejectArticle = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Error al rechazar artículo:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// =============================
+// OBTENER ARTÍCULOS APROBADOS (PARA EDITORES)
+// =============================
+export const getApprovedArticles = async (req, res) => {
+  try {
+    // La verificación de rol de editor ya se hace en la ruta
+    const result = await pool.query(
+      `SELECT a.*, u.nombre as periodista_nombre, u.apellido as periodista_apellido, u.usuario as periodista_usuario
+       FROM articulos a
+       JOIN usuarios u ON a.periodista_id = u.id_usuario
+       WHERE a.estado = 'aprobado'
+       ORDER BY a.fecha_publicacion DESC`
+    );
+    
+    res.json(result.rows);
+  } catch (error) {
+    console.error("❌ Error al obtener artículos aprobados:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

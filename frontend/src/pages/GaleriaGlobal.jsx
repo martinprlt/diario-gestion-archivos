@@ -1,67 +1,81 @@
-// 📁 src/pages/GaleriaGlobal.jsx - VERSIÓN FUSIONADA CON FILTROS Y CONTEXT
-import React, { useState, useEffect } from 'react';
-import { useCategorias } from '../context/CategoriasContext.jsx';
-import '../assets/styles/galeria.css';
+import { useEffect, useState, useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
+import { useCategorias } from "../context/CategoriasContext.jsx";
+import "../assets/styles/global.css";
 
-const GaleriaGlobal = () => {
-  const { categorias } = useCategorias(); // 🔹 Obtener categorías desde el Context
+function GaleriaGlobal() {
   const [fotos, setFotos] = useState([]);
+  const [categoriaFiltro, setCategoriaFiltro] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [categoriaFiltro, setCategoriaFiltro] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFoto, setSelectedFoto] = useState(null);
+  const { token } = useContext(AuthContext);
+  const { categorias } = useCategorias();
 
-  // 🔹 Cargar fotos desde la API, opcionalmente filtradas por categoría
-  const cargarFotos = async (categoriaId = '') => {
-    try {
-      setLoading(true);
-      let url = 'http://localhost:5000/api/fotos/globales';
-      if (categoriaId) url += `?categoria=${categoriaId}`;
-      
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Error al cargar las fotos');
+  const placeholder = "https://placehold.co/800x600?text=Sin+imagen";
 
-      const data = await response.json();
-      setFotos(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error cargando fotos:', err);
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const normalizar = (s = "") =>
+    s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
-  // 🔹 Cargar fotos al inicio o cuando cambia el filtro de categoría
   useEffect(() => {
-    cargarFotos(categoriaFiltro);
-  }, [categoriaFiltro]);
+    const ac = new AbortController();
 
-  // 🔹 Filtrar fotos por búsqueda
-  const fotosFiltradas = fotos.filter(foto => 
-    foto.titulo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (foto.descripcion && foto.descripcion.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+    const fetchFotos = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-  // 🔹 Limpiar filtros
-  const limpiarFiltros = () => {
-    setCategoriaFiltro('');
-    setSearchTerm('');
-  };
+        const res = await fetch("http://localhost:5000/api/fotos/global", {
+          headers: { Authorization: `Bearer ${token}` },
+          signal: ac.signal,
+        });
+
+        if (!res.ok) throw new Error("Error al cargar las fotos");
+        const data = await res.json();
+        setFotos(data || []);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.error(err);
+          setError("No se pudieron cargar las fotos");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (token) fetchFotos();
+    return () => ac.abort();
+  }, [token]);
+
+  const term = normalizar(searchTerm);
+
+  const fotosFiltradas = fotos.filter((foto) => {
+    const coincideCategoria =
+      !categoriaFiltro || foto.categoria_id?.toString() === categoriaFiltro;
+
+    const titulo = normalizar(foto.titulo);
+    const desc = normalizar(foto.descripcion);
+    const coincideBusqueda = !term || titulo.includes(term) || desc.includes(term);
+
+    return coincideCategoria && coincideBusqueda;
+  });
+
+  const abrirLightbox = (foto) => setSelectedFoto(foto);
+  const cerrarLightbox = () => setSelectedFoto(null);
+  const volverArriba = () => window.scrollTo({ top: 0, behavior: "smooth" });
+
+  if (loading) return <div className="sin-fotos">Cargando fotos…</div>;
+  if (error) return <div className="error">{error}</div>;
 
   return (
     <div className="galeria-container">
-      <div className="galeria-header">
-        <h1>Galería Global de Fotos</h1>
-        <p>Explora todas las fotos publicadas por nuestros fotógrafos</p>
-      </div>
+      <h2 className="titulo-galeria">Galería Global de Fotos</h2>
 
-      {/* 🔹 FILTROS */}
-      <div className="filtros-container">
-        <div className="filtro-group">
-          <label htmlFor="categoria-filtro">Filtrar por categoría:</label>
+      <div className="filtros-galeria">
+        <div className="campo">
+          <label>Categoría:</label>
           <select
-            id="categoria-filtro"
             value={categoriaFiltro}
             onChange={(e) => setCategoriaFiltro(e.target.value)}
           >
@@ -74,73 +88,97 @@ const GaleriaGlobal = () => {
           </select>
         </div>
 
-        <div className="filtro-group">
-          <label htmlFor="busqueda">Buscar:</label>
+        <div className="campo">
+          <label>Buscar:</label>
           <input
             type="text"
-            id="busqueda"
+            placeholder="Buscar por título o descripción..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar por título o descripción..."
           />
         </div>
+      </div>
 
-        {(categoriaFiltro || searchTerm) && (
-          <button className="limpiar-filtros-btn" onClick={limpiarFiltros}>
-            Limpiar filtros
-          </button>
+      {/* MASONRY GRID */}
+      <div className="masonry-grid">
+        {fotosFiltradas.length > 0 ? (
+          fotosFiltradas.map((foto) => {
+            const fechaStr = foto.fecha || foto.fecha_publicacion;
+            return (
+              <div
+                key={foto.id_foto}
+                className="masonry-item"
+                role="button"
+                tabIndex={0}
+                onClick={() => abrirLightbox(foto)}
+                onKeyDown={(e) => (e.key === "Enter" ? abrirLightbox(foto) : null)}
+              >
+                <div className="imagen-wrapper">
+                  <img
+                    src={foto.url?.startsWith("http") ? foto.url : placeholder}
+                    onError={(e) => {
+                      e.currentTarget.src = placeholder;
+                    }}
+                    alt={foto.titulo || "Foto sin título"}
+                    className="imagen-galeria"
+                  />
+                  {foto.categoria_nombre && (
+                    <span className="badge-categoria">{foto.categoria_nombre}</span>
+                  )}
+                </div>
+
+                <div className="info-foto">
+                  <h3>{foto.titulo || "Sin título"}</h3>
+                  <p className="descripcion">{foto.descripcion || "Sin descripción"}</p>
+                  <p className="autor">
+                    📷 {foto.fotografo_nombre || "Autor desconocido"}
+                  </p>
+                  <p className="fecha">
+                    📅{" "}
+                    {fechaStr
+                      ? new Date(fechaStr).toLocaleDateString("es-AR")
+                      : "Fecha desconocida"}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <p className="sin-fotos">No hay fotos disponibles 😕</p>
         )}
       </div>
 
-      {/* 🔹 CONTADOR DE RESULTADOS */}
-      <div className="resultados-info">
-        <p>
-          Mostrando <strong>{fotosFiltradas.length}</strong> de <strong>{fotos.length}</strong> fotos
-          {categoriaFiltro && ` en ${categorias.find(c => c.id_categoria.toString() === categoriaFiltro)?.nombre}`}
-          {searchTerm && ` que coinciden con "${searchTerm}"`}
-        </p>
-      </div>
-
-      {/* 🔹 GALERÍA */}
-      {loading ? (
-        <div className="loading">🔄 Cargando fotos...</div>
-      ) : error ? (
-        <div className="error">❌ Error: {error}</div>
-      ) : fotosFiltradas.length === 0 ? (
-        <div className="no-resultados">
-          <p>No se encontraron fotos con los filtros aplicados</p>
-          <button onClick={limpiarFiltros} className="btn-primary">
-            Mostrar todas las fotos
-          </button>
-        </div>
-      ) : (
-        <div className="galeria-grid">
-          {fotosFiltradas.map((foto) => (
-            <div key={foto.id_foto} className="galeria-item">
-              <img 
-                src={`http://localhost:5000/${foto.ruta_archivo.replace(/\\/g, '/')}`} 
-                alt={foto.titulo}
-                onError={(e) => { e.target.src = '/placeholder-image.jpg'; }}
-              />
-              <div className="galeria-info">
-                <h3>{foto.titulo}</h3>
-                {foto.descripcion && <p>{foto.descripcion}</p>}
-                <div className="galeria-meta">
-                  {foto.categoria_nombre && (
-                    <span className="categoria-badge">{foto.categoria_nombre}</span>
-                  )}
-                  <span className="fotografo">
-                    Por: {foto.fotografo_nombre} {foto.fotografo_apellido}
-                  </span>
-                  <span className="fecha">{new Date(foto.fecha).toLocaleDateString()}</span>
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* LIGHTBOX */}
+      {selectedFoto && (
+        <div className="lightbox" onClick={cerrarLightbox}>
+          <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={
+                selectedFoto.url?.startsWith("http") ? selectedFoto.url : placeholder
+              }
+              onError={(e) => {
+                e.currentTarget.src = placeholder;
+              }}
+              alt={selectedFoto.titulo || "Foto"}
+              className="lightbox-img"
+            />
+            <p className="lightbox-text">
+              <strong>{selectedFoto.titulo || "Sin título"}</strong> —{" "}
+              {selectedFoto.fotografo_nombre || "Autor desconocido"}
+            </p>
+            <button className="cerrar-btn" onClick={cerrarLightbox}>
+              ✕
+            </button>
+          </div>
         </div>
       )}
+
+      {/* BOTÓN VOLVER ARRIBA */}
+      <button className="volver-arriba" onClick={volverArriba}>
+        ↑
+      </button>
     </div>
   );
-};
+}
 
 export default GaleriaGlobal;

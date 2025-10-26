@@ -79,3 +79,24 @@ export async function checkAdminRole(req, res, next) {
     res.status(500).json({ message: "Error al verificar rol" });
   }
 }
+
+export async function checkEditorRole(req, res, next) {
+  try {
+    const categoria = req.user.categoria?.toLowerCase();
+    
+    if (categoria === 'editor') {
+      console.log('✅ Usuario editor verificado:', req.user.usuario);
+      return next();
+    }
+
+    console.log('❌ Acceso denegado:', req.user.usuario, 'es', categoria);
+    return res.status(403).json({ 
+      message: "Acceso denegado: se requiere rol de editor",
+      tuCategoria: req.user.categoria 
+    });
+
+  } catch (err) {
+    console.error("🔴 Error en checkEditorRole:", err);
+    res.status(500).json({ message: "Error al verificar rol" });
+  }
+}

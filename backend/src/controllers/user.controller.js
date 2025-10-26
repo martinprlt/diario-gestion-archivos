@@ -1,5 +1,8 @@
 //src/controllers/user.controller.js
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
+import path from 'path';
+import { UPLOADS_PATH } from '../config/multer.js'; // Importar la ruta centralizada
 import {
   findByUsuario,
   findByEmail,
@@ -50,9 +53,22 @@ export async function registrarUsuario(req, res) {
         apellido: nuevo.apellido,
         email: nuevo.email,
         telefono: nuevo.telefono,
-        rol_id: nuevo.rol_id,
+      rol_id: nuevo.rol_id,
       }
     });
+
+    // 5. Crear carpeta para el usuario usando la ruta centralizada
+    try {
+      const userFolderPath = path.join(UPLOADS_PATH, 'articles', nuevo.usuario);
+
+      if (!fs.existsSync(userFolderPath)) {
+        fs.mkdirSync(userFolderPath, { recursive: true });
+        console.log(`📁 Carpeta creada para el usuario en ruta unificada: ${userFolderPath}`);
+      }
+    } catch (folderError) {
+      console.error(`💥 No se pudo crear la carpeta para el usuario ${nuevo.usuario}:`, folderError);
+    }
+
   } catch (err) {
     console.error('💥 registrarUsuario:', err);
     res.status(500).json({ message: 'Error del servidor' });

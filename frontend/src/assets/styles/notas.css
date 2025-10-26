@@ -1,361 +1,562 @@
-/*src/styles/notas.css*/
+/* ===== CONTENEDOR GENERAL ===== */
+.notas-page{
+  padding:2rem;
+  min-height:100vh;
+  background:linear-gradient(180deg,#f7fff8,#e8f5ec);
+  color:#184d27;
+  font-family:"Poppins",sans-serif;
+}
 
-/* Estilo para la tabla */
-.notas-table {
+/* Título */
+.notas-title{
+  text-align:center;
+  font-family:"Playfair Display",serif;
+  font-size:2.2rem;
+  font-weight:700;
+  margin-bottom:1.25rem;
+  color:#184d27;
+  text-shadow:0 1px 6px rgba(0,0,0,.08);
+}
+
+/* ===== TARJETA (envoltorio de tabla) ===== */
+.notas-card{
+  max-width:1200px;
+  margin:0 auto;
+  background:#fff;
+  border-radius:18px;
+  border:1px solid #dbe9dc;
+  box-shadow:0 10px 28px rgba(0,0,0,.06);
+  overflow:hidden;
+}
+
+/* ===== TOOLBAR ===== */
+.notas-toolbar{
+  display:grid;
+  grid-template-columns: 1fr auto auto;
+  gap:.75rem;
+  padding:1rem 1rem .75rem;
+  background:linear-gradient(180deg, #f8fff9, #ffffff);
+  border-bottom:1px solid #e8efe9;
+}
+.notas-toolbar .input{
+  width:100%;
+  padding:.75rem 1rem;
+  border:1.5px solid #b7d6b7;
+  border-radius:10px;
+  font-size:.95rem;
+  color:#184d27;
+  background:#fff;
+  transition:all .25s ease;
+}
+.notas-toolbar .input:focus{
+  outline:none;
+  border-color:#2e8b57;
+  box-shadow:0 0 8px rgba(46,139,87,.30);
+}
+
+/* Botones base */
+.btn{
+  border:none;
+  border-radius:10px;
+  padding:.55rem .9rem;
+  font-weight:700;
+  cursor:pointer;
+  transition:all .25s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:.45rem;
+  font-size:.92rem;
+  line-height:1;
+}
+.btn--primary{ background:#2e8b57; color:#fff; }
+.btn--primary:hover{ background:#184d27; }
+.btn--outline{ background:#fff; color:#2e8b57; border:1.6px solid #2e8b57; }
+.btn--outline:hover{ background:#eaf6ed; color:#184d27; border-color:#184d27; }
+
+/* ===== TABLA ===== */
+.notas-table{
+  width:100%;
+  border-collapse:separate; /* para redondeado suave al hover */
+  border-spacing:0;
+}
+.notas-table thead th{
+  position:sticky; top:0; z-index:1;
+  background:#f5fbf6;
+  color:#184d27;
+  font-weight:700;
+  text-align:left;
+  padding:.85rem 1rem;
+  border-bottom:1px solid #e8efe9;
+  font-size:.95rem;
+}
+.notas-table tbody td{
+  padding: .8rem 1rem;
+  border-bottom:1px solid #eef5ef;
+  color:#2a3f30;
+  font-size:.95rem;
+  vertical-align:top;
+}
+.notas-table tbody tr:nth-child(even){ background:#f9fdfa; }
+.notas-table tbody tr:hover{ background:#f7fff8; }
+
+/* Columnas y truncado */
+.col-titulo { min-width:240px; max-width:440px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-weight:700; color:#184d27; }
+.col-categoria{ min-width:140px; }
+.col-estado{ min-width:290px; }
+.col-fecha{ min-width:130px; white-space:nowrap; }
+.col-acciones{ min-width:290px; white-space:nowrap; text-align:right; }
+
+/* Título como enlace suave (opcional) */
+.titulo-link{
+  color:#184d27;
+  text-decoration:none;
+}
+.titulo-link:hover{ text-decoration:underline; }
+
+/* Chips / Badges */
+.chip{
+  display:inline-block;
+  padding:.28rem .6rem;
+  border-radius:999px;
+  font-size:.8rem;
+  font-weight:600;
+  border:1px solid transparent;
+}
+.chip--cat{ background:#eef7ef; color:#2c5b3b; border-color:#d6ead7; }
+
+/* Estado */
+.estado{
+  display:inline-flex;
+  align-items:center;
+  gap:.4rem;
+  padding:.38rem .6rem;
+  border-radius:10px;
+  font-weight:700;
+  font-size:.8rem;
+  border:1px solid transparent;
+}
+.estado i{ font-style:normal; font-size:.9rem; line-height:1; }
+.estado--ok  { background:#e3f7e5; color:#1f7a3f; border-color:#bfe8c7; }
+.estado--rev { background:#fff6d8; color:#7a5f1f; border-color:#f3e2a9; }
+.estado--bad { background:#fdecea; color:#a33a2f; border-color:#f5c6cb; }
+
+/* Comentario / Motivo */
+.motivo{
+  margin-top:.5rem;
+  background:#fff4f3;
+  color:#a33a2f;
+  border:1px dashed #efb2ab;
+  border-radius:10px;
+  padding:.55rem .7rem;
+  font-size:.82rem;
+}
+
+/* Acciones agrupadas */
+.actions{
+  display:inline-flex;
+  gap:.45rem;
+  align-items:center;
+  justify-content:flex-end;
+}
+.btn--light{ background:#eef7ef; color:#2c5b3b; border:1px solid #d6ead7; }
+.btn--light:hover{ filter:brightness(.96); }
+.btn--info{ background:#d7f0ff; color:#0b5b8a; border:1px solid #b5e2ff; }
+.btn--info:hover{ filter:brightness(.96); }
+.btn--warn{ background:#ffe7c2; color:#7a4a00; border:1px solid #ffd59a; }
+.btn--warn:hover{ filter:brightness(.96); }
+.btn--danger{ background:#e85b4a; color:#fff; }
+.btn--danger:hover{ background:#c44335; }
+
+/* Estados vacíos / loading / error */
+.empty-state,.error-message,.loading{ text-align:center; padding:1rem; font-weight:500; }
+.error-message{
+  background:#fdecea;
+  color:#a33a2f;
+  border:1px solid #f5c6cb;
+  margin:1rem;
+  border-radius:12px;
+}
+
+/* ===== RESPONSIVE (tabla → cards) ===== */
+@media (max-width: 860px){
+  .notas-toolbar{ grid-template-columns:1fr; }
+  .col-acciones{ text-align:left; }
+}
+@media (max-width: 720px){
+  .notas-card{ border-radius:16px; }
+  .notas-table thead{ display:none; }
+  .notas-table, .notas-table tbody, .notas-table tr, .notas-table td{
+    display:block; width:100%;
+  }
+  .notas-table tr{ border-bottom:1px solid #eef5ef; }
+  .notas-table td{
+    padding:.85rem 1rem;
+    display:grid; grid-template-columns:130px 1fr; gap:.4rem;
+  }
+  .notas-table td::before{
+    content:attr(data-label);
+    font-weight:700; color:#184d27;
+  }
+}
+/* ====== LAYOUT FULL-WIDTH COMO "GESTIÓN" ====== */
+.notas-page{
+  padding: 2rem 1.25rem;            /* mismo padding que gestión */
+  background: linear-gradient(180deg, #f7fff8, #e8f5ec);
+  font-family: "Poppins", sans-serif;
+  color:#184d27;
+}
+
+.notas-title{
+  text-align:center;
+  font-family: "Playfair Display", serif;
+  font-weight:700;
+  font-size: 2.1rem;
+  color:#184d27;
+  margin-bottom: 1.2rem;
+}
+
+/* Tarjeta grande a TODO el ancho disponible */
+.notas-card{
+  width: 100%;
+  max-width: none;                  /* <-- elimina límite de ancho */
+  margin: 0 auto;
+  background:#fff;
+  border: 1px solid #dbe9dc;
+  border-radius:16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+
+/* Barra superior (buscador + botones) */
+.notas-toolbar{
+  display:grid;
+  grid-template-columns: 1fr auto auto; /* buscador toma todo, botones a la derecha */
+  gap:.75rem;
+  padding: 1rem;
+  background:#fff;
+  border-bottom: 1px solid #eef5ef;
+}
+
+/* Input del buscador */
+.notas-toolbar .input{
+  width:100%;
+  padding:.75rem 1rem;
+  border:1.5px solid #b7d6b7;
+  border-radius:10px;
+  font-size:.95rem;
+  color:#184d27;
+}
+.notas-toolbar .input:focus{
+  outline:none;
+  border-color:#2e8b57;
+  box-shadow:0 0 8px rgba(46,139,87,.28);
+}
+
+/* Tabla a 100% con columnas equilibradas */
+.notas-table{
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.95rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  table-layout: fixed;              /* evita saltos raros y mantiene anchos */
+}
+.notas-table thead th{
+  background:#f3faf5;
+  color:#184d27;
+  font-weight:700;
+  text-align:left;
+  padding:.9rem 1rem;
+  border-bottom: 1px solid #e8efe9;
+}
+.notas-table td{
+  padding:.85rem 1rem;
+  border-bottom:1px solid #eef5ef;
+  color:#2a3f30;
 }
 
-/* Encabezado verde (como en tu diseño anterior) */
-.notas-table th {
-  background-color: #1e311b; /* Verde similar al de tu primera imagen */
-  color: white;
-  padding: 15px;
-  text-align: left;
-  font-weight: 500;
-  border: none;
+/* Sugerencia de anchos por columna (ajusta a gusto) */
+.notas-table .col-titulo{    width: 26%; }
+.notas-table .col-categoria{ width: 16%; }
+.notas-table .col-estado{    width: 22%; }
+.notas-table .col-fecha{     width: 14%; } /* se aplica a ambas fechas */
+.notas-table .col-acciones{  width: 22%; text-align:right; }
+
+/* Acciones en línea a la derecha */
+.col-acciones .actions{
+  display:flex;
+  gap:.45rem;
+  justify-content:flex-end;
+  flex-wrap:wrap;
 }
 
-/* Celdas */
-.notas-table td {
-  background-color: #fff;
-  color: #555;
-  padding: 15px;
-  border-bottom: 1px solid #f0f0f0;
-}
+/* Responsive: en pantallas chicas, apilar como "cards" */
+@media (max-width: 980px){
+  .notas-toolbar{
+    grid-template-columns: 1fr;     /* buscador arriba, botones abajo */
+  }
 
-/* Botones de acción - Versión mejorada */
-.accion-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  border: none;
-  background: #f0f0f0;
-  color: #333;
+  .notas-table thead { display:none; }
+  .notas-table, .notas-table tbody, .notas-table tr, .notas-table td{
+    display:block; width:100%;
+  }
+  .notas-table tr{ border-bottom:1px solid #eef5ef; }
+  .notas-table td{
+    display:grid;
+    grid-template-columns: 140px 1fr;
+    gap:.4rem;
+  }
+  .notas-table td::before{
+    content: attr(data-label);
+    font-weight:700; color:#184d27;
+  }
+  .col-acciones .actions{ justify-content:flex-start; }
+}
+/* ====== BOTONES — ALTO CONTRASTE ====== */
+.actions .btn,
+.btn-accion,
+.btn-enviar,
+.btn-modificar,
+.btn-delete {
+  border: 1.6px solid transparent;
+  border-radius: 10px;
+  padding: .55rem .9rem;
+  font-weight: 700;
+  font-size: .92rem;
   cursor: pointer;
-  margin-right: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  transition: all 0.2s;
+  transition: transform .08s ease, background-color .22s ease, box-shadow .22s ease;
+  box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+/* Primarios (azules) – Descargar / Leer */
+.btn-accion {
+  background: #2d6cdf;         /* azul fuerte */
+  color: #fff;
+}
+.btn-accion:hover { background:#1e46b6; }
+.btn-accion:active { transform: translateY(1px); }
+
+/* Acciones positivas – Enviar/Reenviar a revisión (teal) */
+.btn-enviar {
+  background: #0ea5a6;         /* teal */
+  color: #fff;
+}
+.btn-enviar:hover { background:#0a7f80; }
+
+/* Modificar – naranja */
+.btn-modificar {
+  background: #f59e0b;         /* naranja */
+  color: #fff;
+}
+.btn-modificar:hover { background:#d97706; }
+
+/* Eliminar – rojo */
+.btn-delete {
+  background: #dc2626;         /* rojo */
+  color: #fff;
+}
+.btn-delete:hover { background:#b91c1c; }
+
+/* Estado deshabilitado — que siga legible */
+.actions .btn:disabled,
+.btn-accion:disabled,
+.btn-enviar:disabled,
+.btn-modificar:disabled,
+.btn-delete:disabled {
+  background: #e9efe9 !important;
+  color: #7b8b82 !important;
+  border-color: #cfe4d5 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+}
+
+/* Acomodar la fila de acciones a la derecha y con aire */
+.col-acciones .actions{
+  display:flex;
+  gap:.5rem;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+}
+
+/* Badges (ya los tenías, solo reforzamos contraste del rechazado) */
+.estado-badge.estado-rechazado{
+  background:#fee2e2;
+  color:#b91c1c;
+  border:1px solid #fecaca;
+}
+/* ====== BOTONES ESTILO SISTEMA DE GESTIÓN ====== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* Botón principal (Nuevo Artículo) */
+.btn--primary {
+  background: #2e8b57;
+  color: #fff;
+}
+.btn--primary:hover {
+  background: #184d27;
+}
+
+/* Botón contorno (Ver artículos en revisión) */
+.btn--outline {
+  background: #fff;
+  color: #2e8b57;
+  border: 1.6px solid #2e8b57;
+}
+.btn--outline:hover {
+  background: #eaf6ed;
+  color: #184d27;
+}
+
+/* Botones de tabla */
+.btn--light {
+  background: #2d6cdf;       /* azul fuerte */
+  color: #fff;
+}
+.btn--light:hover {
+  background: #1e46b6;
+}
+
+/* Enviar/Reenviar a revisión */
+.btn--info {
+  background: #0ea5a6;       /* teal */
+  color: #fff;
+}
+.btn--info:hover {
+  background: #0a7f80;
+}
+
+/* Modificar */
+.btn--warn {
+  background: #f59e0b;       /* naranja */
+  color: #fff;
+}
+.btn--warn:hover {
+  background: #d97706;
+}
+
+/* Eliminar */
+.btn--danger {
+  background: #dc2626;       /* rojo */
+  color: #fff;
+}
+.btn--danger:hover {
+  background: #b91c1c;
+}
+
+/* Deshabilitado (solo si le pones disabled) */
+.btn:disabled {
+  background: #e5e9e5 !important;
+  color: #7b8b82 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
+  opacity: 0.7;
+}
+
+/* Organización de botones dentro de las acciones */
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+/* ===== BOTONES FINALES CORREGIDOS ===== */
+.btn {
+  border: none;
+  border-radius: 10px;
+  padding: 0.55rem 0.95rem;
+  font-weight: 600;
+  font-family: "Poppins", sans-serif;
+  font-size: 0.92rem;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 80px;
+  gap: 0.3rem;
+  text-align: center;
 }
 
-/* Estilos para cada tipo de botón */
-.btn-editar {
-  background-color: #e1f5fe;
-  color: #0288d1;
+/* --- Verde primario --- */
+.btn--primary {
+  background: #2e8b57;
+  color: #fff;
 }
+.btn--primary:hover { background: #1c5b3a; }
 
-.btn-eliminar {
-  background-color: #ffebee;
-  color: #d32f2f;
-}
-
-.btn-publicar {
-  background-color: #e8f5e9;
-  color: #388e3c;
-}
-
-/* Efecto hover */
-.accion-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
-
-.btn-editar:hover { background-color: #b3e5fc; }
-.btn-eliminar:hover { background-color: #ffcdd2; }
-.btn-publicar:hover { background-color: #c8e6c9; }
-
-/* Estilos para notificaciones */
-.notificaciones-panel {
-  margin-top: 2rem;
-  border-top: 1px solid #ddd;
-  padding-top: 1rem;
-}
-
-.notificacion {
-  padding: 1rem;
-  margin: 0.5rem 0;
-  border-radius: 4px;
-  background: #f9f9f9;
-}
-
-.notificacion.no-leida {
-  background: #e3f2fd;
-  border-left: 3px solid #2196f3;
-}
-
-/* Estilos para comentarios */
-.comentario-editor {
-  margin-top: 0.5rem;
-}
-
-.form-comentario {
-  margin-top: 1rem;
-  padding: 1rem;
-  background: #f5f5f5;
-  border-radius: 4px;
-}
-
-.comentario-item {
-  margin-top: 0.5rem;
-  padding: 0.5rem;
+/* --- Contorno verde --- */
+.btn--outline {
   background: #fff;
-  border: 1px solid #eee;
-  border-radius: 4px;
+  border: 1.8px solid #2e8b57;
+  color: #2e8b57;
+}
+.btn--outline:hover {
+  background: #e9f7ef;
+  color: #184d27;
 }
 
-.estado-selector select {
-  padding: 0.3rem;
-  border-radius: 4px;
-  border: 1px solid #ddd;
-}
-
-/* Estilos generales de estado */
-.estado-badge {
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: bold;
-  text-transform: uppercase;
-  display: inline-block;
-  min-width: 90px;
-  text-align: center;
-}
-
-/* Variantes de estado */
-.estado-borrador {
-  background-color: #ffc107;
-  color: #000;
-}
-
-.estado-revision {
-  background-color: #17a2b8;
+/* --- Azul fuerte: Descargar, Leer --- */
+.btn--light {
+  background: #2563eb;
   color: #fff;
 }
+.btn--light:hover { background: #1e40af; }
 
-.estado-aprobado {
-  background-color: #28a745;
+/* --- Verde agua: Enviar / Reenviar --- */
+.btn--info {
+  background: #0ea5a6;
   color: #fff;
 }
+.btn--info:hover { background: #0a7f80; }
 
-.estado-rechazado {
-  background-color: #dc3545;
+/* --- Naranja: Modificar --- */
+.btn--warn {
+  background: #f59e0b;
   color: #fff;
 }
+.btn--warn:hover { background: #d97706; }
 
-.estado-default {
-  background-color: #6c757d;
+/* --- Rojo: Eliminar --- */
+.btn--danger {
+  background: #dc2626;
   color: #fff;
 }
+.btn--danger:hover { background: #b91c1c; }
 
-
-/* Botón de enviar */
-.btn-enviar {
-  background-color: #17a2b8;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-right: 5px;
+/* --- Deshabilitado --- */
+.btn:disabled {
+  background: #cbd5c0 !important;
+  color: #f8faf8 !important;
+  opacity: 0.9 !important;
+  cursor: not-allowed !important;
+  box-shadow: none !important;
 }
 
-.btn-enviar:hover {
-  background-color: #138496;
-}
-
-
-/* En notas.css */
-.comentario-rechazo {
-  margin-top: 8px;
-  padding: 10px;
-  background-color: #fff3cd;
-  border: 1px solid #ffeaa7;
-  border-radius: 5px;
-  font-size: 12px;
-  color: #856404;
-  line-height: 1.4;
-}
-
-.btn-modificar {
-  background-color: #fd7e14;
-  color: white;
-  padding: 8px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  margin-top: 5px;
-  font-size: 14px;
-}
-
-.btn-modificar:hover {
-  background-color: #e66a00;
-}
-
-.acciones {
+/* --- Alineación de acciones --- */
+.actions {
   display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-/* En notas.css */
-.fila-rechazada {
-  background-color: #fff5f5 !important;
-  border-left: 4px solid #dc3545 !important;
-}
-
-.fila-rechazada:hover {
-  background-color: #ffe6e6 !important;
-}
-
-.comentario-rechazo {
-  margin-top: 8px;
-  padding: 10px;
-  background-color: #f8d7da;
-  border: 1px solid #f5c6cb;
-  border-radius: 5px;
-  font-size: 12px;
-  color: #721c24;
-  line-height: 1.4;
-  max-width: 300px;
-}
-
-.estado-rechazado {
-  background-color: #dc3545;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.btn-modificar {
-  background-color: #fd7e14;
-  color: white;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  margin-top: 5px;
-}
-
-.btn-modificar:hover {
-  background-color: #e66a00;
-}
-
-/* 📁 assets/styles/notas.css - AGREGAR ESTOS ESTILOS */
-
-/* FILTROS PARA EDITORES */
-.filtros-editor {
-  background: #f8f9fa;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  display: flex;
-  gap: 20px;
-  align-items: end;
   flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
 }
 
-.filtros-editor .filtro-group {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
+/* --- Ajuste del botón de Modificar para ícono --- */
+.btn--warn i {
+  font-size: 1rem;
 }
 
-.filtros-editor .filtro-group label {
-  font-weight: 600;
-  color: #333;
-  font-size: 14px;
-}
-
-.filtros-editor select,
-.filtros-editor input {
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 14px;
-  min-width: 200px;
-}
-
-/* BADGE DE CATEGORÍA EN LA TABLA */
-.categoria-badge {
-  background: #007bff;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-block;
-}
-
-/* INFORMACIÓN DE RESULTADOS */
-.resultados-info {
-  background: #e7f3ff;
-  padding: 10px 15px;
-  border-radius: 4px;
-  margin-bottom: 20px;
-  border-left: 4px solid #007bff;
-}
-
-.resultados-info p {
-  margin: 0;
-  color: #333;
-}
-
-/* BOTÓN PRIMARIO */
-.btn-primary {
-  background: #007bff;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 14px;
-  margin-top: 10px;
-}
-
-.btn-primary:hover {
-  background: #0056b3;
-}
-
-/* MEJORAS A LA TABLA EXISTENTE */
-.tabla-notas th:nth-child(3) {
-  width: 120px; /* Ancho fijo para columna categoría */
-}
-
-.tabla-notas td:nth-child(3) {
-  text-align: center;
-}
-
-.categoria-badge {
-  background: #6f42c1;
-  color: white;
-  padding: 4px 8px;
-  border-radius: 12px;
-  font-size: 12px;
-  font-weight: 500;
-  display: inline-block;
-}
-
-/* AJUSTES DE TABLA CON NUEVA COLUMNA */
-.notas-table th:nth-child(2) {
-  width: 140px; /* Ancho fijo para categoría */
-}
-
-.notas-table td:nth-child(2) {
-  text-align: center;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .notas-table th:nth-child(2),
-  .notas-table td:nth-child(2) {
-    display: none; /* Ocultar categoría en móvil si es necesario */
-  }
+/* --- Transición más visible --- */
+.btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
 }
