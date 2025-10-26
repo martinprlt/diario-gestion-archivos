@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useChat } from "../context/chatContext.jsx";
+import { useChat } from "../context/ChatContext.jsx";
 
 const ChatBox = ({ receptor, userId }) => {
   const { mensajes, enviarMensaje } = useChat();
