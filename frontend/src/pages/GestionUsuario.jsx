@@ -40,7 +40,7 @@ export default function GestionUsuario() {
 
       const url = usuarioData.id 
         ? `${API_BASE_URL}/api/usuarios/${usuarioData.id}`
-        : '${API_BASE_URL}/api/usuarios';
+        : `${API_BASE_URL}/api/usuarios`;
 
       const method = usuarioData.id ? 'PUT' : 'POST';
 
