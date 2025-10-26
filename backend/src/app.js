@@ -20,6 +20,8 @@ import fileRoutes from './routes/file.routes.js';
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+app.set('trust proxy', 1);
+
 //  1. HELMET - Headers de seguridad
 app.use(
   helmet({
