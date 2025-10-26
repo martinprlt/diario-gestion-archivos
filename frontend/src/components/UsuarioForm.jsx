@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext"; 
 import "../assets/styles/UsuarioForm.css";
+import { API_BASE_URL } from '../config/api.js'
 
 export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
   const [formData, setFormData] = useState({
@@ -19,7 +20,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/roles", {
+        const response = await fetch(`${API_BASE_URL}/api/roles`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 

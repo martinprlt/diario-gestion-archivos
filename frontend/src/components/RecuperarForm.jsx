@@ -1,6 +1,7 @@
 // src/components/RecuperarForm.jsx
 import { useState } from 'react';
 import '../assets/styles/recuperar.css';
+import { API_BASE_URL } from '../config/api.js'
 
 function RecuperarForm() {
   const [email, setEmail] = useState('');
@@ -12,7 +13,7 @@ function RecuperarForm() {
 
     try {
       // Llamada al backend (ajustá el endpoint según tu API)
-      const response = await fetch('http://localhost:3000/api/recuperar', {
+      const response = await fetch(`${API_BASE_URL}/api/recuperar`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),

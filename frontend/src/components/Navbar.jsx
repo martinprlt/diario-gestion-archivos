@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.js';
 import logo from '../assets/imagenes/logo.png';
 import '../assets/styles/navbar.css';
+import { API_BASE_URL } from '../config/api.js'
 
 export default function Navbar() {
   const { usuario, logout, token } = useContext(AuthContext);
@@ -13,6 +14,7 @@ export default function Navbar() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const menuRef = useRef(null);
   const navbarRef = useRef(null);
+ 
 
   const linksPorCategoria = {
     periodista: [
@@ -61,7 +63,7 @@ export default function Navbar() {
     if (usuario && token) {
       const cargarNotificaciones = async () => {
         try {
-          const res = await fetch(`http://localhost:5000/api/notificaciones/${usuario.id_usuario}`, {
+          const res = await fetch(`${API_BASE_URL}/api/notificaciones/${usuario.id_usuario}`, {
             headers: {
               'Authorization': `Bearer ${token}`
             }
@@ -81,7 +83,7 @@ export default function Navbar() {
   // Marcar notificación como leída
   const marcarComoLeida = async (id) => {
     try {
-      await fetch("http://localhost:5000/api/notificaciones/marcar-leida", {
+      await fetch(`${API_BASE_URL}/api/notificaciones/marcar-leida`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_notificacion: id })

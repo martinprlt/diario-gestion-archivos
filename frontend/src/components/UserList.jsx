@@ -2,6 +2,7 @@ import React, { useEffect, useState, useContext } from "react";
 import { useChat } from "../context/ChatContext.jsx";
 import { AuthContext } from "../context/AuthContext.js";
 import "../assets/styles/userlist.css"; // nuevo archivo para detalles visuales
+import { API_BASE_URL } from '../config/api.js'
 
 const UserList = ({ onSelectUser, userId }) => {
   const [usuarios, setUsuarios] = useState([]);
@@ -10,7 +11,7 @@ const UserList = ({ onSelectUser, userId }) => {
 
   useEffect(() => {
     if (token) {
-      fetch("http://localhost:5000/api/usuarios", {
+      fetch(`${API_BASE_URL}/api/usuarios`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

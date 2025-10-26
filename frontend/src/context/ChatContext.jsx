@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
+import { API_BASE_URL } from '../config/api.js'
 
 const ChatContext = createContext();
 
@@ -8,7 +9,7 @@ export const ChatProvider = ({ children, userId }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const SOCKET_URL = import.meta.env.VITE_API_URL || `${API_BASE_URL}`;
     const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
