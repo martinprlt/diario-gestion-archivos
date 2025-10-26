@@ -1,0 +1,220 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+.configuracion-upload-container {
+  display: flex;
+  min-height: 100vh;
+  font-family: 'Poppins', sans-serif;
+  background-color: #fefefe;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.04);
+  padding: 1rem;
+  border-radius: 12px;
+  flex-direction: column;
+  align-items: center;
+}
+
+.upload-header {
+  width: 100%;
+  max-width: 1000px;
+  text-align: center;
+  font-weight: 900;
+  font-size: 2.8rem;
+  color: #1e311b;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.8rem;
+  user-select: none;
+  text-shadow: 0 0 7px rgba(128, 159, 57, 0.35);
+}
+
+.upload-wrapper {
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  border-radius: 12px;
+  box-sizing: border-box;
+}
+
+.sidebar {
+  width: 200px;
+  background-color: #1e311b;
+  color: white;
+  padding: 2rem 1.5rem 2.5rem 1.5rem;
+  border-radius: 12px 0 0 12px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  user-select: none;
+}
+
+.upload-main {
+  flex: 1;
+  padding: 2.8rem 3rem;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0 12px 12px 0;
+  background: white;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.05);
+  box-sizing: border-box;
+}
+
+.form-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.mi-perfil-titulo {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e311b;
+  margin-bottom: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.imagen-perfil-box {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  border: 3px solid #a9c3ba;
+  background: linear-gradient(145deg, #f8f8f8, #ffffff);
+  box-shadow: inset 0 6px 14px rgba(168, 195, 186, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+  cursor: pointer;
+  transition: box-shadow 0.3s ease;
+}
+
+.imagen-perfil-box:hover {
+  box-shadow: inset 0 10px 20px rgba(168, 195, 186, 0.7);
+}
+
+.imagen-perfil {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.imagen-perfil.placeholder {
+  background-color: #e0e0e0;
+}
+
+label {
+  align-self: flex-start;
+  font-weight: 600;
+  color: #1e311b;
+  font-size: 1.1rem;
+  margin-top: 0.6rem;
+}
+
+input[type="text"] {
+  width: 100%;
+  padding: 1rem 1.1rem;
+  font-size: 1.05rem;
+  border: 2px solid #a9c3ba;
+  border-radius: 12px;
+  background-color: #ffffff;
+  color: #1e311b;
+  box-shadow: inset 1px 1px 6px #dde5d5;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+input[type="text"]:focus {
+  outline: none;
+  border-color: #809f39;
+  box-shadow: 0 0 10px #809f39;
+}
+
+.upload-button {
+  padding: 0.9rem 1rem;
+  background-color: #274a2a;
+  color: white;
+  font-weight: 700;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(39, 74, 42, 0.35);
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  font-size: 1rem;
+  margin-top: 0.8rem;
+}
+
+.upload-button:hover {
+  background-color: #1e311b;
+  box-shadow: 0 10px 30px rgba(30, 49, 27, 0.75);
+}
+
+.subir-btn {
+  width: auto;
+  padding: 0.5rem 1rem;
+  margin-top: 1rem;
+}
+
+.guardar-btn {
+  margin-top: 1.5rem;
+}
+
+/* Nuevos estilos para integrar funcionalidad */
+.info-section {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.info-group {
+  margin-bottom: 1.5rem;
+  width: 100%;
+}
+
+.info-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #1e311b;
+  font-size: 1.1rem;
+}
+
+.info-value {
+  padding: 1rem;
+  background-color: #f8f9f8;
+  border-radius: 12px;
+  color: #1e311b;
+  border: 1px solid #dde5d5;
+}
+
+.password-note {
+  display: block;
+  margin-top: 0.5rem;
+  color: #666;
+  font-size: 0.8rem;
+}
+
+.error-message {
+  color: #d32f2f;
+  background: #ffebee;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  width: 100%;
+  text-align: center;
+}
+
+.cancel-btn {
+  background-color: #f44336 !important;
+}
+
+.button-group {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.button-group button {
+  flex: 1;
+  min-width: 120px;
+}

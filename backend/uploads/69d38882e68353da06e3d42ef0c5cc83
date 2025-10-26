@@ -1,0 +1,46 @@
+-- Paso 1: Eliminar claves foráneas relacionadas con categorias
+
+ALTER TABLE usuarios DROP CONSTRAINT IF EXISTS usuarios_categoria_i_fkey;
+
+ALTER TABLE articulos DROP CONSTRAINT IF EXISTS articulos_categoria_i_fkey;
+
+ALTER TABLE fotos DROP CONSTRAINT IF EXISTS fotos_categoria_i_fkey;
+
+-- Paso 2: Eliminar columnas relacionadas con categorias
+
+ALTER TABLE usuarios DROP COLUMN IF EXISTS categoria_i;
+
+ALTER TABLE articulos DROP COLUMN IF EXISTS categoria_i;
+
+ALTER TABLE fotos DROP COLUMN IF EXISTS categoria_i;
+
+Paso 3: Eliminar las tablas que ya no se usarán
+
+DROP TABLE IF EXISTS categorias CASCADE;
+
+DROP TABLE IF EXISTS permisos CASCADE;
+
+DROP TABLE IF EXISTS roles_permisos CASCADE;
+
+Paso 4: Insertar roles en la tabla 'roles'
+
+INSERT INTO roles (nombre) VALUES
+
+('Periodista'),
+
+('Fotógrafo'),
+
+('Editor'),
+
+('Administrador');
+
+
+
+
+
+ALTER TABLE articulos
+ADD COLUMN tipo_archivo VARCHAR(50),
+ADD COLUMN ruta_archivo TEXT,
+ADD COLUMN tamaño_archivo INTEGER,
+ADD COLUMN fecha_subida TIMESTAMP;
+DROP TABLE archivossistema;

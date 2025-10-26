@@ -1,0 +1,23 @@
+/* header.css */
+
+.header {
+  background-color: #d9dde0; /* Gris claro de la paleta */
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 2px 4px rgba(40, 68, 35, 0.15);
+  border-bottom: 2px solid #a9c3ba;
+}
+
+
+.logo-container {
+  display: flex;
+  align-items: center;
+}
+
+.logo {
+  height: 50px;
+  width: auto;
+  object-fit: contain;
+}

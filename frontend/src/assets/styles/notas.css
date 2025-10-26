@@ -1,0 +1,361 @@
+/*src/styles/notas.css*/
+
+/* Estilo para la tabla */
+.notas-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+/* Encabezado verde (como en tu diseño anterior) */
+.notas-table th {
+  background-color: #1e311b; /* Verde similar al de tu primera imagen */
+  color: white;
+  padding: 15px;
+  text-align: left;
+  font-weight: 500;
+  border: none;
+}
+
+/* Celdas */
+.notas-table td {
+  background-color: #fff;
+  color: #555;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Botones de acción - Versión mejorada */
+.accion-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #f0f0f0;
+  color: #333;
+  cursor: pointer;
+  margin-right: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 80px;
+}
+
+/* Estilos para cada tipo de botón */
+.btn-editar {
+  background-color: #e1f5fe;
+  color: #0288d1;
+}
+
+.btn-eliminar {
+  background-color: #ffebee;
+  color: #d32f2f;
+}
+
+.btn-publicar {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+/* Efecto hover */
+.accion-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.btn-editar:hover { background-color: #b3e5fc; }
+.btn-eliminar:hover { background-color: #ffcdd2; }
+.btn-publicar:hover { background-color: #c8e6c9; }
+
+/* Estilos para notificaciones */
+.notificaciones-panel {
+  margin-top: 2rem;
+  border-top: 1px solid #ddd;
+  padding-top: 1rem;
+}
+
+.notificacion {
+  padding: 1rem;
+  margin: 0.5rem 0;
+  border-radius: 4px;
+  background: #f9f9f9;
+}
+
+.notificacion.no-leida {
+  background: #e3f2fd;
+  border-left: 3px solid #2196f3;
+}
+
+/* Estilos para comentarios */
+.comentario-editor {
+  margin-top: 0.5rem;
+}
+
+.form-comentario {
+  margin-top: 1rem;
+  padding: 1rem;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.comentario-item {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.estado-selector select {
+  padding: 0.3rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Estilos generales de estado */
+.estado-badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  display: inline-block;
+  min-width: 90px;
+  text-align: center;
+}
+
+/* Variantes de estado */
+.estado-borrador {
+  background-color: #ffc107;
+  color: #000;
+}
+
+.estado-revision {
+  background-color: #17a2b8;
+  color: #fff;
+}
+
+.estado-aprobado {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.estado-rechazado {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.estado-default {
+  background-color: #6c757d;
+  color: #fff;
+}
+
+
+/* Botón de enviar */
+.btn-enviar {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-right: 5px;
+}
+
+.btn-enviar:hover {
+  background-color: #138496;
+}
+
+
+/* En notas.css */
+.comentario-rechazo {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: #fff3cd;
+  border: 1px solid #ffeaa7;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #856404;
+  line-height: 1.4;
+}
+
+.btn-modificar {
+  background-color: #fd7e14;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.btn-modificar:hover {
+  background-color: #e66a00;
+}
+
+.acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* En notas.css */
+.fila-rechazada {
+  background-color: #fff5f5 !important;
+  border-left: 4px solid #dc3545 !important;
+}
+
+.fila-rechazada:hover {
+  background-color: #ffe6e6 !important;
+}
+
+.comentario-rechazo {
+  margin-top: 8px;
+  padding: 10px;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 5px;
+  font-size: 12px;
+  color: #721c24;
+  line-height: 1.4;
+  max-width: 300px;
+}
+
+.estado-rechazado {
+  background-color: #dc3545;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.btn-modificar {
+  background-color: #fd7e14;
+  color: white;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.btn-modificar:hover {
+  background-color: #e66a00;
+}
+
+/* 📁 assets/styles/notas.css - AGREGAR ESTOS ESTILOS */
+
+/* FILTROS PARA EDITORES */
+.filtros-editor {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  gap: 20px;
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+.filtros-editor .filtro-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.filtros-editor .filtro-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.filtros-editor select,
+.filtros-editor input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  min-width: 200px;
+}
+
+/* BADGE DE CATEGORÍA EN LA TABLA */
+.categoria-badge {
+  background: #007bff;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* INFORMACIÓN DE RESULTADOS */
+.resultados-info {
+  background: #e7f3ff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border-left: 4px solid #007bff;
+}
+
+.resultados-info p {
+  margin: 0;
+  color: #333;
+}
+
+/* BOTÓN PRIMARIO */
+.btn-primary {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.btn-primary:hover {
+  background: #0056b3;
+}
+
+/* MEJORAS A LA TABLA EXISTENTE */
+.tabla-notas th:nth-child(3) {
+  width: 120px; /* Ancho fijo para columna categoría */
+}
+
+.tabla-notas td:nth-child(3) {
+  text-align: center;
+}
+
+.categoria-badge {
+  background: #6f42c1;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* AJUSTES DE TABLA CON NUEVA COLUMNA */
+.notas-table th:nth-child(2) {
+  width: 140px; /* Ancho fijo para categoría */
+}
+
+.notas-table td:nth-child(2) {
+  text-align: center;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .notas-table th:nth-child(2),
+  .notas-table td:nth-child(2) {
+    display: none; /* Ocultar categoría en móvil si es necesario */
+  }
+}

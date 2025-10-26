@@ -1,0 +1,76 @@
+/* login.css */
+
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  margin-top: 1rem;
+  min-height: 100vh;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 420px;           
+  background-color: #fefefe;
+  padding: 2.5rem;    /* Más espacio interno */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(30, 49, 27, 0.2);
+  border: 1px solid #a9c3ba;
+}
+
+
+.login-form h2 {
+  margin: 0;
+  text-align: center;
+  color: #1e311b; /* verde muy oscuro */
+}
+
+.login-form input {
+  padding: 0.75rem;
+  font-size: 1rem;
+  border: 1px solid #a9c3ba;
+  border-radius: 4px;
+  background-color: #ffffff;
+  color: #1e311b;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #809f39;
+  box-shadow: 0 0 5px #809f39;
+}
+
+.login-form button {
+  padding: 0.75rem;
+  background-color: #274a2a; /* verde oscuro */
+  color: white;
+  font-size: 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-form button:hover {
+  background-color: #1e311b; /* verde más oscuro al pasar el mouse */
+}
+
+.login-options {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.link-recuperar {
+  color: #809f39; /* verde oliva claro */
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.link-recuperar:hover {
+  text-decoration: underline;
+  color: #274a2a; /* verde oscuro al pasar el mouse */
+}

@@ -1,0 +1,47 @@
+[33m89b87b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmartincho[m[33m, [m[1;31morigin/martincho[m[33m, [m[1;32mcheckout[m[33m)[m refs/remotes/origin/martincho@{0}: update by push
+[33m89b87b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmartincho[m[33m, [m[1;31morigin/martincho[m[33m, [m[1;32mcheckout[m[33m)[m HEAD@{0}: checkout: moving from main to martincho
+[33m96f989e[m[33m ([m[1;32mmain[m[33m)[m refs/heads/main@{0}: commit: Gestion periodista-editor y galeria, back reestructurado
+[33m96f989e[m[33m ([m[1;32mmain[m[33m)[m HEAD@{1}: commit: Gestion periodista-editor y galeria, back reestructurado
+[33m7139272[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m refs/heads/main@{1}: pull origin main: Fast-forward
+[33m7139272[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m HEAD@{2}: pull origin main: Fast-forward
+[33m1d64a41[m[33m ([m[1;31morigin/flor[m[33m)[m refs/remotes/origin/flor@{0}: fetch origin: storing head
+[33m8f3356d[m[33m ([m[1;31morigin/isaac[m[33m)[m refs/remotes/origin/isaac@{0}: fetch origin: fast-forward
+[33m7139272[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m refs/remotes/origin/main@{0}: fetch origin: fast-forward
+[33maf6058a[m HEAD@{3}: checkout: moving from main to main
+[33maf6058a[m HEAD@{4}: checkout: moving from martincho to main
+[33m89b87b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmartincho[m[33m, [m[1;31morigin/martincho[m[33m, [m[1;32mcheckout[m[33m)[m refs/heads/checkout@{0}: branch: Created from martincho
+[33m89b87b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmartincho[m[33m, [m[1;31morigin/martincho[m[33m, [m[1;32mcheckout[m[33m)[m refs/heads/martincho@{0}: merge main: Merge made by the 'ort' strategy.
+[33m89b87b5[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmartincho[m[33m, [m[1;31morigin/martincho[m[33m, [m[1;32mcheckout[m[33m)[m HEAD@{5}: merge main: Merge made by the 'ort' strategy.
+[33m355c0f5[m HEAD@{6}: checkout: moving from main to martincho
+[33maf6058a[m HEAD@{7}: reset: moving to origin/main
+[33maf6058a[m HEAD@{8}: checkout: moving from martincho to main
+[33m355c0f5[m refs/heads/martincho@{1}: commit: Guardando mis cambios actuales en martincho
+[33m355c0f5[m HEAD@{9}: commit: Guardando mis cambios actuales en martincho
+[33m7ab03bd[m HEAD@{10}: checkout: moving from martincho to martincho
+[33m7ab03bd[m HEAD@{11}: checkout: moving from main to martincho
+[33maf6058a[m refs/heads/main@{2}: reset: moving to origin/main
+[33maf6058a[m HEAD@{12}: reset: moving to origin/main
+[33mdbde523[m HEAD@{13}: checkout: moving from martincho to main
+[33m7ab03bd[m HEAD@{14}: reset: moving to 7ab03bd1982304d3fc0eed1ec64008666b193b73
+[33m7ab03bd[m HEAD@{15}: checkout: moving from main to martincho
+[33mdbde523[m refs/heads/main@{3}: commit: Cambios temporales para mover a martincho
+[33mdbde523[m HEAD@{16}: commit: Cambios temporales para mover a martincho
+[33m1bdc49d[m refs/heads/main@{4}: reset: moving to HEAD~1
+[33m1bdc49d[m HEAD@{17}: reset: moving to HEAD~1
+[33m5e62c26[m HEAD@{18}: checkout: moving from martincho to main
+[33m7ab03bd[m HEAD@{19}: checkout: moving from main to martincho
+[33m5e62c26[m HEAD@{20}: checkout: moving from martincho to main
+[33m5e62c26[m refs/heads/main@{5}: commit (merge): Mis cambios antes de cambiar de rama
+[33m7ab03bd[m refs/heads/martincho@{2}: branch: Created from refs/remotes/origin/martincho
+[33m7ab03bd[m HEAD@{21}: checkout: moving from main to martincho
+[33m5e62c26[m HEAD@{22}: commit (merge): Mis cambios antes de cambiar de rama
+[33m1bdc49d[m refs/heads/main@{6}: commit: Guardo cambios en Navbar antes de pull
+[33m1bdc49d[m HEAD@{23}: commit: Guardo cambios en Navbar antes de pull
+[33m4dd5887[m refs/remotes/origin/isaac@{1}: fetch origin: fast-forward
+[33maf6058a[m refs/remotes/origin/main@{1}: fetch origin: fast-forward
+[33m7ab03bd[m refs/remotes/origin/martincho@{1}: fetch origin: fast-forward
+[33m5454fe4[m[33m ([m[1;31morigin/pauxd[m[33m)[m refs/remotes/origin/pauxd@{0}: fetch origin: storing head
+[33m6d5cc25[m HEAD@{24}: checkout: moving from main to main
+[33m6d5cc25[m refs/heads/main@{7}: clone: from https://github.com/LucasIsac/Sistema-de-Gestion-Independiente.git
+[33m6d5cc25[m refs/remotes/origin/HEAD@{0}: clone: from https://github.com/LucasIsac/Sistema-de-Gestion-Independiente.git
+[33m6d5cc25[m HEAD@{25}: clone: from https://github.com/LucasIsac/Sistema-de-Gestion-Independiente.git

@@ -1,0 +1,34 @@
+.presentacion-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 5rem 1rem;
+  min-height: calc(100vh - 80px); /* resta altura del navbar */
+  background-color: #d9dde0; /* fondo claro corporativo */
+  color: #1e311b;
+}
+
+.contenido {
+  text-align: center;
+  max-width: 600px;
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.logo-presentacion {
+  width: 350px;
+  margin-bottom: 1rem;
+}
+
+h1 {
+  margin-bottom: 1rem;
+  color: #274a2a;
+}
+
+p {
+  margin-bottom: 1rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+}

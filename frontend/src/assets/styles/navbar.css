@@ -1,0 +1,496 @@
+/* ====================== */
+/* ESTILOS BASE DEL NAVBAR */
+/* ====================== */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #274a2a;
+  padding: 0.7rem 1.5rem;
+  color: #ffffff;
+  position: relative;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* ============= */
+/* ESTILOS LOGO */
+/* ============= */
+.nav-logo img {
+  height: 42px;
+  max-width: 100%;
+  transition: transform 0.3s ease;
+}
+
+.nav-logo img:hover {
+  transform: scale(1.05);
+}
+
+/* ===================== */
+/* ESTILOS MENÚ PRINCIPAL */
+/* ===================== */
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.nav-links a {
+  color: #d9dde0;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 0.5rem 0;
+  position: relative;
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.nav-links a:hover {
+  color: #809f39;
+}
+
+/* Efecto subrayado al hover */
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #809f39;
+  transition: width 0.3s ease;
+}
+
+.nav-links a:hover::after {
+  width: 100%;
+}
+
+/* ====================== */
+/* ESTILOS NOTIFICACIONES */
+/* ====================== */
+.notificaciones-wrapper {
+  position: relative;
+}
+
+.btn-notificaciones {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #d9dde0;
+  font-weight: 500;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.btn-notificaciones:hover {
+  color: #297c3e;
+  transform: translateY(-1px);
+}
+
+.dropdown-notificaciones {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: #ffffff;
+  color: #000000;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  width: 280px;
+  max-height: 70vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  transform-origin: top right;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.notificacion-item {
+  padding: 0.8rem;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+  display: flex;
+  flex-direction: column;
+  transition: background-color 0.2s ease;
+}
+
+.notificacion-item:last-child {
+  border-bottom: none;
+}
+
+.notificacion-item strong {
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.notificacion-item:hover {
+  background: #f5f5f5;
+}
+
+.notificacion-item.no-leida {
+  background-color: #eef7ee;
+  font-weight: bold;
+}
+
+.notificacion-contenido {
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.notificacion-contenido p {
+  margin: 0 0 8px 0;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.notificacion-contenido small {
+  font-size: 0.75rem;
+  color: #777;
+  display: block;
+  text-align: right;
+}
+
+/* Badge de notificaciones no leídas */
+.badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: #e53935;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: bold;
+  padding: 2px 6px;
+  border-radius: 50%;
+  transform: translate(30%, -30%);
+}
+
+/* ===================== */
+/* ESTILOS USUARIO (NUEVO) */
+/* ===================== */
+/* Contenedor principal del usuario */
+.nav-user {
+  flex: 0 0 auto; /* No crece, no se encoge */
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+/* Contenedor del dropdown/drawer */
+.user-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Avatar del usuario */
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #6b8d7d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-weight: bold;
+  transition: transform 0.2s ease;
+}
+
+/* Efecto hover para el avatar */
+.user-avatar:hover {
+  transform: scale(1.05);
+}
+
+/* Iniciales del avatar cuando no hay imagen */
+.avatar-initials {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* Imagen del avatar */
+.avatar-image {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #6b8d7d;
+}
+
+/* ===================== */
+/* ESTILOS DRAWER USUARIO */
+/* ===================== */
+/* Drawer/Menú lateral del usuario */
+.user-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100vh;
+  background: white;
+  box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  padding: 1.5rem;
+  box-sizing: border-box;
+}
+
+/* Estado abierto del drawer */
+.user-drawer.open {
+  transform: translateX(0);
+}
+
+/* Header del drawer */
+.user-drawer-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+/* Avatar en el drawer */
+.user-drawer-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: #6b8d7d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+}
+
+/* Información del usuario en el drawer */
+.user-drawer-info h3 {
+  margin: 0;
+  color: #333;
+}
+
+.user-drawer-info p {
+  margin: 0.25rem 0 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Opciones del drawer */
+.user-drawer-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Items del drawer */
+.user-drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s ease;
+}
+
+.user-drawer-item:hover {
+  background: #f5f5f5;
+}
+
+/* Iconos de los items */
+.user-drawer-item span {
+  font-size: 1.25rem;
+}
+
+/* Botón de cerrar sesión */
+.user-drawer-logout {
+  margin-top: 1.5rem;
+  width: 100%;
+  padding: 0.75rem;
+  background: #f0f0f0;
+  border: none;
+  border-radius: 6px;
+  color: #d32f2f;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.user-drawer-logout:hover {
+  background: #e0e0e0;
+}
+
+/* Overlay del drawer */
+.user-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.user-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ===================== */
+/* MENÚ HAMBURGUESA */
+/* ===================== */
+.menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+}
+
+/* ===================== */
+/* DISEÑO RESPONSIVE */
+/* ===================== */
+@media (max-width: 992px) {
+  .navbar {
+    padding: 0.7rem 1rem;
+  }
+  
+  .nav-links {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    flex-wrap: wrap;
+    padding: 0.5rem 1rem;
+    position: relative;
+    z-index: 1000;
+  }
+  
+  .menu-toggle {
+    display: block;
+    order: 1;
+  }
+  
+  .nav-logo {
+    order: 2;
+    flex-grow: 1;
+    text-align: center;
+  }
+  
+  .user-dropdown-container {
+    order: 3;
+  }
+  
+  .nav-links {
+    order: 4;
+    width: 100%;
+    justify-content: center;
+    margin-top: 1rem;
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 100%;
+    background-color: #274a2a;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem 0;
+    gap: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+    z-index: 999;
+  }
+  
+  .nav-links.active {
+    max-height: 500px;
+    padding: 1rem 0;
+  }
+  
+  .nav-links li {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .nav-links a {
+    padding: 0.8rem 1rem;
+    display: block;
+    white-space: normal;
+  }
+  
+  .dropdown-notificaciones {
+    position: fixed;
+    top: 60px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 90%;
+    max-width: 400px;
+  }
+  
+  .user-drawer {
+    width: 80%;
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-user {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-end;
+  }
+  
+  .nav-logo img {
+    height: 36px;
+  }
+  
+  .user-avatar {
+    width: 35px;
+    height: 35px;
+    font-size: 0.9rem;
+  }
+  
+  .user-drawer-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .user-drawer-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2rem;
+  }
+}

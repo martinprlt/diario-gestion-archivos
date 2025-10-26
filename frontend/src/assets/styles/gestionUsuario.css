@@ -1,0 +1,68 @@
+.gestion-usuario {
+  padding: 20px;
+}
+
+.acciones {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+}
+
+.acciones input {
+  padding: 5px;
+}
+
+.tabla-usuarios {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-usuarios th,
+.tabla-usuarios td {
+  border: 1px solid #ccc;
+  padding: 8px;
+}
+
+.tabla-usuarios th {
+  background-color: #f4f4f4;
+}
+
+.tabla-usuarios button {
+  margin-right: 5px;
+}
+
+.tabla-usuarios .eliminar {
+  background-color: rgb(2, 58, 21);
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.form-usuario {
+  background: white;
+  padding: 20px;
+  border-radius: 5px;
+  width: 300px;
+}
+
+.form-usuario input,
+.form-usuario select {
+  width: 100%;
+  margin-bottom: 10px;
+  padding: 5px;
+}
+
+.acciones-form {
+  display: flex;
+  justify-content: space-between;
+}

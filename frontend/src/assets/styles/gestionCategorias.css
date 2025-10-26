@@ -1,0 +1,41 @@
+.gestion-categorias-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+}
+
+.categoria-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.categoria-form input,
+.categoria-form textarea {
+  padding: 8px;
+  font-size: 14px;
+}
+
+.categoria-form button {
+  background: #127e42;
+  color: white;
+  padding: 8px;
+  border: none;
+  cursor: pointer;
+}
+
+.categoria-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.categoria-table th,
+.categoria-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.categoria-table th {
+  background-color: #f4f4f4;
+}

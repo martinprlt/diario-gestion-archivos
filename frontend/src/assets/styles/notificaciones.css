@@ -1,0 +1,286 @@
+/* 📁 assets/styles/notificaciones.css */
+.notificaciones-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* 🔹 SELECTOR DE USUARIOS AVANZADO */
+.selector-usuarios {
+  margin-bottom: 20px;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+  min-height: 40px;
+  align-items: center;
+  padding: 10px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.usuario-tag {
+  display: flex;
+  align-items: center;
+  background: #007bff;
+  color: white;
+  padding: 5px 10px;
+  border-radius: 20px;
+  font-size: 14px;
+  gap: 5px;
+}
+
+.tag-nombre {
+  font-weight: 500;
+}
+
+.tag-eliminar {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tag-eliminar:hover {
+  background: rgba(255,255,255,0.2);
+}
+
+.placeholder-tag {
+  color: #6c757d;
+  font-style: italic;
+}
+
+.btn-abrir-selector {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.btn-abrir-selector:hover {
+  background: #5a6268;
+}
+
+/* 🔹 SELECTOR AVANZADO */
+.selector-avanzado {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: white;
+  margin-top: 10px;
+  overflow: hidden;
+}
+
+.filtros-selector {
+  padding: 15px;
+  border-bottom: 1px solid #eee;
+  background: #f8f9fa;
+}
+
+.busqueda-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.filtro-rol {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin-bottom: 10px;
+  font-size: 14px;
+}
+
+.botones-rapidos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.botones-rapidos span {
+  font-size: 12px;
+  color: #666;
+  margin-right: 5px;
+}
+
+.btn-rapido {
+  background: #e9ecef;
+  border: 1px solid #dee2e6;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  cursor: pointer;
+  color: #495057;
+}
+
+.btn-rapido:hover {
+  background: #dee2e6;
+}
+
+/* 🔹 LISTA DE USUARIOS */
+.lista-usuarios {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.item-usuario {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-bottom: 1px solid #f1f1f1;
+  cursor: pointer;
+  transition: background 0.2s;
+  gap: 12px;
+}
+
+.item-usuario:hover {
+  background: #f8f9fa;
+}
+
+.avatar-usuario {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #007bff;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.info-usuario {
+  flex-grow: 1;
+}
+
+.nombre-usuario {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 2px;
+}
+
+.detalle-usuario {
+  font-size: 12px;
+  color: #666;
+}
+
+.btn-agregar {
+  background: #28a745;
+  color: white;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.btn-agregar:hover {
+  background: #218838;
+}
+
+.cargando, .sin-resultados {
+  padding: 20px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+}
+
+.contador-selector {
+  padding: 10px 15px;
+  background: #e7f3ff;
+  border-top: 1px solid #b3d9ff;
+  font-size: 14px;
+  color: #0066cc;
+}
+
+/* 🔹 BOTÓN PRINCIPAL */
+.btn-generar {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 4px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+  font-weight: 600;
+}
+
+.btn-generar:hover:not(:disabled) {
+  background: #0056b3;
+}
+
+.btn-generar:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #f5c6cb;
+}
+
+.info-message {
+  background: #d1ecf1;
+  color: #0c5460;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  border: 1px solid #bee5eb;
+}
