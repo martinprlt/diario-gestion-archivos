@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChatProvider } from "../context/chatContext.jsx";
+import { ChatProvider } from "../context/ChatContext.jsx";
 import ChatBox from "../components/ChatBox";
 import UserList from "../components/UserList";
 import "../assets/styles/chat-page.css";

@@ -8,7 +8,8 @@ export const ChatProvider = ({ children, userId }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5000");
+    const SOCKET_URL = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
@@ -51,4 +52,5 @@ export const ChatProvider = ({ children, userId }) => {
   );
 };
 
+// ⭐ Exportar el hook en la misma línea para evitar el warning
 export const useChat = () => useContext(ChatContext);
