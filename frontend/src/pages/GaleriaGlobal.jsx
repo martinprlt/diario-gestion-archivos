@@ -27,7 +27,7 @@ function GaleriaGlobal() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_BASE_URL}/api/fotos/global`, {
+        const res = await fetch(`${API_BASE_URL}/api/fotos/globales`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: ac.signal,
         });
