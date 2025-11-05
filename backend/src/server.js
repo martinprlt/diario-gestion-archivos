@@ -1,5 +1,6 @@
+// server.js (EN LA RAIZ del proyecto)
 import 'dotenv/config.js';
-import app from './src/app.js';
+import app from './app.js';  // ← CORREGIDO: './src/app.js' no '/app/src/src/app.js'
 import { testDB } from './src/config/db.js';
 import http from 'http';
 import { initChatServer } from './src/chat/chat.server.js';
