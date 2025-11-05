@@ -1,23 +1,22 @@
-// src/chat/chatServer.js
+// src/chat/chat.server.js
 import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
 
 export const initChatServer = (httpServer) => {
-  // ✅ CONFIGURACIÓN SIMPLIFICADA Y DIRECTA
+  // ✅ CONFIGURACIÓN SUPER PERMISIVA TEMPORAL
   const io = new Server(httpServer, {
     cors: {
-      origin: [
-        'https://gestor-independiente.netlify.app',
-        'http://localhost:5173', 
-        'http://localhost:5174'
-      ],
-      credentials: true,
-      methods: ["GET", "POST"]
+      origin: "*",  // ← PERMITE TODOS LOS ORÍGENES
+      methods: ["GET", "POST"],
+      credentials: false  // ← IMPORTANTE: false cuando origin es "*"
     }
   });
 
+  console.log('💬 Servidor de chat inicializado - CORS: *');
+  console.log('🚨 MODO PERMISIVO TEMPORAL - CORS PARA TODOS LOS ORÍGENES');
+
   io.on("connection", (socket) => {
-    console.log("🟢 Usuario conectado:", socket.id);
+    console.log("🟢 Usuario conectado:", socket.id, 'Origen:', socket.handshake.headers.origin);
 
     socket.on("registrarUsuario", (userId) => {
       socket.userId = userId;
@@ -37,7 +36,6 @@ export const initChatServer = (httpServer) => {
     socket.on("enviarMensaje", async (data) => {
       const { emisorId, receptorId, contenido } = data;
 
-      // Verificación para asegurar que receptorId no es nulo
       if (!receptorId) {
         console.error("❌ Error: receptorId es nulo. Mensaje no guardado.");
         socket.emit("error", "Receptor no válido");
@@ -65,9 +63,6 @@ export const initChatServer = (httpServer) => {
       console.log(`🔴 Usuario desconectado: ${socket.id}`);
     });
   });
-
-  console.log('💬 Servidor de chat inicializado');
-  console.log('🌍 Socket.io CORS configurado para producción');
 
   return io;
 };

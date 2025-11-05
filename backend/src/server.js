@@ -1,27 +1,31 @@
 import 'dotenv/config.js';
-import app from './app.js';
-import { testDB } from './config/db.js';
+import app from './src/app.js';
+import { testDB } from './src/config/db.js';
 import http from 'http';
-import { initChatServer } from './chat/chat.server.js';
+import { initChatServer } from './src/chat/chat.server.js';
 
 const PORT = process.env.PORT || 5000;
 
-// Función async para iniciar el servidor
 async function startServer() {
   try {
-    console.log('Probando conexión a PostgreSQL...');
+    console.log('🔍 Probando conexión a PostgreSQL...');
     await testDB();
-    console.log(' PostgreSQL conectado correctamente');
+    console.log('✅ PostgreSQL conectado correctamente');
 
     const server = http.createServer(app);
 
+    console.log('🔧 Inicializando servidor de chat...');
     // Iniciar servidor de chat (Socket.io)
-    initChatServer(server);
+    const io = initChatServer(server);
+    
+    // Verificar que Socket.io se inicializó
+    console.log('✅ Socket.io inicializado:', !!io);
 
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor HTTP + Chat en puerto ${PORT}`);
       console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`📡 Escuchando en todas las interfaces (0.0.0.0:${PORT})`);
+      console.log(`📡 URL: https://diario-gestion-archivos-production.up.railway.app`);
+      console.log(`🔧 CORS configurado para Socket.io`);
     });
 
   } catch (error) {
@@ -29,6 +33,5 @@ async function startServer() {
     process.exit(1);
   }
 }
-
 
 startServer();
