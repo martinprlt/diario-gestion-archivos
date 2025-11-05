@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 
+
 // Rutas
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -21,6 +22,7 @@ import logsRoutes from "./routes/logs.routes.js";
 
 
 const app = express();
+app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(
