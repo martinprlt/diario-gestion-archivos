@@ -1,6 +1,6 @@
 // ChatPage.jsx - Actualizado
 import React, { useState } from "react";
-import { ChatProvider } from "../context/chatContext.jsx";
+import { ChatProvider } from "../context/ChatContext.jsx";
 import ChatBox from "../components/ChatBox.jsx";
 import UserList from "../components/UserList.jsx";
 import "../assets/styles/chat-page.css";
