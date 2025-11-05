@@ -3,10 +3,10 @@
   "name": "backend-diario-virtual",
   "version": "1.0.0",
   "description": "API Express para el diario virtual",
-  "main": "src/server.js",
+  "main": "server.js",
   "scripts": {
-    "dev": "node src/server.js",
-    "start": "node src/server.js",
+    "dev": "node server.js",
+    "start": "node server.js",
     "test": "echo \"Sin tests por ahora\" && exit 0"
   },
   "author": "Lucas Isaac De la Fuente",
