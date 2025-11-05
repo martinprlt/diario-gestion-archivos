@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import "../assets/styles/gestionCategorias.css";
 
 export default function CategoriaForm({ onAdd }) {
   const [nombre, setNombre] = useState('');

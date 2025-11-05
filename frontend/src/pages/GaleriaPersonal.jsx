@@ -30,6 +30,53 @@ function GaleriaPersonal() {
     fetchFotos();
   }, [token]);
 
+  const handleDelete = async (fotoId) => {
+    if (window.confirm("¿Estás seguro de que quieres eliminar esta foto?")) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/fotos/${fotoId}`, {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (!res.ok) {
+          throw new Error("No se pudo eliminar la foto");
+        }
+
+        setFotos(fotos.filter((foto) => foto.id_foto !== fotoId));
+      } catch (err) {
+        console.error(err);
+        setError("Error al eliminar la foto.");
+      }
+    }
+  };
+
+  const handleToggleVisibilidad = async (fotoId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/fotos/${fotoId}/toggle-visibility`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      if (!res.ok) throw new Error("Error al cambiar la visibilidad");
+
+      const data = await res.json();
+
+      setFotos((prevFotos) =>
+        prevFotos.map((foto) =>
+          foto.id_foto === fotoId ? { ...foto, es_global: data.es_global } : foto
+        )
+      );
+
+      alert(data.message);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cambiar la visibilidad de la foto.");
+    }
+  };
+
   const fotosFiltradas = fotos.filter((foto) => {
     const coincideCategoria =
       !categoriaFiltro || foto.categoria_id?.toString() === categoriaFiltro;
@@ -82,12 +129,36 @@ function GaleriaPersonal() {
       <div className="masonry-grid-personal">
         {fotosFiltradas.length > 0 ? (
           fotosFiltradas.map((foto) => (
-            <div
-              key={foto.id_foto}
-              className="masonry-item-personal"
-              onClick={() => abrirLightbox(foto)}
-            >
-              <div className="imagen-wrapper">
+            <div key={foto.id_foto} className="masonry-item-personal">
+              <div
+                className="imagen-wrapper"
+                onClick={() => abrirLightbox(foto)}
+              >
+                <button
+                  className="delete-btn-personal eliminar"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDelete(foto.id_foto);
+                  }}
+                >
+                  🗑️
+                </button>
+
+                <button
+                  className="toggle-btn-personal"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleVisibilidad(foto.id_foto);
+                  }}
+                  title={
+                    foto.es_global
+                      ? "Actualmente visible globalmente"
+                      : "Actualmente privada"
+                  }
+                >
+                  {foto.es_global ? "🌍" : "🔒"}
+                </button>
+
                 <img
                   src={
                     foto.url && foto.url.startsWith("http")
