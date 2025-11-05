@@ -1,8 +1,9 @@
+// src/pages/ConfiguracionUsuario.jsx
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../assets/styles/configuracion-usuario.css';
-import { API_BASE_URL } from '../config/api.js'
+import { API_BASE_URL } from '../config/api.js';
 
 export default function ConfiguracionUsuario() {
   const { usuario, token, setUsuario } = useContext(AuthContext);
@@ -19,7 +20,7 @@ export default function ConfiguracionUsuario() {
   const inputFotoRef = useRef(null);
   const navigate = useNavigate();
 
-  // Cargar datos del usuario
+  // 🔹 Cargar datos del usuario
   useEffect(() => {
     const loadUserData = async () => {
       try {
@@ -50,7 +51,7 @@ export default function ConfiguracionUsuario() {
         }
 
         const data = await response.json();
-        
+
         if (data.usuario) {
           setFormData({
             nombre: data.usuario.nombre || '',
@@ -67,6 +68,7 @@ export default function ConfiguracionUsuario() {
     loadUserData();
   }, [usuario, token]);
 
+  // 🔹 Manejo de imagen de perfil
   const handleFotoClick = () => inputFotoRef.current.click();
 
   const handleFotoChange = async (e) => {
@@ -100,6 +102,7 @@ export default function ConfiguracionUsuario() {
         throw new Error(data.message || 'Error al subir imagen');
       }
 
+      // Previsualizar y actualizar en contexto
       setPreview(URL.createObjectURL(file));
       setUsuario(prev => ({
         ...prev,
@@ -110,15 +113,11 @@ export default function ConfiguracionUsuario() {
     }
   };
 
+  // 🔹 Actualizar datos del usuario
   const handleUpdate = async () => {
     try {
-      if (!usuario?.id_usuario) {
-        throw new Error('ID de usuario no disponible');
-      }
-
-      if (!token) {
-        throw new Error('No hay token de autenticación');
-      }
+      if (!usuario?.id_usuario) throw new Error('ID de usuario no disponible');
+      if (!token) throw new Error('No hay token de autenticación');
 
       const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuario.id_usuario}`, {
         method: 'PUT',
@@ -126,21 +125,13 @@ export default function ConfiguracionUsuario() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...formData,
-          password
-        })
+        body: JSON.stringify({ ...formData, password })
       });
 
-      if (response.status === 401) {
-        throw new Error('Sesión expirada. Por favor, vuelve a iniciar sesión.');
-      }
+      if (response.status === 401) throw new Error('Sesión expirada. Por favor, vuelve a iniciar sesión.');
 
       const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.message || 'Error al actualizar los datos');
-      }
+      if (!response.ok) throw new Error(result.message || 'Error al actualizar los datos');
 
       setUsuario(prev => ({
         ...prev,
@@ -150,7 +141,7 @@ export default function ConfiguracionUsuario() {
         email: formData.email
       }));
 
-      alert('¡Datos actualizados correctamente!');
+      alert('✅ ¡Datos actualizados correctamente!');
       setEditMode(false);
       setPassword('');
       setError('');
@@ -159,14 +150,13 @@ export default function ConfiguracionUsuario() {
     }
   };
 
+  // 🔹 Render principal
   return (
     <div className="configuracion-upload-container">
       <div className="upload-header">CONFIGURACIÓN DE USUARIO</div>
 
       <div className="upload-wrapper">
-        <aside className="sidebar">
-          {/* Espacio para opciones laterales */}
-        </aside>
+        <aside className="sidebar">{/* Espacio para opciones futuras */}</aside>
 
         <main className="upload-main">
           <div className="form-container">
@@ -178,7 +168,11 @@ export default function ConfiguracionUsuario() {
               {preview ? (
                 <img src={preview} alt="Foto de perfil" className="imagen-perfil" />
               ) : usuario?.avatar_url ? (
-                <img src={`${API_BASE_URL}${usuario.avatar_url}`} alt="Foto de perfil" className="imagen-perfil" />
+                <img
+                  src={`${API_BASE_URL}${usuario.avatar_url}`}
+                  alt="Foto de perfil"
+                  className="imagen-perfil"
+                />
               ) : (
                 <div className="imagen-perfil placeholder" />
               )}

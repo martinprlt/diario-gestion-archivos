@@ -102,6 +102,32 @@
   filter: brightness(0.9);
 }
 
+/* ---------- BOTÓN ELIMINAR (Estilo Admin) ---------- */
+.delete-btn-personal.eliminar {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: #e63946;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  z-index: 10;
+  opacity: 0; /* Oculto por defecto */
+}
+
+.masonry-item-personal:hover .delete-btn-personal.eliminar {
+  opacity: 1; /* Visible al hacer hover */
+}
+
+.delete-btn-personal.eliminar:hover {
+  background-color: #c71f2d;
+  transform: scale(1.1);
+}
+
 /* ---------- BADGE DE CATEGORÍA ---------- */
 .badge-categoria-personal {
   position: absolute;
@@ -155,6 +181,7 @@
   width: 100vw;
   height: 100vh;
   background: rgba(0, 0, 0, 0.8);
+  -webkit-backdrop-filter: blur(8px); /* Soporte para Safari */
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -270,4 +297,27 @@
   color: #456b54;
   font-size: 1.1rem;
   margin-top: 2rem;
+}
+
+.toggle-btn-personal {
+  position: absolute;
+  top: 10px;
+  right: 45px;
+  background-color: #43a047;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 6px rgba(0, 80, 0, 0.15);
+  z-index: 20; /* ✅ Asegura que quede sobre la imagen */
+}
+
+
+.toggle-btn-personal:hover {
+  background-color: #2e7d32;
+  transform: scale(1.1);
 }

@@ -2,6 +2,7 @@
 import { pool } from "../config/db.js";
 import path from "path";
 import fs from "fs";
+import { logAction } from "../helpers/logAction.js";
 
 
 // =============================
@@ -9,96 +10,61 @@ import fs from "fs";
 // =============================
 export const uploadArticle = async (req, res) => {
   try {
-    console.log("🎯 uploadArticle llamado");
-    console.log("📦 Body recibido:", req.body);
-    console.log("📁 File recibido:", req.file ? req.file.originalname : "No file");
-
-    if (!req.file) {
-      console.log("❌ No se subió archivo");
-      return res.status(400).json({ message: "No se subió ningún archivo" });
-    }
-
     const { titulo, categoria_id, articulo_id } = req.body;
 
-    console.log("📝 Título:", titulo);
-    console.log("🏷️ Categoría ID:", categoria_id ?? "No enviada");
-    console.log("🔄 Artículo ID para reemplazar:", articulo_id ?? "Nuevo artículo");
+    if (!req.file) return res.status(400).json({ message: "No se subió ningún archivo" });
+    if (!titulo) return res.status(400).json({ message: "Faltan campos obligatorios (título)" });
 
-    if (!titulo) {
-      console.log("❌ Falta título");
-      return res.status(400).json({ 
-        message: "Faltan campos obligatorios (título)" 
-      });
-    }
-
-    // 🔹 Si es un reemplazo de artículo existente
+    // 🔹 Reemplazo
     if (articulo_id) {
       return await reemplazarArticulo(req, res, articulo_id);
     }
 
-    // 🔹 Si es un artículo nuevo
     const now = new Date();
     let query, values;
 
     if (categoria_id) {
-      // ✅ Verificar que la categoría existe
       const categoriaCheck = await pool.query(
         'SELECT id_categoria FROM categorias WHERE id_categoria = $1',
         [Number(categoria_id)]
       );
-
       if (categoriaCheck.rows.length === 0) {
         return res.status(400).json({ message: "La categoría seleccionada no existe" });
       }
 
-      query = `
-        INSERT INTO articulos (
-          titulo, periodista_id, categoria_id, estado,
-          tipo_archivo, nombre_archivo, nombre_original,
-          ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-        RETURNING *;
-      `;
+      query = `INSERT INTO articulos (
+        titulo, periodista_id, categoria_id, estado,
+        tipo_archivo, nombre_archivo, nombre_original,
+        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *;`;
 
       values = [
-        titulo.trim(),
-        req.userId,
-        Number(categoria_id),
-        'borrador',
-        req.file.mimetype,
-        req.file.filename,
-        req.file.originalname,
-        req.file.path,
-        req.file.size,
-        now,
-        now
+        titulo.trim(), req.userId, Number(categoria_id), 'borrador',
+        req.file.mimetype, req.file.filename, req.file.originalname,
+        req.file.path, req.file.size, now, now
       ];
     } else {
-      query = `
-        INSERT INTO articulos (
-          titulo, periodista_id, estado,
-          tipo_archivo, nombre_archivo, nombre_original,
-          ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING *;
-      `;
+      query = `INSERT INTO articulos (
+        titulo, periodista_id, estado,
+        tipo_archivo, nombre_archivo, nombre_original,
+        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;`;
 
       values = [
-        titulo.trim(),
-        req.userId,
-        'borrador',
-        req.file.mimetype,
-        req.file.filename,
-        req.file.originalname,
-        req.file.path,
-        req.file.size,
-        now,
-        now
+        titulo.trim(), req.userId, 'borrador',
+        req.file.mimetype, req.file.filename, req.file.originalname,
+        req.file.path, req.file.size, now, now
       ];
     }
 
     const result = await pool.query(query, values);
-    console.log("✅ Artículo insertado con éxito:", result.rows[0]);
+
+    // 🔹 Log
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'crear',
+      descripcion: `Creó artículo "${titulo}"${categoria_id ? ` en categoría ${categoria_id}` : ''}`
+    });
 
     res.status(201).json(result.rows[0]);
 
@@ -109,89 +75,61 @@ export const uploadArticle = async (req, res) => {
 };
 
 // =============================
-// FUNCIÓN PARA REEMPLAZAR ARTÍCULO
+// REEMPLAZAR ARTÍCULO
 // =============================
 const reemplazarArticulo = async (req, res, articulo_id) => {
   try {
     const { titulo, categoria_id } = req.body;
     const userId = req.userId;
 
-    // Verificar que el artículo existe y pertenece al usuario
     const articleCheck = await pool.query(
       `SELECT * FROM articulos WHERE id_articulo = $1 AND periodista_id = $2`,
       [articulo_id, userId]
     );
-
-    if (articleCheck.rows.length === 0) {
-      return res.status(404).json({ message: "Artículo no encontrado o no autorizado" });
-    }
+    if (!articleCheck.rows.length) return res.status(404).json({ message: "Artículo no encontrado o no autorizado" });
 
     const articuloViejo = articleCheck.rows[0];
-    
-    // Solo se puede reemplazar si está en revisión, rechazado o es borrador
-    if (!['en_revision', 'rechazado', 'borrador'].includes(articuloViejo.estado)) {
-      return res.status(400).json({ 
-        message: `Solo se pueden reemplazar artículos en estado "borrador", "en_revision" o "rechazado". Estado actual: ${articuloViejo.estado}` 
-      });
+    if (!['en_revision','rechazado','borrador'].includes(articuloViejo.estado)) {
+      return res.status(400).json({ message: `No se puede reemplazar artículo en estado "${articuloViejo.estado}"` });
     }
 
-    // Eliminar el archivo antiguo
-    try {
-      if (fs.existsSync(articuloViejo.ruta_archivo)) {
-        fs.unlinkSync(articuloViejo.ruta_archivo);
-        console.log("🗑️ Archivo antiguo eliminado:", articuloViejo.ruta_archivo);
-      }
-    } catch (error) {
-      console.warn("⚠️ No se pudo eliminar el archivo antiguo:", error.message);
-    }
+    // Eliminar archivo antiguo
+    try { if (fs.existsSync(articuloViejo.ruta_archivo)) fs.unlinkSync(articuloViejo.ruta_archivo); } 
+    catch (error) { console.warn("⚠️ No se pudo eliminar el archivo antiguo:", error.message); }
 
     const now = new Date();
 
-    // Actualizar el artículo existente con el nuevo archivo
     const updateQuery = `
       UPDATE articulos 
-      SET titulo = $1, 
-          categoria_id = $2,
-          tipo_archivo = $3, 
-          nombre_archivo = $4, 
-          nombre_original = $5,
-          ruta_archivo = $6, 
-          tamaño_archivo = $7, 
-          fecha_modificacion = $8,
-          estado = 'en_revision'  -- Cambiar a revisión después del reemplazo
-      WHERE id_articulo = $9
+      SET titulo=$1, categoria_id=$2, tipo_archivo=$3, nombre_archivo=$4,
+          nombre_original=$5, ruta_archivo=$6, tamaño_archivo=$7,
+          fecha_modificacion=$8, estado='en_revision'
+      WHERE id_articulo=$9
       RETURNING *;
     `;
 
     const values = [
-      titulo.trim(),
-      categoria_id ? Number(categoria_id) : null,
-      req.file.mimetype,
-      req.file.filename,
-      req.file.originalname,
-      req.file.path,
-      req.file.size,
-      now,
-      articulo_id
+      titulo.trim(), categoria_id ? Number(categoria_id) : null,
+      req.file.mimetype, req.file.filename, req.file.originalname,
+      req.file.path, req.file.size, now, articulo_id
     ];
 
     const result = await pool.query(updateQuery, values);
-    
-    console.log("✅ Artículo reemplazado con éxito:", result.rows[0]);
 
-    res.status(200).json({
-      success: true,
-      message: 'Artículo actualizado y enviado a revisión',
-      articulo: result.rows[0]
+    // 🔹 Log
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'reemplazar',
+      descripcion: `Reemplazó artículo ID ${articulo_id} con archivo "${req.file.originalname}"`
     });
+
+    res.status(200).json({ success:true, message:'Artículo actualizado y enviado a revisión', articulo: result.rows[0] });
 
   } catch (error) {
     console.error("❌ Error al reemplazar artículo:", error);
     res.status(500).json({ message: "Error interno del servidor al reemplazar artículo" });
   }
 };
-
-
 // =============================
 // OBTENER MIS ARTÍCULOS (MEJORADA)
 // =============================
@@ -262,7 +200,7 @@ export const updateArticle = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.userId;
-    const { titulo, estado } = req.body; // Quita categoria_id
+    const { titulo, estado } = req.body; 
 
     const articleCheck = await pool.query(
       "SELECT * FROM articulos WHERE id_articulo = $1 AND periodista_id = $2",
@@ -275,7 +213,7 @@ export const updateArticle = async (req, res) => {
 
     const updateQuery = `
       UPDATE articulos 
-      SET titulo = $1, estado = $2, fecha_modificacion = $3  // Quita categoria_id
+      SET titulo = $1, estado = $2, fecha_modificacion = $3  
       WHERE id_articulo = $4
       RETURNING *
     `;
@@ -289,6 +227,13 @@ export const updateArticle = async (req, res) => {
 
     const result = await pool.query(updateQuery, values);
     res.json(result.rows[0]);
+
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'actualizar',
+  descripcion: `Actualizó artículo ID ${id}. Campos modificados: ${titulo ? 'titulo' : ''} ${estado ? 'estado' : ''}`
+});
+
 
   } catch (error) {
     console.error("❌ Error al actualizar artículo:", error);
@@ -343,6 +288,13 @@ export const downloadArticle = async (req, res) => {
       headers: { 'Content-Type': tipo_archivo }
     });
 
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'descargar',
+  descripcion: `Descargó artículo ID ${id}`
+});
+
+
   } catch (error) {
     console.error("❌ Error al descargar:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -393,6 +345,12 @@ export const viewArticle = async (req, res) => {
 
     res.sendFile(path.resolve(article.ruta_archivo));
 
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'visualizar',
+  descripcion: `Visualizó artículo ID ${id}`
+});
+
   } catch (error) {
     console.error("❌ Error al ver archivo:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -432,6 +390,12 @@ export const deleteArticle = async (req, res) => {
     );
 
     res.json({ success: true, message: "Artículo eliminado correctamente" });
+
+    await logAction({
+  usuario_id: userId,
+  accion: 'eliminar',
+  descripcion: `Eliminó artículo ID ${id}`
+});
 
   } catch (error) {
     console.error("Error completo:", error);
@@ -507,7 +471,7 @@ export const getArticlesForReview = async (req, res) => {
        FROM usuarios u 
        JOIN roles r ON u.rol_id = r.id_rol 
        WHERE u.id_usuario = $1`,
-      [req.userId]
+      [req.userId] // ✅ Usar req.userId
     );
 
     if (userCheck.rows.length === 0 || userCheck.rows[0].rol !== 'Editor') {
@@ -521,6 +485,13 @@ export const getArticlesForReview = async (req, res) => {
        WHERE a.estado = 'en_revision'
        ORDER BY a.fecha_modificacion DESC`
     );
+
+    // ✅ CORREGIDO: Usar req.userId en lugar de userId
+    await logAction({
+      usuario_id: req.userId, // ✅ Cambiado de userId a req.userId
+      accion: 'visualizar',
+      descripcion: `Revisó artículos en revisión como editor`
+    });
     
     res.json(result.rows);
   } catch (error) {
@@ -595,6 +566,12 @@ export const approveArticle = async (req, res) => {
       message: 'Artículo aprobado y publicado exitosamente' 
     });
 
+    await logAction({
+  usuario_id: userId,
+  accion: 'aprobar',
+  descripcion: `Aprobó y publicó artículo ID ${id} ("${article.titulo}")`
+});
+
   } catch (error) {
     console.error("❌ Error al aprobar artículo:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -667,6 +644,12 @@ export const rejectArticle = async (req, res) => {
       success: true, 
       message: 'Artículo rechazado y notificado al periodista' 
     });
+
+    await logAction({
+  usuario_id: userId,
+  accion: 'rechazar',
+  descripcion: `Rechazó artículo ID ${id} ("${article.titulo}"). Motivo: ${comentario.substring(0, 100)}${comentario.length > 100 ? '...' : ''}`
+});
 
   } catch (error) {
     console.error("❌ Error al rechazar artículo:", error);

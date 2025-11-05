@@ -1,63 +1,84 @@
-import React from "react";
+// UsuarioTabla.jsx - Actualizado
+import React from 'react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 export default function UsuarioTabla({ usuarios, onEditar, onEliminar }) {
-  // Función para mapear rol_id a nombre de rol
-  const getRolNombre = (rolId) => {
-    const rolesMap = {
-      1: 'Administrador',
-      2: 'Periodista', 
-      3: 'Fotógrafo',
-      4: 'Editor'
+  const getRolDisplay = (rolNombre) => {
+    const roles = {
+      'administrador': 'Administrador',
+      'Editor': 'Editor', 
+      'Periodista': 'Periodista',
+      'Fotografo': 'Fotógrafo'
     };
-    return rolesMap[rolId] || 'Desconocido';
+    return roles[rolNombre] || rolNombre;
   };
 
-  const handleEliminarClick = (usuario) => {
-    if (!usuario.id) {
-      alert("Error: ID de usuario no válido");
-      return;
-    }
-    
-    onEliminar(usuario.id);
+  const getEstadoDisplay = (activo) => {
+    return activo ? 'Activo' : 'Inactivo';
   };
 
   return (
-    <table className="tabla-usuarios">
+    <table className="data-table">
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nombre</th>
           <th>Usuario</th>
           <th>Email</th>
           <th>Rol</th>
+          <th>Estado</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        {usuarios.length > 0 ? (
-          usuarios.map((usuario) => (
-            <tr key={usuario.id}>
-              <td>{usuario.id}</td>
-              <td>{usuario.nombre} {usuario.apellido}</td>
-              <td>{usuario.usuario}</td>
-              <td>{usuario.email}</td>
-              <td>{getRolNombre(usuario.rol_id)}</td>
-              <td>
-                <button onClick={() => onEditar(usuario)}>Editar</button>
-                <button
-                  className="eliminar"
-                  onClick={() => handleEliminarClick(usuario)}
+        {usuarios.map((usuario) => (
+          <tr key={usuario.id}>
+            <td>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div className="user-avatar">
+                  {usuario.nombre?.[0]}{usuario.apellido?.[0]}
+                </div>
+                <div>
+                  <div className="user-name">
+                    {usuario.nombre} {usuario.apellido}
+                  </div>
+                  <div className="user-email">
+                    @{usuario.usuario}
+                  </div>
+                </div>
+              </div>
+            </td>
+            <td className="user-email">{usuario.email}</td>
+            <td>
+              <span className="user-role">
+                {getRolDisplay(usuario.rol_nombre)}
+              </span>
+            </td>
+            <td>
+              <span className={`user-status ${usuario.activo ? 'status-active' : 'status-inactive'}`}>
+                {getEstadoDisplay(usuario.activo)}
+              </span>
+            </td>
+            <td className="actions-cell">
+              <div className="actions-buttons">
+                <button 
+                  onClick={() => onEditar(usuario)}
+                  className="btn-editar"
+                  title="Editar usuario"
                 >
+                  <Edit2 size={14} />
+                  Editar
+                </button>
+                <button 
+                  onClick={() => onEliminar(usuario.id)}
+                  className="btn-eliminar"
+                  title="Desactivar usuario"
+                >
+                  <Trash2 size={14} />
                   Eliminar
                 </button>
-              </td>
-            </tr>
-          ))
-        ) : (
-          <tr>
-            <td colSpan="6">No hay usuarios</td>
+              </div>
+            </td>
           </tr>
-        )}
+        ))}
       </tbody>
     </table>
   );

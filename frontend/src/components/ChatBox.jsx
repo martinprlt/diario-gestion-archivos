@@ -1,9 +1,12 @@
-import React, { useState } from "react";
-import { useChat } from "../context/ChatContext.jsx";
+// ChatBox.jsx - Actualizado
+import React, { useState, useRef, useEffect } from "react";
+import { useChat } from "../context/chatContext.jsx";
+import { Send } from "lucide-react";
 
 const ChatBox = ({ receptor, userId }) => {
   const { mensajes, enviarMensaje } = useChat();
   const [texto, setTexto] = useState("");
+  const chatEndRef = useRef(null);
 
   const handleEnviar = () => {
     if (texto.trim()) {
@@ -18,59 +21,85 @@ const ChatBox = ({ receptor, userId }) => {
       (m.emisor_id === receptor.id && m.receptor_id === userId)
   );
 
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajesFiltrados]);
+
   return (
-    <div className="flex flex-col max-w-3xl w-full mx-auto mt-6 bg-gradient-to-b from-green-50 to-white rounded-xl shadow-xl overflow-hidden border border-green-200">
-      {/* HEADER */}
-      <div className="bg-green-800 text-white p-8 flex items-center justify-between">
-        <h2 className="font-semibold text-lg">💬 {receptor.nombre}</h2>
-        <span className="text-sm opacity-80"></span>
+    <>
+      {/* Header del chat */}
+      <div className="chat-header">
+        <div className="chat-header-info">
+          <h3 className="chat-partner-name">{receptor.nombre}</h3>
+          <span className="chat-status">
+            <span className="status-dot"></span>
+            En línea
+          </span>
+        </div>
       </div>
 
-      {/* MENSAJES */}
-      <div className="flex-1 overflow-y-auto p-8 bg-green-50">
+      {/* Área de mensajes */}
+      <div className="chat-messages">
         {mensajesFiltrados.length === 0 ? (
-          <p className="text-center text-gray-500 mt-10">
-            No hay mensajes todavía. ¡Comenzá la conversación!
-          </p>
+          <div className="chat-placeholder">
+            <div className="placeholder-icon">🌱</div>
+            <h3 className="placeholder-title">No hay mensajes todavía</h3>
+            <p className="placeholder-text">
+              Comienza la conversación con {receptor.nombre}
+            </p>
+          </div>
         ) : (
-          mensajesFiltrados.map((m) => (
-            <div
-              key={m.id_mensaje}
-              className={`flex mb-4 ${
-                m.emisor_id === userId ? "justify-end" : "justify-start"
-              }`}
-            >
+          mensajesFiltrados.map((m) => {
+            const esPropio = m.emisor_id === userId;
+            return (
               <div
-                className={`relative max-w-xs px-4 py-3 rounded-2xl text-sm shadow-sm transition-all ${
-                  m.emisor_id === userId
-                    ? "bg-green-700 text-white rounded-br-none animate-fadeIn"
-                    : "bg-white text-gray-800 border border-green-100 rounded-bl-none animate-fadeIn"
+                key={m.id_mensaje}
+                className={`message-bubble ${
+                  esPropio ? "message-sent" : "message-received"
                 }`}
               >
-                {m.contenido}
+                {/* Nombre del remitente (solo para mensajes recibidos) */}
+                {!esPropio && (
+                  <div className="message-sender">{receptor.nombre}</div>
+                )}
+
+                {/* Contenido del mensaje */}
+                <div className="message-text">{m.contenido}</div>
+
+                {/* Hora del mensaje */}
+                <div className="message-time">
+                  {new Date(m.fecha_envio).toLocaleTimeString('es-AR', {
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
+        <div ref={chatEndRef} />
       </div>
 
-      {/* INPUT */}
-      <div className="p-3 border-t border-green-200 bg-white flex gap-2 items-center">
+      {/* Input de mensaje */}
+      <div className="chat-input-container">
         <input
           type="text"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
           placeholder="Escribe un mensaje..."
-          className="flex-1 border border-green-300 rounded-full px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+          onKeyDown={(e) => e.key === "Enter" && handleEnviar()}
+          className="chat-input"
         />
         <button
           onClick={handleEnviar}
-          className="bg-green-700 hover:bg-green-800 text-white px-5 py-2 rounded-full font-medium shadow-md transition-all"
+          disabled={!texto.trim()}
+          className={`chat-send-btn ${!texto.trim() ? "inactive" : ""}`}
         >
-          Enviar
+          <Send size={18} />
+          <span>Enviar</span>
         </button>
       </div>
-    </div>
+    </>
   );
 };
 

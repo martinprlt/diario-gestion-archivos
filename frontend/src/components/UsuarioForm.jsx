@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from "react";
-import { AuthContext } from "../context/AuthContext"; 
+import { AuthContext } from "../context/AuthContext";
 import "../assets/styles/UsuarioForm.css";
 import { API_BASE_URL } from '../config/api.js'
 
@@ -12,10 +12,10 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
     email: "",
     telefono: "",
     rol: "",
-    contraseña: "" 
+    contraseña: "",
   });
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
-  const { token } = useContext(AuthContext); 
+  const { token } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchRoles = async () => {
@@ -23,11 +23,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
         const response = await fetch(`${API_BASE_URL}/api/roles`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-
-        if (!response.ok) {
-          throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
+        if (!response.ok) throw new Error(`Error ${response.status}`);
         const data = await response.json();
         setRolesDisponibles(Array.isArray(data) ? data : []);
       } catch {
@@ -46,7 +42,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
         email: usuario.email || "",
         telefono: usuario.telefono || "",
         rol: usuario.rol || usuario.rol_nombre || "",
-        contraseña: ""
+        contraseña: "",
       });
     } else {
       setFormData({
@@ -57,7 +53,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
         email: "",
         telefono: "",
         rol: "",
-        contraseña: ""
+        contraseña: "",
       });
     }
   }, [usuario, token]);
@@ -73,122 +69,61 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
   };
 
   return (
-    <div className="modal">
-      <form className="form-usuario" onSubmit={handleSubmit}>
+    <div className="usuario-modal">
+      <form className="usuario-form" onSubmit={handleSubmit}>
         <h2>{formData.id ? "Editar Usuario" : "Nuevo Usuario"}</h2>
 
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Nombre</label>
-          <input
-            type="text"
-            name="nombre"
-            className="usuario-form-input"
-            value={formData.nombre}
-            onChange={handleChange}
-            required
-          />
-          <span className="usuario-form-error">Este campo es requerido</span>
-        </div>
-
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Apellido</label>
-          <input
-            type="text"
-            name="apellido"
-            className="usuario-form-input"
-            value={formData.apellido}
-            onChange={handleChange}
-            required
-          />
-          <span className="usuario-form-error">Este campo es requerido</span>
-        </div>
-
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Usuario</label>
-          <input
-            type="text"
-            name="usuario"
-            className="usuario-form-input"
-            value={formData.usuario}
-            onChange={handleChange}
-            required
-            disabled={!!formData.id}
-          />
-          <span className="usuario-form-error">Este campo es requerido</span>
-        </div>
-
-        {!formData.id && (
+        <div className="usuario-grid">
           <div className="usuario-form-group">
-            <label className="usuario-form-label">Contraseña</label>
-            <input
-              type="password"
-              name="contraseña"
-              className="usuario-form-input"
-              value={formData.contraseña}
-              onChange={handleChange}
-              required
-            />
-            <span className="usuario-form-error">Este campo es requerido</span>
+            <label>Nombre</label>
+            <input type="text" name="nombre" value={formData.nombre} onChange={handleChange} required />
           </div>
-        )}
 
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Email</label>
-          <input
-            type="email"
-            name="email"
-            className="usuario-form-input"
-            value={formData.email}
-            onChange={handleChange}
-            required
-          />
-          <span className="usuario-form-error">Ingrese un email válido</span>
-        </div>
+          <div className="usuario-form-group">
+            <label>Apellido</label>
+            <input type="text" name="apellido" value={formData.apellido} onChange={handleChange} required />
+          </div>
 
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Teléfono</label>
-          <input
-            type="tel"
-            name="telefono"
-            className="usuario-form-input"
-            value={formData.telefono}
-            onChange={handleChange}
-            required
-          />
-          <span className="usuario-form-error">Este campo es requerido</span>
-        </div>
+          <div className="usuario-form-group">
+            <label>Usuario</label>
+            <input type="text" name="usuario" value={formData.usuario} onChange={handleChange} required disabled={!!formData.id} />
+          </div>
 
-        <div className="usuario-form-group">
-          <label className="usuario-form-label">Rol</label>
-          <select
-            name="rol"
-            className="usuario-form-select"
-            value={formData.rol}
-            onChange={handleChange}
-            required
-          >
-            <option value="">Seleccione un rol</option>
-            {rolesDisponibles.map((rol) => (
-              <option key={rol.id_rol} value={rol.nombre}>
-                {rol.nombre}
-              </option>
-            ))}
-          </select>
-          <span className="usuario-form-error">Seleccione un rol</span>
+          {!formData.id && (
+            <div className="usuario-form-group">
+              <label>Contraseña</label>
+              <input type="password" name="contraseña" value={formData.contraseña} onChange={handleChange} required />
+            </div>
+          )}
+
+          <div className="usuario-form-group">
+            <label>Email</label>
+            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+          </div>
+
+          <div className="usuario-form-group">
+            <label>Teléfono</label>
+            <input type="tel" name="telefono" value={formData.telefono} onChange={handleChange} required />
+          </div>
+
+          <div className="usuario-form-group">
+            <label>Rol</label>
+            <select name="rol" value={formData.rol} onChange={handleChange} required>
+              <option value="">Seleccione un rol</option>
+              {rolesDisponibles.map((rol) => (
+                <option key={rol.id_rol} value={rol.nombre}>
+                  {rol.nombre}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         <div className="usuario-form-actions">
-          <button
-            type="button"
-            className="usuario-form-button usuario-form-button--cancel"
-            onClick={onCancelar}
-          >
+          <button type="button" className="btn-cancelar" onClick={onCancelar}>
             Cancelar
           </button>
-          <button
-            type="submit"
-            className="usuario-form-button usuario-form-button--save"
-          >
+          <button type="submit" className="btn-guardar">
             Guardar
           </button>
         </div>

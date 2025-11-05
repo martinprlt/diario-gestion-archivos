@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { API_BASE_URL } from '../config/api.js'
-import '../assets/styles/articulos-revision.css';
+import '../assets/styles/articulos-aprobado.css';
 
 const ArticulosAprobados = () => {
   const [articulos, setArticulos] = useState([]);
@@ -18,7 +17,7 @@ const ArticulosAprobados = () => {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Respuesta de la API:', response.data); // Para depuración
+        console.log('Respuesta de la API:', response.data); 
         if (Array.isArray(response.data)) {
           setArticulos(response.data);
         } else {
@@ -61,8 +60,8 @@ const ArticulosAprobados = () => {
   if (error) return <p className="error-message">{error}</p>;
 
   return (
-    <div className="articulos-revision-container">
-      <h1>Artículos Aprobados</h1>
+    <div className="revisiones-container">
+      <h1 className="titulo-seccion">Artículos Aprobados</h1>
       {articulos.length === 0 ? (
         <p>No hay artículos aprobados en este momento.</p>
       ) : (

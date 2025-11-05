@@ -1,9 +1,11 @@
 import { pool } from "../config/db.js";
 import path from "path";
 import fs from "fs";
+import { logAction } from "../helpers/logAction.js";
+
 
 // =============================
-// SUBIR FOTO (Simplificado)
+// SUBIR FOTO 
 // =============================
 export const uploadFoto = async (req, res) => {
   try {
@@ -37,7 +39,7 @@ export const uploadFoto = async (req, res) => {
       req.file.mimetype,
       now,
       es_global === 'true' || es_global === true,
-      req.file.path,          // ruta_archivo (ESENCIAL)
+      path.join('uploads', 'fotos', req.file.filename).replace(/\\/g, '/'), // Guardar ruta relativa
       req.file.originalname   // nombre_original (ÚTIL)
     ];
 
@@ -45,6 +47,12 @@ export const uploadFoto = async (req, res) => {
     console.log("✅ Foto subida con éxito");
 
     res.status(201).json(result.rows[0]);
+
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'crear',
+  descripcion: `Subió foto "${titulo}"${categoria_id ? ` en categoría ${categoria_id}` : ''}${es_global ? ' (global)' : ' (personal)'}`
+});
 
   } catch (error) {
     console.error("❌ Error en uploadFoto:", error);
@@ -68,7 +76,12 @@ export const getMyFotos = async (req, res) => {
       [fotografo_id]
     );
     
-    res.json(result.rows);
+    const fotosConUrl = result.rows.map(foto => ({
+      ...foto,
+      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+    }));
+
+    res.json(fotosConUrl);
   } catch (error) {
     console.error("❌ Error al obtener fotos:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -82,22 +95,28 @@ export const getFotosGlobales = async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT f.*, 
-              u.nombre as fotografo_nombre, 
-              u.apellido as fotografo_apellido,
-              c.nombre as categoria_nombre 
+              u.nombre AS fotografo_nombre, 
+              u.apellido AS fotografo_apellido,
+              c.nombre AS categoria_nombre 
        FROM fotos f 
        LEFT JOIN usuarios u ON f.fotografo_id = u.id_usuario
        LEFT JOIN categorias c ON f.categoria_id = c.id_categoria
-       WHERE f.es_global = true
+       WHERE f.es_global = true -- ✅ filtro clave
        ORDER BY f.fecha DESC`
     );
-    
-    res.json(result.rows);
+
+    const fotosConUrl = result.rows.map(foto => ({
+      ...foto,
+      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`,
+    }));
+
+    res.json(fotosConUrl);
   } catch (error) {
     console.error("❌ Error al obtener fotos globales:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
 
 // =============================
 // CAMBIAR VISIBILIDAD (Personal ↔ Global)
@@ -132,6 +151,12 @@ export const toggleVisibilidadFoto = async (req, res) => {
       es_global: !foto.es_global
     });
 
+    await logAction({
+  usuario_id: userId,
+  accion: 'actualizar',
+  descripcion: `Cambió visibilidad de foto ID ${id} a ${!foto.es_global ? 'global' : 'personal'}`
+});
+
   } catch (error) {
     console.error("❌ Error al cambiar visibilidad:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -144,16 +169,25 @@ export const toggleVisibilidadFoto = async (req, res) => {
 export const deleteFoto = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = req.userId;
+    const { userId, user } = req; // Obtenemos el usuario completo desde verifyToken
 
-    // Verificar que la foto existe y pertenece al usuario
-    const fotoCheck = await pool.query(
-      `SELECT * FROM fotos WHERE id_foto = $1 AND fotografo_id = $2`,
-      [id, userId]
-    );
+    let fotoCheck;
+
+    // Si es admin, puede borrar cualquier foto. Si no, solo las suyas.
+    if (user.categoria === 'administrador' || user.categoria === 'admin') {
+      fotoCheck = await pool.query(
+        `SELECT * FROM fotos WHERE id_foto = $1`,
+        [id]
+      );
+    } else {
+      fotoCheck = await pool.query(
+        `SELECT * FROM fotos WHERE id_foto = $1 AND fotografo_id = $2`,
+        [id, userId]
+      );
+    }
 
     if (fotoCheck.rows.length === 0) {
-      return res.status(404).json({ message: "Foto no encontrada o no autorizada" });
+      return res.status(404).json({ message: "Foto no encontrada o no tienes permiso para eliminarla" });
     }
 
     const foto = fotoCheck.rows[0];
@@ -172,6 +206,12 @@ export const deleteFoto = async (req, res) => {
     await pool.query(`DELETE FROM fotos WHERE id_foto = $1`, [id]);
 
     res.json({ success: true, message: "Foto eliminada correctamente" });
+
+    await logAction({
+  usuario_id: userId,
+  accion: 'eliminar',
+  descripcion: `Eliminó foto ID ${id} ("${foto.titulo}")`
+});
 
   } catch (error) {
     console.error("❌ Error al eliminar foto:", error);
@@ -202,7 +242,13 @@ export const getFotoById = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    res.json(result.rows[0]);
+    const foto = result.rows[0];
+    const fotoConUrl = {
+      ...foto,
+      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+    };
+
+    res.json(fotoConUrl);
   } catch (error) {
     console.error("❌ Error al obtener foto:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -264,6 +310,18 @@ export const viewFoto = async (req, res) => {
     res.setHeader('Content-Type', tipo_archivo);
     res.sendFile(path.resolve(ruta_archivo));
 
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'descargar',
+  descripcion: `Descargó foto ID ${id}`
+});
+
+await logAction({
+  usuario_id: req.userId,
+  accion: 'visualizar',
+  descripcion: `Visualizó foto ID ${id}`
+});
+
   } catch (error) {
     console.error("❌ Error al visualizar foto:", error);
     res.status(500).json({ message: "Error interno del servidor" });
@@ -297,7 +355,13 @@ export const getFotosFiltradas = async (req, res) => {
     query += ` ORDER BY f.fecha DESC`;
     
     const result = await pool.query(query, params);
-    res.json(result.rows);
+    
+    const fotosConUrl = result.rows.map(foto => ({
+      ...foto,
+      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+    }));
+
+    res.json(fotosConUrl);
   } catch (error) {
     console.error('❌ Error al obtener fotos filtradas:', error);
     res.status(500).json({ message: "Error al obtener fotos" });

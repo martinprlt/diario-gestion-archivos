@@ -1,8 +1,8 @@
-//src/pages/ArticulosEnRevision.jsx
+// src/pages/ArticulosEnRevision.jsx
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import '../assets/styles/articulos-revision.css';
-import { API_BASE_URL } from '../config/api.js'
+import { API_BASE_URL } from '../config/api.js';
 
 function ArticulosEnRevision() {
   const [articulos, setArticulos] = useState([]);
@@ -11,25 +11,23 @@ function ArticulosEnRevision() {
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    fetchArticulosEnRevision();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (token) fetchArticulosEnRevision();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
+  // 🔹 Obtener artículos en revisión / rechazados / aprobados
   const fetchArticulosEnRevision = async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/articles/my`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { 'Authorization': `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Error al cargar artículos');
       const data = await response.json();
-      
-      // ✅ Filtrar artículos en revisión, rechazados y aprobados
-      const articulosFiltrados = data.filter(articulo => 
-        articulo.estado === 'en_revision' || 
-        articulo.estado === 'rechazado' || 
-        articulo.estado === 'aprobado'
+
+      const articulosFiltrados = data.filter(articulo =>
+        ['en_revision', 'rechazado', 'aprobado'].includes(articulo.estado)
       );
-      
+
       setArticulos(articulosFiltrados);
     } catch (err) {
       console.error('Error:', err);
@@ -39,6 +37,7 @@ function ArticulosEnRevision() {
     }
   };
 
+  // 🔹 Descargar archivo
   const handleDownload = async (id, articulo) => {
     if (!articulo?.ruta_archivo || !articulo?.nombre_archivo) {
       alert('⚠️ Este artículo no tiene archivo asociado');
@@ -49,8 +48,8 @@ function ArticulosEnRevision() {
       const response = await fetch(`${API_BASE_URL}/api/articles/download/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+        },
       });
 
       if (!response.ok) {
@@ -61,13 +60,15 @@ function ArticulosEnRevision() {
       const blob = await response.blob();
       const fileExtension = articulo.nombre_archivo.split('.').pop() || '';
       const mimeTypes = {
-        'doc': 'application/msword',
-        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'pdf': 'application/pdf',
-        'txt': 'text/plain'
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        pdf: 'application/pdf',
+        txt: 'text/plain',
       };
 
-      const url = window.URL.createObjectURL(new Blob([blob], { type: mimeTypes[fileExtension] || 'application/octet-stream' }));
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeTypes[fileExtension] || 'application/octet-stream' })
+      );
       const link = document.createElement('a');
       link.href = url;
       link.download = articulo.nombre_original || `articulo_${id}.${fileExtension}`;
@@ -83,6 +84,7 @@ function ArticulosEnRevision() {
     }
   };
 
+  // 🔹 Visualizar archivo
   const handleView = async (id, articulo) => {
     if (!articulo?.ruta_archivo) {
       alert('⚠️ Este artículo no tiene archivo asociado');
@@ -93,8 +95,8 @@ function ArticulosEnRevision() {
       const response = await fetch(`${API_BASE_URL}/api/articles/view/${id}`, {
         headers: {
           'Authorization': `Bearer ${token}`,
-          'Pragma': 'no-cache'
-        }
+          'Pragma': 'no-cache',
+        },
       });
 
       if (!response.ok) {
@@ -107,75 +109,89 @@ function ArticulosEnRevision() {
       const url = window.URL.createObjectURL(new Blob([blob], { type: fileType }));
 
       const viewer = window.open(url, '_blank');
-      if (!viewer) alert('⚠️ Por favor desbloquea ventanas emergentes para visualizar el archivo');
+      if (!viewer)
+        alert('⚠️ Por favor desbloquea ventanas emergentes para visualizar el archivo');
     } catch (err) {
       console.error('❌ Error al visualizar:', err);
       alert(`❌ ${err.message || 'Error al abrir el archivo'}`);
     }
   };
 
+  // 🔹 Reenviar artículo rechazado
   const handleReenviar = async (id, titulo) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/articles/${id}/send-to-review`, {
         method: 'POST',
-        headers: { 
+        headers: {
           'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          'Content-Type': 'application/json',
+        },
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
 
-      // Actualizar el estado local del artículo
-      setArticulos(prev => prev.map(item => 
-        item.id_articulo === id 
-          ? { ...item, estado: 'en_revision', fecha_modificacion: new Date().toISOString() }
-          : item
-      ));
-      
+      setArticulos(prev =>
+        prev.map(item =>
+          item.id_articulo === id
+            ? { ...item, estado: 'en_revision', fecha_modificacion: new Date().toISOString() }
+            : item
+        )
+      );
+
       alert(`✅ "${titulo}" reenviado a revisión exitosamente`);
     } catch (err) {
       alert(`❌ Error: ${err.message}`);
-      console.error("Error al reenviar a revisión:", err);
+      console.error('Error al reenviar a revisión:', err);
     }
   };
 
-  const getEstadoBadgeClass = (estado) => {
+  // 🔹 Clases visuales para el estado
+  const getEstadoBadgeClass = estado => {
     switch (estado) {
-      case 'en_revision': return 'estado-revision';
-      case 'rechazado': return 'estado-rechazado';
-      case 'aprobado': return 'estado-aprobado';
-      default: return 'estado-default';
+      case 'en_revision':
+        return 'estado-revision';
+      case 'rechazado':
+        return 'estado-rechazado';
+      case 'aprobado':
+        return 'estado-aprobado';
+      default:
+        return 'estado-default';
     }
   };
 
-  const getEstadoTexto = (estado) => {
+  const getEstadoTexto = estado => {
     switch (estado) {
-      case 'en_revision': return 'En Revisión';
-      case 'rechazado': return 'Rechazado';
-      case 'aprobado': return 'Aprobado';
-      default: return estado;
+      case 'en_revision':
+        return 'En Revisión';
+      case 'rechazado':
+        return 'Rechazado';
+      case 'aprobado':
+        return 'Aprobado';
+      default:
+        return estado;
     }
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'N/A';
-
     try {
       const date = new Date(dateString);
-      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return isNaN(date.getTime())
+        ? 'N/A'
+        : date.toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
     } catch {
       return 'N/A';
     }
   };
 
+  // 🔹 Render principal
   if (loading) return <div className="loading">Cargando artículos...</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -200,37 +216,41 @@ function ArticulosEnRevision() {
               </tr>
             </thead>
             <tbody>
-              {articulos.map((articulo) => (
+              {articulos.map(articulo => (
                 <tr key={articulo.id_articulo}>
-                  <td>{articulo.titulo}</td>
+                  <td className="titulo-columna">{articulo.titulo}</td>
                   <td>{articulo.categoria_nombre || 'Sin categoría'}</td>
                   <td>
-                    <span className={`estado-badge ${getEstadoBadgeClass(articulo.estado)}`}>
+                    <span
+                      className={`estado-badge ${getEstadoBadgeClass(
+                        articulo.estado
+                      )}`}
+                    >
                       {getEstadoTexto(articulo.estado)}
                     </span>
                   </td>
                   <td>{formatDate(articulo.fecha_creacion)}</td>
                   <td>{formatDate(articulo.fecha_modificacion)}</td>
                   <td className="acciones">
-                    <button 
-                      onClick={() => handleDownload(articulo.id_articulo, articulo)} 
-                      className="btn-accion"
+                    <button
+                      onClick={() => handleDownload(articulo.id_articulo, articulo)}
+                      className="btn-accion descargar"
                     >
-                      Descargar
+                      📥 Descargar
                     </button>
-                    <button 
-                      onClick={() => handleView(articulo.id_articulo, articulo)} 
-                      className="btn-accion"
+                    <button
+                      onClick={() => handleView(articulo.id_articulo, articulo)}
+                      className="btn-accion leer"
                     >
-                      Leer
+                      👁️ Leer
                     </button>
-                    
+
                     {articulo.estado === 'rechazado' && (
-                      <button 
-                        onClick={() => handleReenviar(articulo.id_articulo, articulo.titulo)} 
+                      <button
+                        onClick={() => handleReenviar(articulo.id_articulo, articulo.titulo)}
                         className="btn-reenviar"
                       >
-                        Reenviar
+                        🔄 Reenviar
                       </button>
                     )}
                   </td>

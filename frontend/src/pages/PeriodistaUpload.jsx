@@ -1,14 +1,14 @@
 // 📁 src/pages/PeriodistaUpload.jsx
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
-import { useCategorias } from '../context/CategoriasContext.jsx'; // 👈 NUEVO
+import { useCategorias } from '../context/CategoriasContext.jsx';
 import '../assets/styles/periodista-upload.css';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { API_BASE_URL } from '../config/api.js'
+import { API_BASE_URL } from '../config/api.js';
 
 export default function PeriodistaUpload() {
   const { token } = useContext(AuthContext);
-  const { categorias, loading, error } = useCategorias(); // 👈 USAR CONTEXT
+  const { categorias, loading, error } = useCategorias();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -18,37 +18,37 @@ export default function PeriodistaUpload() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isModoEdicion, setIsModoEdicion] = useState(false);
   const [articuloEditando, setArticuloEditando] = useState(null);
-  
 
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔹 Verificar si estamos en modo edición o modificación tras rechazo
+  // 🔹 Detectar modo edición (por rechazo o modificación)
   useEffect(() => {
     if (location.state && location.state.articulo) {
       const articulo = location.state.articulo;
       const esModificacion = location.state.modo === 'modificacion';
-      
+
       setIsModoEdicion(true);
       setArticuloEditando(articulo);
       setTitle(articulo.titulo);
       setCategory(articulo.categoria_id?.toString() || '');
-      
+
       if (esModificacion) {
-        setUploadStatus({ 
-          info: '⚠️ Este artículo fue rechazado. Modifícalo y envíalo nuevamente a revisión.' 
+        setUploadStatus({
+          info: '⚠️ Este artículo fue rechazado. Modifícalo y envíalo nuevamente a revisión.'
         });
       }
     }
   }, [location.state]);
 
-  // 🔹 Establecer categoría por defecto cuando se cargan las categorías
+  // 🔹 Asignar categoría por defecto
   useEffect(() => {
     if (categorias.length > 0 && !category) {
       setCategory(categorias[0].id_categoria.toString());
     }
   }, [categorias, category]);
 
+  // 🔹 Manejar archivo y vista previa
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
@@ -61,6 +61,7 @@ export default function PeriodistaUpload() {
     }
   };
 
+  // 🔹 Enviar artículo nuevo o editado
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -100,13 +101,12 @@ export default function PeriodistaUpload() {
       });
 
       const data = await response.json();
-
       if (!response.ok) throw new Error(data.message || 'Error al subir');
 
-      setUploadStatus({ 
-        success: isModoEdicion 
-          ? 'Artículo actualizado correctamente' 
-          : 'Artículo subido correctamente' 
+      setUploadStatus({
+        success: isModoEdicion
+          ? 'Artículo actualizado correctamente'
+          : 'Artículo subido correctamente'
       });
       setIsSubmitted(true);
     } catch (err) {
@@ -128,11 +128,9 @@ export default function PeriodistaUpload() {
       <div className="upload-header">
         {isModoEdicion ? 'MODIFICAR ARTÍCULO' : 'SUBIR ARTÍCULO'}
       </div>
-      
+
       <div className="upload-wrapper">
-        <aside className="sidebar">
-          {/* Opciones del sidebar si las necesitas */}
-        </aside>
+        <aside className="sidebar">{/* opcional */}</aside>
 
         <main className="upload-main">
           <form onSubmit={handleSubmit} className="upload-form">
@@ -158,10 +156,9 @@ export default function PeriodistaUpload() {
                 />
               </div>
 
-              {/* 👈 SELECT DE CATEGORÍAS ACTUALIZADO */}
               <div className="form-group">
                 <label htmlFor="category">Categoría *</label>
-                
+
                 {loading ? (
                   <div className="loading-categorias">🔄 Cargando categorías...</div>
                 ) : error ? (
@@ -183,7 +180,7 @@ export default function PeriodistaUpload() {
                     ))}
                   </select>
                 )}
-                
+
                 {!category && categorias.length > 0 && (
                   <span className="field-error-text">Debes seleccionar una categoría</span>
                 )}
@@ -206,10 +203,9 @@ export default function PeriodistaUpload() {
                   </label>
                 </div>
                 <p className="file-hint">
-                  {isModoEdicion 
+                  {isModoEdicion
                     ? 'Selecciona un nuevo archivo para reemplazar el actual (opcional)'
-                    : 'Formatos aceptados: PDF, DOC, DOCX'
-                  }
+                    : 'Formatos aceptados: PDF, DOC, DOCX'}
                 </p>
               </div>
 
@@ -222,14 +218,19 @@ export default function PeriodistaUpload() {
 
               {!isSubmitted ? (
                 <div className="form-actions">
-                  <button type="submit" className="upload-button" disabled={uploadStatus?.loading}>
-                    {uploadStatus?.loading 
-                      ? 'Procesando...' 
-                      : isModoEdicion ? 'Actualizar artículo' : 'Subir artículo'
-                    }
+                  <button
+                    type="submit"
+                    className="upload-button"
+                    disabled={uploadStatus?.loading}
+                  >
+                    {uploadStatus?.loading
+                      ? 'Procesando...'
+                      : isModoEdicion
+                      ? 'Actualizar artículo'
+                      : 'Subir artículo'}
                   </button>
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     className="cancel-button"
                     onClick={handleCancel}
                     disabled={uploadStatus?.loading}
@@ -241,8 +242,8 @@ export default function PeriodistaUpload() {
                 <div className="upload-success">
                   <p>{uploadStatus.success}</p>
                   <div className="success-actions">
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="new-upload-button"
                       onClick={() => {
                         setTitle('');
@@ -257,8 +258,8 @@ export default function PeriodistaUpload() {
                     >
                       {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
                     </button>
-                    <button 
-                      type="button" 
+                    <button
+                      type="button"
                       className="back-button"
                       onClick={handleCancel}
                     >
@@ -273,10 +274,7 @@ export default function PeriodistaUpload() {
               <h2>Vista previa</h2>
               <div className="preview-box">
                 {preview ? (
-                  <iframe
-                    src={preview}
-                    title="Vista previa del documento"
-                  />
+                  <iframe src={preview} title="Vista previa del documento" />
                 ) : (
                   <div className="preview-placeholder">
                     {file ? (

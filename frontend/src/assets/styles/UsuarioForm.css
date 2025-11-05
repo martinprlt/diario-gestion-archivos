@@ -1,54 +1,127 @@
-/* UsuarioForm.css */
-.usuario-form-container {
-    padding: 20px;
-    background: white;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    max-width: 500px;
-    margin: 20px auto;
+/* Fondo modal */
+.usuario-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(42, 116, 42, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
 }
 
-.form-group {
-    margin-bottom: 15px;
+/* Contenedor del formulario */
+.usuario-form {
+  background: #f6fff6;
+  border: 2px solid #cfe9cf;
+  border-radius: 14px;
+  padding: 2rem 2.5rem;
+  width: 80%;
+  max-width: 600px;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.25);
+  animation: fadeIn 0.25s ease-in-out;
 }
 
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    color: #333;
+/* Título */
+.usuario-form h2 {
+  text-align: center;
+  font-family: "Georgia", "Times New Roman", serif;
+  color: #1d4b2e;
+  margin-bottom: 1.5rem;
 }
 
-.form-group input,
-.form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
+/* Layout de campos */
+.usuario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.2rem;
 }
 
-.form-buttons {
-    display: flex;
-    gap: 10px;
-    justify-content: flex-end;
-    margin-top: 20px;
+.usuario-form-group {
+  display: flex;
+  flex-direction: column;
 }
 
-.btn-guardar {
-    background: #4CAF50;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+.usuario-form-group label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #226b37;
+  margin-bottom: 0.4rem;
+}
+
+.usuario-form-group input[type="text"],
+.usuario-form-group select {
+  width: 80%;
+  padding: 1.0rem 0.7rem;
+  border-radius: 8px;
+  border: 1.0px solid #b6dcb8;
+  outline: none;
+  background: #ffffff;
+  transition: all 0.2s ease;
+}
+
+.usuario-form-group input:focus,
+.usuario-form-group select:focus {
+  border-color: #3c7a4f;
+  box-shadow: 0 0 4px rgba(60, 122, 79, 0.3);
+}
+
+/* Botones */
+.usuario-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.8rem;
 }
 
 .btn-cancelar {
-    background: #f44336;
-    color: white;
-    padding: 10px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  background: #e8f2ea;
+  color: #1b3d26;
+  border: 1px solid #c8e0ca;
+  border-radius: 8px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.btn-cancelar:hover {
+  background: #d9ebdc;
+}
+
+.btn-guardar {
+  background: #2e6e41;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-guardar:hover {
+  background: #255d35;
+}
+
+thead {
+    background-color: #1b5139;
+    color: rgb(242, 245, 243);
+}
+/* Animación modal */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .usuario-grid {
+    grid-template-columns: 1fr;
+  }
 }

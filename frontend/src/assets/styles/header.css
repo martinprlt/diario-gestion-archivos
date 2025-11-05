@@ -1,23 +1,82 @@
-/* header.css */
+/* login.css */
 
-.header {
-  background-color: #d9dde0; /* Gris claro de la paleta */
-  padding: 1rem 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  box-shadow: 0 2px 4px rgba(40, 68, 35, 0.15);
-  border-bottom: 2px solid #a9c3ba;
+* {
+  box-sizing: border-box; /* Asegura que padding y border no alteren el ancho total */
 }
 
-
-.logo-container {
+.login-container {
   display: flex;
-  align-items: center;
+  justify-content: center;
+  align-items: flex-start;
+  padding-top: 4rem;
+  padding-bottom: 4rem;
+  margin-top: 1rem;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f7fff8, #e8f5ec);
 }
 
-.logo {
-  height: 50px;
-  width: auto;
-  object-fit: contain;
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 420px;
+  background-color: #ffffff;
+  padding: 2.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(30, 49, 27, 0.2);
+  border: 1px solid #a9c3ba;
+}
+
+.login-form h2 {
+  margin: 0;
+  text-align: center;
+  color: #1e311b;
+}
+
+.login-form input,
+.login-form button {
+  width: 100%; /* Uniformidad total */
+  padding: 0.75rem;
+  font-size: 1rem;
+  border-radius: 4px;
+}
+
+.login-form input {
+  border: 1px solid #a9c3ba;
+  background-color: #ffffff;
+  color: #1e311b;
+}
+
+.login-form input:focus {
+  outline: none;
+  border-color: #809f39;
+  box-shadow: 0 0 5px #809f39;
+}
+
+.login-form button {
+  background-color: #274a2a;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.login-form button:hover {
+  background-color: #1e311b;
+}
+
+.login-options {
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.link-recuperar {
+  color: #809f39;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.link-recuperar:hover {
+  text-decoration: underline;
+  color: #274a2a;
 }

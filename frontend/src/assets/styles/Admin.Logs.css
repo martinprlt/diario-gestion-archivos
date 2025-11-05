@@ -1,5 +1,5 @@
 /* ============================= */
-/* GESTIÓN DE ROLES - DISEÑO MODERNO */
+/* ADMIN LOGS - DISEÑO MODERNO */
 /* ============================= */
 
 /* ------------------ */
@@ -23,15 +23,15 @@
 /* ------------------ */
 /* Contenedor principal */
 /* ------------------ */
-.gestion-roles-container {
+.admin-logs-container {
   min-height: 100vh;
-  background: linear-gradient(180deg, #f9fff9, #ecf6ef);
+ background: linear-gradient(180deg, #f9fff9, #ecf6ef);;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   color: var(--gris-oscuro);
   padding: 2rem 1rem;
 }
 
-.gestion-roles-content {
+.admin-logs-content {
   max-width: 1400px;
   margin: 0 auto;
 }
@@ -65,6 +65,38 @@
   font-size: 0.95rem;
 }
 
+/* Botón refresh */
+.btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--verde-medio);
+  color: var(--blanco);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  box-shadow: var(--sombra-suave);
+}
+
+.btn-refresh:hover:not(:disabled) {
+  background: var(--verde-claro);
+  transform: translateY(-2px);
+  box-shadow: 0 0 10px rgba(22, 101, 52, 0.4);
+}
+
+.btn-refresh:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-refresh.refreshing {
+  background: var(--verde-brillante);
+}
+
 /* ------------------ */
 /* Grid de estadísticas */
 /* ------------------ */
@@ -79,7 +111,7 @@
   background: var(--blanco);
   border-radius: 1rem;
   padding: 1.75rem;
-  border-left: 5px solid var(--verde-medio);
+  border-left: 5px solid;
   transition: all 0.3s ease;
   box-shadow: var(--sombra-suave);
 }
@@ -88,6 +120,10 @@
   transform: translateY(-4px);
   box-shadow: var(--sombra-fuerte);
 }
+
+.stat-card.border-blue { border-color: #2563eb; }
+.stat-card.border-green { border-color: var(--verde-medio); }
+.stat-card.border-purple { border-color: #7c3aed; }
 
 .stat-header {
   display: flex;
@@ -105,9 +141,12 @@
 }
 
 .stat-icon {
-  color: var(--verde-brillante);
   opacity: 0.8;
 }
+
+.stat-icon.text-blue { color: #2563eb; }
+.stat-icon.text-green { color: var(--verde-brillante); }
+.stat-icon.text-purple { color: #7c3aed; }
 
 .stat-value {
   font-size: 2.5rem;
@@ -122,74 +161,19 @@
   color: var(--gris-medio);
 }
 
-.stat-meta {
-  display: flex;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  color: var(--gris-medio);
-  margin-top: 0.5rem;
-}
-
 /* ------------------ */
-/* Cards de roles */
+/* Contenedor de filtros */
 /* ------------------ */
-.roles-resumen {
-  margin-bottom: 2.5rem;
-}
-
-.roles-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1.5rem;
-}
-
-.rol-card {
+.filter-container {
   background: var(--blanco);
   border-radius: 1rem;
   padding: 1.75rem;
-  border-left: 5px solid;
-  transition: all 0.3s ease;
   box-shadow: var(--sombra-suave);
+  margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
 }
 
-.rol-card:hover {
-  transform: translateY(-4px);
-  box-shadow: var(--sombra-fuerte);
-}
-
-.rol-card.administrador { border-color: #dc2626; }
-.rol-card.editor { border-color: #ea580c; }
-.rol-card.periodista { border-color: var(--verde-medio); }
-.rol-card.fotografo { border-color: #7c3aed; }
-
-.rol-card h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--verde-oscuro);
-  margin-bottom: 0.5rem;
-}
-
-.rol-card p {
-  font-size: 0.9rem;
-  color: var(--gris-medio);
-  margin-bottom: 0.75rem;
-  line-height: 1.5;
-}
-
-.rol-card small {
-  color: var(--verde-brillante);
-  font-weight: 600;
-  font-size: 0.85rem;
-}
-
-/* ------------------ */
-/* Tabla de usuarios */
-/* ------------------ */
-.reasignacion-roles {
-  margin-bottom: 3rem;
-}
-
-.section-header {
+.filter-header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -197,13 +181,79 @@
   color: var(--verde-oscuro);
 }
 
-.section-header h2 {
+.filter-header h2 {
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0;
 }
 
-.usuarios-table-container {
+.filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.filter-group label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--verde-oscuro);
+  margin-bottom: 0.5rem;
+}
+
+.filter-group select,
+.filter-group input {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  font-size: 0.95rem;
+  color: var(--gris-oscuro);
+  background: var(--blanco);
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.filter-group select:focus,
+.filter-group input:focus {
+  border-color: var(--verde-medio);
+  box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.btn-clear {
+  background: #f3f4f6;
+  color: var(--gris-oscuro);
+  border: 1.5px solid #d1d5db;
+  border-radius: 0.75rem;
+  padding: 0.65rem 1.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.btn-clear:hover {
+  background: var(--verde-medio);
+  color: var(--blanco);
+  border-color: var(--verde-medio);
+  transform: translateY(-2px);
+}
+
+/* ------------------ */
+/* Tabla de logs */
+/* ------------------ */
+.table-container {
   background: var(--blanco);
   border-radius: 1rem;
   box-shadow: var(--sombra-suave);
@@ -211,17 +261,17 @@
   border: 1px solid #e5e7eb;
 }
 
-.usuarios-table {
+.logs-table {
   width: 100%;
   border-collapse: collapse;
 }
 
-.usuarios-table thead {
+.logs-table thead {
   background: var(--gris-claro);
   border-bottom: 2px solid #e5e7eb;
 }
 
-.usuarios-table th {
+.logs-table th {
   padding: 1rem 1.25rem;
   font-size: 0.8rem;
   font-weight: 700;
@@ -231,25 +281,51 @@
   letter-spacing: 0.5px;
 }
 
-.usuarios-table tbody tr {
+.logs-table tbody tr {
   border-bottom: 1px solid #f3f4f6;
   transition: background 0.2s ease;
 }
 
-.usuarios-table tbody tr:hover {
+.logs-table tbody tr:hover {
   background: #f9fafb;
 }
 
-.usuarios-table td {
+.logs-table td {
   padding: 1rem 1.25rem;
   font-size: 0.9rem;
   color: var(--gris-oscuro);
-  vertical-align: middle;
+  vertical-align: top;
 }
 
-/* ------------------ */
+/* Celda de fecha */
+.date-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.date-main {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--verde-oscuro);
+}
+
+.date-icon {
+  color: var(--verde-brillante);
+}
+
+.date-relative {
+  font-size: 0.9rem;
+}
+
+.date-full {
+  font-size: 0.75rem;
+  color: var(--gris-medio);
+}
+
 /* Celda de usuario */
-/* ------------------ */
 .user-cell {
   display: flex;
   align-items: center;
@@ -269,7 +345,6 @@
   background: linear-gradient(135deg, var(--verde-medio), var(--verde-brillante));
   flex-shrink: 0;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-transform: uppercase;
 }
 
 .user-info {
@@ -289,10 +364,8 @@
   color: var(--gris-medio);
 }
 
-/* ------------------ */
-/* Badges de rol */
-/* ------------------ */
-.badge {
+/* Badge de acción */
+.action-badge {
   display: inline-block;
   padding: 0.4rem 0.9rem;
   font-size: 0.75rem;
@@ -300,85 +373,96 @@
   border-radius: 999px;
   letter-spacing: 0.5px;
   border: 1.5px solid;
-  text-transform: capitalize;
 }
 
-.badge.rol-administrador {
-  background: #fef2f2;
-  color: #dc2626;
+.action-badge.bg-green {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.action-badge.bg-blue {
+  background: #dbeafe;
+  color: #1d4ed8;
+  border-color: #bfdbfe;
+}
+
+.action-badge.bg-red {
+  background: #fee2e2;
+  color: #b91c1c;
   border-color: #fecaca;
 }
 
-.badge.rol-editor {
-  background: #fff7ed;
-  color: #ea580c;
+.action-badge.bg-emerald {
+  background: #d1fae5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.action-badge.bg-orange {
+  background: #ffedd5;
+  color: #c2410c;
   border-color: #fed7aa;
 }
 
-.badge.rol-periodista {
-  background: #f0fdf4;
-  color: var(--verde-medio);
-  border-color: #bbf7d0;
-}
-
-.badge.rol-fotografo {
-  background: #faf5ff;
-  color: #7c3aed;
+.action-badge.bg-purple {
+  background: #ede9fe;
+  color: #5b21b6;
   border-color: #ddd6fe;
 }
 
-/* ------------------ */
-/* Selects y botones */
-/* ------------------ */
-.rol-select {
-  width: 100%;
-  padding: 0.65rem 1rem;
-  border: 1.5px solid #d1d5db;
-  border-radius: 0.75rem;
-  font-size: 0.9rem;
+.action-badge.bg-gray {
+  background: #f3f4f6;
+  color: #374151;
+  border-color: #d1d5db;
+}
+
+.action-badge.bg-yellow {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+
+.action-badge.bg-indigo {
+  background: #e0e7ff;
+  color: #3730a3;
+  border-color: #c7d2fe;
+}
+
+/* Descripción */
+.description-cell {
+  max-width: 400px;
+  line-height: 1.5;
   color: var(--gris-oscuro);
-  background: var(--blanco);
-  transition: all 0.3s ease;
-  outline: none;
-  cursor: pointer;
-}
-
-.rol-select:focus {
-  border-color: var(--verde-medio);
-  box-shadow: 0 0 0 3px rgba(22, 101, 52, 0.1);
-}
-
-.btn-actualizar {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--verde-medio);
-  color: var(--blanco);
-  border: none;
-  border-radius: 0.75rem;
-  padding: 0.65rem 1.25rem;
-  font-weight: 600;
-  font-size: 0.9rem;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  box-shadow: var(--sombra-suave);
-}
-
-.btn-actualizar:hover:not(:disabled) {
-  background: var(--verde-claro);
-  transform: translateY(-2px);
-  box-shadow: 0 0 10px rgba(22, 101, 52, 0.4);
-}
-
-.btn-actualizar:disabled {
-  background: #9bb89b;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
 }
 
 /* ------------------ */
-/* Estados de carga y error */
+/* Sin resultados */
+/* ------------------ */
+.no-results {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--gris-medio);
+}
+
+.no-results-icon {
+  margin: 0 auto 1rem;
+  color: #d1d5db;
+}
+
+.no-results p:first-of-type {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--gris-oscuro);
+  margin-bottom: 0.5rem;
+}
+
+.no-results p:last-of-type {
+  font-size: 0.9rem;
+}
+
+/* ------------------ */
+/* Loading */
 /* ------------------ */
 .loading-container {
   display: flex;
@@ -395,20 +479,7 @@
   font-size: 1.1rem;
 }
 
-.error-message {
-  background: #fef2f2;
-  color: #dc2626;
-  padding: 1rem 1.5rem;
-  border-radius: 0.75rem;
-  margin-bottom: 1.5rem;
-  border: 1px solid #fecaca;
-  font-weight: 500;
-  text-align: center;
-}
-
-/* ------------------ */
 /* Animación spin */
-/* ------------------ */
 .spin {
   animation: spin 1s linear infinite;
 }
@@ -422,14 +493,17 @@
 /* RESPONSIVE DESIGN */
 /* ------------------ */
 @media (max-width: 1024px) {
-  .stats-grid,
-  .roles-grid {
+  .stats-grid {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  }
+  
+  .filter-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 }
 
 @media (max-width: 768px) {
-  .gestion-roles-container {
+  .admin-logs-container {
     padding: 1rem 0.5rem;
   }
 
@@ -444,34 +518,40 @@
     font-size: 1.5rem;
   }
 
-  .stats-grid,
-  .roles-grid {
+  .btn-refresh {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .stats-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
   }
 
-  .stat-card,
-  .rol-card {
+  .stat-card {
     padding: 1.5rem;
   }
 
-  .usuarios-table-container {
+  .filter-container {
+    padding: 1.5rem;
+  }
+
+  .filter-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .table-container {
     overflow-x: auto;
   }
 
-  .usuarios-table {
+  .logs-table {
     min-width: 700px;
   }
 
-  .usuarios-table th,
-  .usuarios-table td {
+  .logs-table th,
+  .logs-table td {
     padding: 0.75rem 0.85rem;
-  }
-
-  .user-cell {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
   }
 }
 
@@ -484,12 +564,13 @@
     font-size: 2rem;
   }
 
-  .section-header h2 {
-    font-size: 1.1rem;
+  .user-cell {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
-  .badge {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.7rem;
+  .no-results {
+    padding: 3rem 1rem;
   }
 }

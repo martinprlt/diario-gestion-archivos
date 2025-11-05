@@ -2,7 +2,7 @@ import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/articulos-revision.css";
-import { API_BASE_URL } from '../config/api.js'
+import { API_BASE_URL } from "../config/api.js";
 
 function RevisionEditor() {
   const [articulos, setArticulos] = useState([]);

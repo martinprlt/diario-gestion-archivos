@@ -19,6 +19,7 @@ import ArticulosEnRevision from './pages/ArticulosEnRevision.jsx';
 import ArticulosAprobados from './pages/ArticulosAprobados.jsx';
 import ConfiguracionUsuario from './pages/ConfiguracionUsuario';
 import RevisionEditor from './pages/RevisionEditor';
+import AdminLogs from './pages/AdminLogs.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { DashboardAdmin } from './pages/DashboardAdmin.jsx';
 import ChatPage from './pages/ChatPage.jsx'; // Importar ChatPage
@@ -34,13 +35,13 @@ function GlobalHeartbeat() {
 
 // ✅ Wrapper para activar heartbeat solo si hay usuario
 function AppContent() {
-  const { usuario } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   
   return (
     <>
       <Navbar />
       {/* ✅ Si hay usuario logueado, activar heartbeat global */}
-      {usuario && <GlobalHeartbeat />}
+      {user && <GlobalHeartbeat />}
       
       <Routes>
         <Route path="/" element={<Presentacion />} />
@@ -77,6 +78,10 @@ function AppContent() {
         </Route>
 
         <Route element={<ProtectedRoute allow={['administrador']} />}>
+          <Route path="/admin/logs" element={<AdminLogs />} />
+          </Route>
+
+        <Route element={<ProtectedRoute allow={['administrador']} />}>
           <Route path="/gestion-categorias" element={<GestionCategorias />} />
         </Route>
 
@@ -99,7 +104,7 @@ function AppContent() {
 
         {/* Ruta para el Chat */}
         <Route element={<ProtectedRoute allow={['periodista', 'fotografo', 'editor', 'administrador']} />}>
-          <Route path="/chat" element={<ChatPage userId={usuario?.id_usuario} />} />
+          <Route path="/chat" element={<ChatPage userId={user?.id_usuario} />} />
         </Route>
 
         <Route path="/no-autorizado" element={<h2>No autorizado</h2>} />
