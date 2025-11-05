@@ -32,13 +32,13 @@ app.use(
 );
 
 const allowedOrigins = [
-  'https://gestor-independiente.netlify.app',
+  'https://independientegestion-xebssdir7-martinprlt02-4741s-projects.vercel.app',
   'http://localhost:5173',
   'http://localhost:5174'
 ];
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://gestor-independiente.netlify.app'],
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://independientegestion-xebssdir7-martinprlt02-4741s-projects.vercel.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['*'], 
