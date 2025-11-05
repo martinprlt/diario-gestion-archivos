@@ -6,7 +6,6 @@ import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
 
-
 // Rutas
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
@@ -22,9 +21,9 @@ import logsRoutes from "./routes/logs.routes.js";
 
 
 const app = express();
-app.set('trust proxy', 1);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// 🔐 1. HELMET - Headers de seguridad
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -33,16 +32,17 @@ app.use(
 
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://sdgi-elindependiente.netlify.app'],
+  origin: ['http://localhost:5173', 'http://localhost:5174', 'https://sdgi-elindependiente.netlify.app', 'https://diario-gestion-archivos-production.up.railway.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['*'], 
+  allowedHeaders: ['*'], // Permite todos los headers temporalmente
   optionsSuccessStatus: 200
 }));
 
+// 🔐 3. RATE LIMITING PARA LOGIN (Protección contra fuerza bruta)
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, 
-  max: 5, 
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 intentos de login cada 15 minutos
   message: {
     error: 'Demasiados intentos de login. Por seguridad, espera 15 minutos.',
   },
@@ -50,11 +50,15 @@ const loginLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// 🧩 Middlewares básicos
 app.use(express.json());
 
-app.use('/api/auth/login', loginLimiter); 
-app.use('/api/auth', authRoutes); 
+// 🛣️ RUTAS CON SEGURIDAD APLICADA
+// Login con rate limiting ESPECÍFICO
+app.use('/api/auth/login', loginLimiter); // Limita solo /login
+app.use('/api/auth', authRoutes); // Rutas normales de auth
 
+// Resto de rutas
 app.use('/api/articles', articleRoutes);
 app.use('/api/fotos', fotoRoutes);
 app.use('/api', userRoutes);
@@ -65,11 +69,15 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/admin', onlineUsersRoutes);
 app.use("/api/logs", logsRoutes); 
 
+// 📂 Ruta estática unificada para todos los archivos subidos
+// Sirve el contenido de la carpeta `backend/uploads` en la ruta `/uploads`
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
+// 🌱 Rutas básicas
 app.get('/', (_req, res) => res.send('Backend Diario Virtual funcionando 👌'));
 app.get('/test', (req, res) => res.json({ message: 'Test OK' }));
 
+// 🧯 Middleware de errores
 app.use(errorHandler);
 
 
