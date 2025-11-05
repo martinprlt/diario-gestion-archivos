@@ -70,8 +70,8 @@ function RevisionEditor() {
       const comentario = comentarios[articuloId] || "";
       const endpoint =
         decision === "approve"
-          ? `${API_BASE_URL}/api/article/${articuloId}/approve`
-          : `${API_BASE_URL}/api/article/${articuloId}/reject`;
+          ? `${API_BASE_URL}/api/articles/${articuloId}/approve`
+          : `${API_BASE_URL}/api/articles/${articuloId}/reject`;
 
       const res = await fetch(endpoint, {
         method: "POST",
