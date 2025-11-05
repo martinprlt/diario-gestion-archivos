@@ -31,14 +31,9 @@ app.use(
   })
 );
 
-const allowedOrigins = [
-  'https://sdgi-elindependiente.netlify.app/',
-  'http://localhost:5173',
-  'http://localhost:5174'
-];
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://sdgi-elindependiente.netlify.app/'],
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://sdgi-elindependiente.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['*'], 
