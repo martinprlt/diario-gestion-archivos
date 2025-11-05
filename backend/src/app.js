@@ -32,13 +32,13 @@ app.use(
 );
 
 const allowedOrigins = [
-  'https://independientegestion.netlify.app',
+  'https://gestor-independiente.netlify.app',
   'http://localhost:5173',
   'http://localhost:5174'
 ];
 
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://independientegestion.netlify.app'],
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://gestor-independiente.netlify.app'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['*'], 
