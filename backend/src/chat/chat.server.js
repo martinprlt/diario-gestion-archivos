@@ -1,6 +1,7 @@
 // src/chat/chat.server.js
 import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
+import jwt from 'jsonwebtoken';
 
 export const initChatServer = (httpServer) => {
   console.log('🔧 Configurando Socket.io...');
@@ -15,29 +16,63 @@ export const initChatServer = (httpServer) => {
 
   console.log('✅ Socket.io configurado con CORS:*');
 
+  // Middleware para autenticación de sockets
+  io.use((socket, next) => {
+    // Intentar obtener el token de diferentes maneras
+    const token = socket.handshake.auth.token || 
+                  socket.handshake.headers.token || 
+                  socket.handshake.query.token;
+    
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        socket.userId = decoded.userId;
+        console.log(`🔐 Usuario autenticado vía token: ${decoded.userId}`);
+      } catch (error) {
+        console.log('❌ Token inválido en socket');
+      }
+    }
+    next();
+  });
+
   io.on("connection", (socket) => {
-    console.log("🟢 Usuario conectado:", socket.id, 'Origen:', socket.handshake.headers.origin);
+    console.log("🟢 Usuario conectado:", socket.id);
+    console.log("📋 Datos de conexión:", {
+      userId: socket.userId,
+      auth: socket.handshake.auth,
+      headers: socket.handshake.headers
+    });
 
     socket.on("registrarUsuario", (userId) => {
-      // ✅ VALIDAR que userId no sea null
-      if (!userId) {
-        console.error('❌ Error: userId es null en registrarUsuario');
+      // ✅ Usar el userId del token si está disponible, sino el que viene del evento
+      const finalUserId = socket.userId || userId;
+      
+      if (!finalUserId) {
+        console.error('❌ Error: No se pudo determinar userId para el socket');
         return;
       }
-      socket.userId = userId;
-      console.log(`👤 Usuario ${userId} registrado`);
+      
+      socket.userId = finalUserId;
+      console.log(`👤 Usuario ${finalUserId} registrado en socket ${socket.id}`);
     });
 
     socket.on("solicitarHistorial", async ({ emisorId, receptorId }) => {
-      // ✅ VALIDAR IDs antes de proceder
-      if (!emisorId || !receptorId) {
-        console.error('❌ Error: IDs nulos en solicitarHistorial', { emisorId, receptorId });
+      // ✅ Usar el userId del socket si emisorId es undefined
+      const finalEmisorId = emisorId || socket.userId;
+      
+      if (!finalEmisorId || !receptorId) {
+        console.error('❌ Error: IDs nulos en solicitarHistorial', { 
+          emisorId: finalEmisorId, 
+          receptorId,
+          socketUserId: socket.userId
+        });
         socket.emit("error", "IDs de usuario no válidos");
         return;
       }
 
       try {
-        const mensajes = await obtenerMensajes(emisorId, receptorId);
+        console.log(`📋 Solicitando historial: ${finalEmisorId} -> ${receptorId}`);
+        const mensajes = await obtenerMensajes(finalEmisorId, receptorId);
         socket.emit("historial", mensajes);
       } catch (error) {
         console.error("❌ Error al obtener historial:", error);
@@ -47,10 +82,17 @@ export const initChatServer = (httpServer) => {
 
     socket.on("enviarMensaje", async (data) => {
       const { emisorId, receptorId, contenido } = data;
+      
+      // ✅ Usar el userId del socket si emisorId es undefined
+      const finalEmisorId = emisorId || socket.userId;
 
       // ✅ VALIDACIÓN COMPLETA de datos
-      if (!emisorId || !receptorId) {
-        console.error("❌ Error: IDs nulos en enviarMensaje", { emisorId, receptorId });
+      if (!finalEmisorId || !receptorId) {
+        console.error("❌ Error: IDs nulos en enviarMensaje", { 
+          emisorId: finalEmisorId, 
+          receptorId,
+          socketUserId: socket.userId
+        });
         socket.emit("error", "IDs de usuario no válidos");
         return; 
       }
@@ -62,14 +104,19 @@ export const initChatServer = (httpServer) => {
       }
 
       try {
-        console.log('📨 Enviando mensaje:', { emisorId, receptorId, contenido });
-        const mensajeGuardado = await guardarMensaje(emisorId, receptorId, contenido);
+        console.log('📨 Enviando mensaje:', { 
+          emisorId: finalEmisorId, 
+          receptorId, 
+          contenido 
+        });
+        
+        const mensajeGuardado = await guardarMensaje(finalEmisorId, receptorId, contenido);
 
         if (mensajeGuardado) {
           console.log('✅ Mensaje guardado:', mensajeGuardado.id);
           // Emitir al destinatario y al emisor
           for (let [id, s] of io.sockets.sockets) {
-            if (s.userId === receptorId || s.userId === emisorId) {
+            if (s.userId === receptorId || s.userId === finalEmisorId) {
               s.emit("recibirMensaje", mensajeGuardado);
             }
           }
@@ -80,8 +127,9 @@ export const initChatServer = (httpServer) => {
       }
     });
 
-    socket.on("disconnect", () => {
-      console.log(`🔴 Usuario desconectado: ${socket.id}`);
+    socket.on("disconnect", (reason) => {
+      console.log(`🔴 Usuario desconectado: ${socket.id} - Razón: ${reason}`);
+      console.log(`👤 UserId del socket desconectado: ${socket.userId}`);
     });
   });
 

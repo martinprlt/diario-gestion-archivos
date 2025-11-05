@@ -23,25 +23,25 @@ import RevisionEditor from './pages/RevisionEditor';
 import AdminLogs from './pages/AdminLogs.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { DashboardAdmin } from './pages/DashboardAdmin.jsx';
-import ChatPage from './pages/ChatPage.jsx'; // Importar ChatPage
-import { useHeartbeat } from './hooks/useHeartbeat'; // ⬅️ IMPORTAR
-import { useContext } from 'react'; // ⬅️ IMPORTAR
+import ChatPage from './pages/ChatPage.jsx'; 
+import { useHeartbeat } from './hooks/useHeartbeat'; 
+import { useContext } from 'react';
 import { AuthContext } from './context/AuthContext'; 
 
-// ✅ Componente que activa el heartbeat para TODOS
+
 function GlobalHeartbeat() {
-  useHeartbeat(); // Este hook se ejecuta en TODA la app
-  return null; // No renderiza nada
+  useHeartbeat(); 
+  return null;
 }
 
-// ✅ Wrapper para activar heartbeat solo si hay usuario
+
 function AppContent() {
   const { user } = useContext(AuthContext);
   
   return (
     <>
       <Navbar />
-      {/* ✅ Si hay usuario logueado, activar heartbeat global */}
+      {}
       {user && <GlobalHeartbeat />}
       
       <Routes>
