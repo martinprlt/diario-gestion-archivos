@@ -99,7 +99,7 @@ function RevisionEditor() {
 
   // 🔹 Ver y descargar archivos
   const verArchivo = async (id) => {
-    const res = await fetch(`${API_BASE_URL}/api/article/view/${id}`, {
+    const res = await fetch(`${API_BASE_URL}/api/articles/view/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const blob = await res.blob();
