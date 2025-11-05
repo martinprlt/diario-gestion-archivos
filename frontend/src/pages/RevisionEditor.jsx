@@ -21,7 +21,7 @@ function RevisionEditor() {
   const fetchArticulosEnRevision = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_BASE_URL}/api/article/editor/review`, {
+      const res = await fetch(`${API_BASE_URL}/api/articles/editor/review`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!res.ok) throw new Error("Error al cargar artículos en revisión");
