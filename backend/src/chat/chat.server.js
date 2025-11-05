@@ -1,4 +1,3 @@
-// src/chat/chat.server.js
 import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
 
@@ -15,7 +14,8 @@ export const initChatServer = (httpServer) => {
     cors: {
       origin: allowedOrigins,
       methods: ["GET", "POST"],
-      credentials: true
+      credentials: true,
+      allowedHeaders: ["*"]
     },
     transports: ['websocket', 'polling'],
     allowEIO3: true,
@@ -23,7 +23,7 @@ export const initChatServer = (httpServer) => {
     pingInterval: 25000
   });
 
-  console.log('✅ Socket.io configurado con CORS:', allowedOrigins.join(', '));
+  console.log('✅ Socket.io CORS:', allowedOrigins.join(', '));
 
   io.on("connection", (socket) => {
     console.log("🟢 Cliente conectado:", socket.id);
