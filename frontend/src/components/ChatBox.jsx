@@ -1,6 +1,6 @@
 // ChatBox.jsx - Actualizado
 import React, { useState, useRef, useEffect } from "react";
-import { useChat } from "../context/chatContext.jsx";
+import { useChat } from "../context/ChatContext.jsx";
 import { Send } from "lucide-react";
 
 const ChatBox = ({ receptor, userId }) => {
