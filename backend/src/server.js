@@ -9,18 +9,15 @@ const PORT = process.env.PORT || 5000;
 // Función async para iniciar el servidor
 async function startServer() {
   try {
-    // Probar conexión con PostgreSQL
     console.log('Probando conexión a PostgreSQL...');
     await testDB();
     console.log(' PostgreSQL conectado correctamente');
 
-    // Crear servidor HTTP base
     const server = http.createServer(app);
 
     // Iniciar servidor de chat (Socket.io)
     initChatServer(server);
 
-    // Escuchar en 0.0.0.0 para Railway (importante!)
     server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Servidor HTTP + Chat en puerto ${PORT}`);
       console.log(`🌍 Entorno: ${process.env.NODE_ENV || 'development'}`);
@@ -33,5 +30,5 @@ async function startServer() {
   }
 }
 
-// Iniciar servidor
+
 startServer();

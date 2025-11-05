@@ -3,32 +3,14 @@ import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
 
 export const initChatServer = (httpServer) => {
-  // ⭐ CONFIGURAR CORS DINÁMICAMENTE
-  const allowedOrigins = process.env.NODE_ENV === 'production'
-    ? (process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
-    : ['http://localhost:5173', 'http://localhost:5174'];
-
+  // ✅ CONFIGURACIÓN SIMPLIFICADA Y DIRECTA
   const io = new Server(httpServer, {
     cors: {
-      origin: function (origin, callback) {
-        // Permitir requests sin origin (apps móviles, Postman)
-        if (!origin) return callback(null, true);
-        
-        // En producción, verificar contra lista de orígenes permitidos
-        if (process.env.NODE_ENV === 'production') {
-          if (allowedOrigins.includes(origin)) {
-            console.log('✅ Socket.io: Origen permitido:', origin);
-            callback(null, true);
-          } else {
-            console.warn('❌ Socket.io bloqueado por CORS:', origin);
-            callback(new Error('CORS not allowed'));
-          }
-        } else {
-          // En desarrollo, permitir cualquier origen localhost
-          console.log('🔧 Socket.io (dev): Origen permitido:', origin);
-          callback(null, true);
-        }
-      },
+      origin: [
+        'https://gestor-independiente.netlify.app',
+        'http://localhost:5173', 
+        'http://localhost:5174'
+      ],
       credentials: true,
       methods: ["GET", "POST"]
     }
@@ -85,7 +67,7 @@ export const initChatServer = (httpServer) => {
   });
 
   console.log('💬 Servidor de chat inicializado');
-  console.log('🌍 Orígenes permitidos para Socket.io:', allowedOrigins);
+  console.log('🌍 Socket.io CORS configurado para producción');
 
   return io;
 };
