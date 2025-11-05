@@ -17,6 +17,7 @@ import NotificacionesInternas from './pages/NotificacionesInternas';
 import GestionUsuario from './pages/GestionUsuario';
 import ArticulosEnRevision from './pages/ArticulosEnRevision.jsx';
 import ArticulosAprobados from './pages/ArticulosAprobados.jsx';
+import Dashboard from './pages/Dashboard.jsx';
 import ConfiguracionUsuario from './pages/ConfiguracionUsuario';
 import RevisionEditor from './pages/RevisionEditor';
 import AdminLogs from './pages/AdminLogs.jsx';
@@ -49,6 +50,8 @@ function AppContent() {
         <Route path="/recuperar" element={<Recuperar />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/configuracion" element={<ConfiguracionUsuario />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
 
         <Route element={<ProtectedRoute allow={['periodista']} />}>
           <Route path="/periodista-upload" element={<PeriodistaUpload />} />

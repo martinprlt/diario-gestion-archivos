@@ -32,18 +32,15 @@ function Login() {
         const rol = data.user.categoria;
         
         switch(rol) {
-          case 'Periodista':
-            navigate('/notas');
-            break;
-          case 'Fotografo':
-            navigate('/galeria');
-            break;
-          case 'Editor':
-            navigate('/editor');
-            break;
-          default:
-            navigate('/');
-        }
+  case 'Periodista':
+  case 'Fotografo': 
+  case 'Editor':
+  case 'Administrador':
+    navigate('/dashboard');  // ✅ Todos van al dashboard
+    break;
+  default:
+    navigate('/');
+}
       } else {
         setError(data.message || 'Credenciales incorrectas');
       }
