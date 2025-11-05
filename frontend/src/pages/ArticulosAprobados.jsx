@@ -9,38 +9,49 @@ const ArticulosAprobados = () => {
   const [error, setError] = useState(null);
   const { token } = useContext(AuthContext);
 
+  // ✅ URL base desde environment variables
+  const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
   useEffect(() => {
     const fetchArticulosAprobados = async () => {
       try {
-        const response = await axios.get('/api/articles/editor/approved', {
+        console.log('🔍 Haciendo request a:', `${API_BASE_URL}/api/articles/editor/approved`);
+        
+        const response = await axios.get(`${API_BASE_URL}/api/articles/editor/approved`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Respuesta de la API:', response.data); 
+        
+        console.log('✅ Respuesta de la API:', response.data); 
+        
         if (Array.isArray(response.data)) {
           setArticulos(response.data);
         } else {
-          console.error("La respuesta de la API no es un array:", response.data);
+          console.error("❌ La respuesta de la API no es un array:", response.data);
           setError("Se recibió un formato de datos inesperado del servidor.");
         }
       } catch (err) {
+        console.error('💥 Error completo:', err);
+        console.error('💥 Response data:', err.response?.data);
         setError('No se pudieron cargar los artículos aprobados. ' + (err.response?.data?.message || err.message));
       } finally {
         setLoading(false);
       }
     };
 
-    fetchArticulosAprobados();
-  }, [token]);
+    if (token) {
+      fetchArticulosAprobados();
+    }
+  }, [token, API_BASE_URL]);
 
   const handleDownload = async (id, nombreOriginal) => {
     try {
-      const response = await axios.get(`/api/articles/download/${id}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/articles/download/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseType: 'blob', // importante para descargar archivos
+        responseType: 'blob',
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));

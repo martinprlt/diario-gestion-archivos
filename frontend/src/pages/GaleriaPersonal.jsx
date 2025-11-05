@@ -53,7 +53,7 @@ function GaleriaPersonal() {
   const handleToggleVisibilidad = async (fotoId) => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/fotos/${fotoId}/toggle-visibility`,
+        `${API_BASE_URL}/api/fotos/${fotoId}/toggle-visibility`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
