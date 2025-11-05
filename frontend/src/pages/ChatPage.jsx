@@ -1,8 +1,8 @@
 // ChatPage.jsx - Actualizado
 import React, { useState } from "react";
-import { ChatProvider } from "../context/chatContext";
-import ChatBox from "../components/ChatBox";
-import UserList from "../components/UserList";
+import { ChatProvider } from "../context/chatContext.jsx";
+import ChatBox from "../components/ChatBox.jsx";
+import UserList from "../components/UserList.jsx";
 import "../assets/styles/chat-page.css";
 
 const ChatPage = ({ userId }) => {
