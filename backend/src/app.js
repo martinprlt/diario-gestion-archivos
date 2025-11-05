@@ -22,7 +22,7 @@ import logsRoutes from "./routes/logs.routes.js";
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ✅ 1. CORS - DEBE IR PRIMERO, ANTES DE TODO
+// ✅ 1. CORS - DEBE IR PRIMERO
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
@@ -31,7 +31,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Permitir requests sin origin (como Postman, apps móviles, etc)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -45,18 +44,18 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600, // Cache de preflight por 10 minutos
+  maxAge: 600,
   optionsSuccessStatus: 200
 }));
 
-// ✅ 2. Manejar OPTIONS manualmente para asegurar CORS
+// ✅ 2. Manejar OPTIONS
 app.options('*', cors());
 
 // ✅ 3. Middlewares básicos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ✅ 4. HELMET - Headers de seguridad (DESPUÉS de CORS)
+// ✅ 4. HELMET
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
@@ -66,33 +65,27 @@ app.use(
 
 // ✅ 5. RATE LIMITING para login
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 10, // Aumentado a 10 intentos
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: {
     error: 'Demasiados intentos de login. Por seguridad, espera 15 minutos.',
   },
   standardHeaders: true,
   legacyHeaders: false,
   skip: (req) => {
-    // No aplicar rate limit en desarrollo local
     const isDev = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
     return isDev;
   }
 });
 
-// ✅ 6. Logging middleware para debug
+// ✅ 6. Logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path} - Origin: ${req.get('origin') || 'No origin'}`);
   next();
 });
 
-// ✅ 7. RUTAS
-// Auth con rate limiting SOLO en producción
-app.post('/api/auth/login', loginLimiter, (req, res, next) => {
-  next();
-});
-
-app.use('/api/auth', authRoutes);
+// ✅ 7. RUTAS - APLICAR RATE LIMITER COMO MIDDLEWARE EN AUTH
+app.use('/api/auth', loginLimiter, authRoutes); // ✅ Rate limiter aplicado a TODAS las rutas de auth
 app.use('/api/articles', articleRoutes);
 app.use('/api/fotos', fotoRoutes);
 app.use('/api', userRoutes);
@@ -132,7 +125,7 @@ app.use((req, res) => {
   });
 });
 
-// ✅ 11. Middleware de errores (DEBE IR AL FINAL)
+// ✅ 11. Middleware de errores
 app.use(errorHandler);
 
 export default app;
