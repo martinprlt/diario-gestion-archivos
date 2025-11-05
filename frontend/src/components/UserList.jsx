@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from "react";
-import { useChat } from "../context/chatContext.jsx";
+import { useChat } from "../context/ChatContext.jsx";
 import { AuthContext } from "../context/AuthContext.js";
 import "../assets/styles/userlist.css";
 import { API_BASE_URL } from '../config/api.js'
