@@ -1,7 +1,7 @@
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
-import "../assets/styles/editorRevision.css";
+import "../assets/styles/EditorRevision.css";
 
 function RevisionEditor() {
   const [articulos, setArticulos] = useState([]);
