@@ -1,12 +1,10 @@
-// src/pages/ConfiguracionUsuario.jsx
 import React, { useState, useEffect, useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import '../assets/styles/configuracion-usuario.css';
-import { API_BASE_URL } from '../config/api.js';
 
 export default function ConfiguracionUsuario() {
-  const { usuario, token, setUsuario } = useContext(AuthContext);
+  const { user, token, setUser } = useContext(AuthContext);
   const [editMode, setEditMode] = useState(false);
   const [password, setPassword] = useState('');
   const [formData, setFormData] = useState({
@@ -20,11 +18,11 @@ export default function ConfiguracionUsuario() {
   const inputFotoRef = useRef(null);
   const navigate = useNavigate();
 
-  // 🔹 Cargar datos del usuario
+  // Cargar datos del usuario
   useEffect(() => {
     const loadUserData = async () => {
       try {
-        if (!usuario?.id_usuario) {
+        if (!user?.id_usuario) {
           setError('Usuario no identificado');
           return;
         }
@@ -34,7 +32,7 @@ export default function ConfiguracionUsuario() {
           return;
         }
 
-        const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuario.id_usuario}`, {
+        const response = await fetch(`http://localhost:5000/api/usuarios/${user.id_usuario}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -51,7 +49,7 @@ export default function ConfiguracionUsuario() {
         }
 
         const data = await response.json();
-
+        
         if (data.usuario) {
           setFormData({
             nombre: data.usuario.nombre || '',
@@ -66,9 +64,8 @@ export default function ConfiguracionUsuario() {
     };
 
     loadUserData();
-  }, [usuario, token]);
+  }, [user, token]);
 
-  // 🔹 Manejo de imagen de perfil
   const handleFotoClick = () => inputFotoRef.current.click();
 
   const handleFotoChange = async (e) => {
@@ -84,7 +81,7 @@ export default function ConfiguracionUsuario() {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const response = await fetch(`${API_BASE_URL}/api/upload-avatar`, {
+      const response = await fetch('http://localhost:5000/api/upload-avatar', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -102,9 +99,8 @@ export default function ConfiguracionUsuario() {
         throw new Error(data.message || 'Error al subir imagen');
       }
 
-      // Previsualizar y actualizar en contexto
       setPreview(URL.createObjectURL(file));
-      setUsuario(prev => ({
+      setUser(prev => ({
         ...prev,
         avatar_url: data.avatarUrl
       }));
@@ -113,27 +109,39 @@ export default function ConfiguracionUsuario() {
     }
   };
 
-  // 🔹 Actualizar datos del usuario
   const handleUpdate = async () => {
     try {
-      if (!usuario?.id_usuario) throw new Error('ID de usuario no disponible');
-      if (!token) throw new Error('No hay token de autenticación');
+      if (!user?.id_usuario) {
+        throw new Error('ID de usuario no disponible');
+      }
 
-      const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuario.id_usuario}`, {
+      if (!token) {
+        throw new Error('No hay token de autenticación');
+      }
+
+      const response = await fetch(`http://localhost:5000/api/usuarios/${user.id_usuario}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ ...formData, password })
+        body: JSON.stringify({
+          ...formData,
+          password
+        })
       });
 
-      if (response.status === 401) throw new Error('Sesión expirada. Por favor, vuelve a iniciar sesión.');
+      if (response.status === 401) {
+        throw new Error('Sesión expirada. Por favor, vuelve a iniciar sesión.');
+      }
 
       const result = await response.json();
-      if (!response.ok) throw new Error(result.message || 'Error al actualizar los datos');
 
-      setUsuario(prev => ({
+      if (!response.ok) {
+        throw new Error(result.message || 'Error al actualizar los datos');
+      }
+
+      setUser(prev => ({
         ...prev,
         nombre: formData.nombre,
         apellido: formData.apellido,
@@ -141,7 +149,7 @@ export default function ConfiguracionUsuario() {
         email: formData.email
       }));
 
-      alert('✅ ¡Datos actualizados correctamente!');
+      alert('¡Datos actualizados correctamente!');
       setEditMode(false);
       setPassword('');
       setError('');
@@ -150,13 +158,14 @@ export default function ConfiguracionUsuario() {
     }
   };
 
-  // 🔹 Render principal
   return (
     <div className="configuracion-upload-container">
       <div className="upload-header">CONFIGURACIÓN DE USUARIO</div>
 
       <div className="upload-wrapper">
-        <aside className="sidebar">{/* Espacio para opciones futuras */}</aside>
+        <aside className="sidebar">
+          {/* Espacio para opciones laterales */}
+        </aside>
 
         <main className="upload-main">
           <div className="form-container">
@@ -167,12 +176,8 @@ export default function ConfiguracionUsuario() {
             <div className="imagen-perfil-box" onClick={handleFotoClick} style={{ cursor: 'pointer' }}>
               {preview ? (
                 <img src={preview} alt="Foto de perfil" className="imagen-perfil" />
-              ) : usuario?.avatar_url ? (
-                <img
-                  src={`${API_BASE_URL}${usuario.avatar_url}`}
-                  alt="Foto de perfil"
-                  className="imagen-perfil"
-                />
+              ) : user?.avatar_url ? (
+                <img src={`http://localhost:5000${user.avatar_url}`} alt="Foto de perfil" className="imagen-perfil" />
               ) : (
                 <div className="imagen-perfil placeholder" />
               )}
@@ -193,7 +198,7 @@ export default function ConfiguracionUsuario() {
             <div className="info-section">
               <div className="info-group">
                 <label>Rol</label>
-                <div className="info-value">{usuario?.categoria}</div>
+                <div className="info-value">{user?.categoria}</div>
               </div>
 
               <div className="info-group">

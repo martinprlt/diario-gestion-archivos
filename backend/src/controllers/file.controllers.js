@@ -246,7 +246,6 @@ export const updateArticle = async (req, res) => {
 export const downloadArticle = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('🔍 Buscando artículo ID:', id, 'para usuario:', req.userId);
 
     // Verificar rol del usuario
     const userCheck = await pool.query(
@@ -262,70 +261,45 @@ export const downloadArticle = async (req, res) => {
     let result;
     if (isEditor) {
       result = await pool.query(
-        `SELECT ruta_archivo, nombre_original, tipo_archivo, nombre_archivo
+        `SELECT ruta_archivo, nombre_original, tipo_archivo 
          FROM articulos WHERE id_articulo = $1`,
         [id]
       );
     } else {
       result = await pool.query(
-        `SELECT ruta_archivo, nombre_original, tipo_archivo, nombre_archivo
+        `SELECT ruta_archivo, nombre_original, tipo_archivo 
          FROM articulos WHERE id_articulo = $1 AND periodista_id = $2`,
         [id, req.userId]
       );
     }
 
     if (result.rows.length === 0) {
-      console.log('❌ Artículo no encontrado en BD');
       return res.status(404).json({ message: "Artículo no encontrado" });
     }
 
-    const { ruta_archivo, nombre_original, tipo_archivo, nombre_archivo } = result.rows[0];
-    console.log('📁 Ruta en BD:', ruta_archivo);
-    console.log('📄 Nombre archivo:', nombre_archivo);
-
-    // ✅ SOLUCIÓN: Construir ruta absoluta para Railway
-    const path = await import('path');
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    
-    // En Railway, los archivos se guardan en el filesystem temporal
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'articles');
-    const filePath = path.join(uploadsDir, nombre_archivo);
-    
-    console.log('🔍 Buscando archivo en:', filePath);
+    const { ruta_archivo, nombre_original, tipo_archivo } = result.rows[0];
 
     // 🔹 Verificar que el archivo existe físicamente
-    const fs = await import('fs');
-    if (!fs.existsSync(filePath)) {
-      console.log('❌ Archivo físico no existe en:', filePath);
-      
-      // Intentar con la ruta original como fallback
-      if (fs.existsSync(ruta_archivo)) {
-        console.log('✅ Usando ruta original como fallback');
-        res.download(ruta_archivo, nombre_original, {
-          headers: { 'Content-Type': tipo_archivo }
-        });
-      } else {
-        return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
-      }
-    } else {
-      console.log('✅ Archivo encontrado, enviando...');
-      res.download(filePath, nombre_original, {
-        headers: { 'Content-Type': tipo_archivo }
-      });
+    if (!fs.existsSync(ruta_archivo)) {
+      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
     }
 
-    await logAction({
-      usuario_id: req.userId,
-      accion: 'descargar',
-      descripcion: `Descargó artículo ID ${id}`
+    res.download(ruta_archivo, nombre_original, {
+      headers: { 'Content-Type': tipo_archivo }
     });
 
+    await logAction({
+  usuario_id: req.userId,
+  accion: 'descargar',
+  descripcion: `Descargó artículo ID ${id}`
+});
+
+
   } catch (error) {
-    console.error("❌ Error completo en downloadArticle:", error);
+    console.error("❌ Error al descargar:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
-
 
 // ==========================
 // Ver artículo (abrir en navegador)
@@ -333,7 +307,6 @@ export const downloadArticle = async (req, res) => {
 export const viewArticle = async (req, res) => {
   try {
     const { id } = req.params;
-    console.log('🔍 Visualizando artículo ID:', id, 'para usuario:', req.userId);
 
     // Verificar rol del usuario
     const userCheck = await pool.query(
@@ -349,58 +322,37 @@ export const viewArticle = async (req, res) => {
     let result;
     if (isEditor) {
       result = await pool.query(
-        "SELECT ruta_archivo, nombre_archivo, tipo_archivo FROM articulos WHERE id_articulo = $1",
+        "SELECT * FROM articulos WHERE id_articulo = $1",
         [id]
       );
     } else {
       result = await pool.query(
-        "SELECT ruta_archivo, nombre_archivo, tipo_archivo FROM articulos WHERE id_articulo = $1 AND periodista_id = $2",
+        "SELECT * FROM articulos WHERE id_articulo = $1 AND periodista_id = $2",
         [id, req.userId]
       );
     }
 
     if (result.rows.length === 0) {
-      console.log('❌ Artículo no encontrado en BD');
       return res.status(404).json({ message: "Artículo no encontrado" });
     }
 
-    const { ruta_archivo, nombre_archivo, tipo_archivo } = result.rows[0];
-    console.log('📁 Ruta en BD:', ruta_archivo);
-
-    // ✅ SOLUCIÓN: Construir ruta absoluta para Railway
-    const path = await import('path');
-    const __dirname = path.dirname(new URL(import.meta.url).pathname);
-    
-    const uploadsDir = path.join(process.cwd(), 'uploads', 'articles');
-    const filePath = path.join(uploadsDir, nombre_archivo);
-    
-    console.log('🔍 Buscando archivo en:', filePath);
+    const article = result.rows[0];
 
     // 🔹 Verificar que el archivo existe físicamente
-    const fs = await import('fs');
-    if (!fs.existsSync(filePath)) {
-      console.log('❌ Archivo físico no existe en:', filePath);
-      
-      // Intentar con la ruta original como fallback
-      if (fs.existsSync(ruta_archivo)) {
-        console.log('✅ Usando ruta original como fallback');
-        res.sendFile(path.resolve(ruta_archivo));
-      } else {
-        return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
-      }
-    } else {
-      console.log('✅ Archivo encontrado, enviando...');
-      res.sendFile(filePath);
+    if (!fs.existsSync(article.ruta_archivo)) {
+      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
     }
 
+    res.sendFile(path.resolve(article.ruta_archivo));
+
     await logAction({
-      usuario_id: req.userId,
-      accion: 'visualizar',
-      descripcion: `Visualizó artículo ID ${id}`
-    });
+  usuario_id: req.userId,
+  accion: 'visualizar',
+  descripcion: `Visualizó artículo ID ${id}`
+});
 
   } catch (error) {
-    console.error("❌ Error completo en viewArticle:", error);
+    console.error("❌ Error al ver archivo:", error);
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };

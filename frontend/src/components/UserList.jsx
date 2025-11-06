@@ -2,7 +2,6 @@ import React, { useEffect, useState, useContext } from "react";
 import { useChat } from "../context/ChatContext.jsx";
 import { AuthContext } from "../context/AuthContext.js";
 import "../assets/styles/userlist.css";
-import { API_BASE_URL } from '../config/api.js'
 
 const UserList = ({ onSelectUser, userId }) => {
   const [usuarios, setUsuarios] = useState([]);
@@ -14,7 +13,7 @@ const UserList = ({ onSelectUser, userId }) => {
   useEffect(() => {
     if (token) {
       setCargando(true);
-      fetch(`${API_BASE_URL}/api/usuarios`, {
+      fetch("http://localhost:5000/api/usuarios", {
         headers: {
           Authorization: `Bearer ${token}`,
         },

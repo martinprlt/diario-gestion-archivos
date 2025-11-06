@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Filter, TrendingUp, User, Activity, RefreshCw, Search } from 'lucide-react';
 import '../assets/styles/AdminLogs.css';
-import { API_BASE_URL } from '../config/api.js'
 
-const API_URL = `${API_BASE_URL}/api`;
+const API_URL = 'http://localhost:5000/api';
 
 export default function AdminLogs() {
   const [logs, setLogs] = useState([]);

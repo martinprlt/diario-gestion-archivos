@@ -4,10 +4,9 @@ import { AuthContext } from "../context/AuthContext.js";
 import UserDrawer from "./UserDrawer";
 import logo from "../assets/imagenes/logo.png";
 import "../assets/styles/navbar.css";
-import { API_BASE_URL } from "../config/api.js";
 
 export default function Navbar() {
-  const { usuario, logout, token } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
   const [notificaciones, setNotificaciones] = useState([]);
   const [expandedNotificationId, setExpandedNotificationId] = useState(null);
@@ -17,52 +16,52 @@ export default function Navbar() {
   const menuRef = useRef(null);
   const navbarRef = useRef(null);
 
-  // Links según categoría del usuario
   const linksPorCategoria = {
     periodista: [
       { to: "/notas", texto: "Mis Artículos" },
-      { to: "/ArticulosEnRevision", texto: "Enviados a Revisión" },
-      { tipo: "notificaciones", texto: "Notificaciones" },
-      { to: "/chat", texto: "Chat" },
       { to: "/periodista-upload", texto: "Subir Artículo" },
+      { to: "/ArticulosEnRevision", texto: "Enviados a Revisión" },
       { to: "/galeria-global", texto: "Galería" },
+      { to: "/chat", texto: "Chat" },
+      { tipo: "notificaciones", texto: "Notificaciones" },
     ],
     fotografo: [
-      { to: "/galeria", texto: "Galería Personal" },
-      { tipo: "notificaciones", texto: "Notificaciones" },
-      { to: "/chat", texto: "Chat" },
-      { to: "/FotografoUpload", texto: "Subir Foto" },
       { to: "/galeria-global", texto: "Galería" },
+      { to: "/galeria", texto: "Galería Personal" },
+      { to: "/FotografoUpload", texto: "Subir Foto" },
+      { to: "/chat", texto: "Chat" },
+      { tipo: "notificaciones", texto: "Notificaciones" },
     ],
     editor: [
       { to: "/revisiones", texto: "Revisiones" },
       { to: "/articulos-aprobados", texto: "Aprobados" },
-      { tipo: "notificaciones", texto: "Notificaciones" },
-      { to: "/chat", texto: "Chat" },
       { to: "/galeria-global", texto: "Galería" },
+      { to: "/chat", texto: "Chat" },
+      { tipo: "notificaciones", texto: "Notificaciones" },
     ],
     administrador: [
       { to: "/gestion-roles", texto: "Gestión de Roles" },
       { to: "/gestion-usuario", texto: "Gestión de Usuario" },
       { to: "/gestion-categorias", texto: "Gestión de Categorías" },
       { to: "/notificaciones-internas", texto: "Notificaciones Internas" },
-      { tipo: "notificaciones", texto: "Notificaciones" },
+      { to: "/admin/dashboard", texto: "Panel" },
       {to: "/admin/logs", texto: "Logs del Sistema"},
-      { to: "/chat", texto: "Chat" },
       { to: "/galeria-global", texto: "Galería" },
-      { to: "/admin/dashboard", texto: "Dashboard" },
+      { to: "/chat", texto: "Chat" },
+      { tipo: "notificaciones", texto: "Notificaciones" },
+
     ],
   };
 
-  const links = usuario ? linksPorCategoria[usuario.categoria] ?? [] : [];
+  const links = user ? linksPorCategoria[user.categoria] ?? [] : [];
 
   // Cargar notificaciones
   useEffect(() => {
-    if (usuario && token) {
+    if (user && token) {
       const cargarNotificaciones = async () => {
         try {
           const res = await fetch(
-            `${API_BASE_URL}/api/notificaciones/${usuario.id_usuario}`,
+            `http://localhost:5000/api/notificaciones/${user.id_usuario}`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -76,12 +75,11 @@ export default function Navbar() {
       };
       cargarNotificaciones();
     }
-  }, [usuario, token]);
+  }, [user, token]);
 
-  // Marcar notificación como leída
   const marcarComoLeida = async (id) => {
     try {
-      await fetch(`${API_BASE_URL}/api/notificaciones/marcar-leida`, {
+      await fetch("http://localhost:5000/api/notificaciones/marcar-leida", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_notificacion: id }),
@@ -96,7 +94,6 @@ export default function Navbar() {
     }
   };
 
-  // Cerrar menús al hacer clic fuera
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -110,7 +107,6 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Alternar menú hamburguesa
   const toggleMenu = () => setMenuAbierto((prev) => !prev);
 
   return (
@@ -193,36 +189,24 @@ export default function Navbar() {
 
       {/* DRAWER DE USUARIO */}
       <div className="nav-user">
-        {usuario ? (
+        {user ? (
           <div className="user-dropdown-container">
             <div
               className="user-avatar"
               onClick={() => setIsDrawerOpen(true)}
               title="Abrir/cerrar menú usuario"
             >
-              {usuario?.foto ? (
-                <img
-                  src={usuario.foto}
-                  alt="Avatar"
-                  className="avatar-image"
-                />
-              ) : (
-                <div className="avatar-initials">
-                  {usuario?.nombre?.charAt(0)}
-                  {usuario?.apellido?.charAt(0)}
-                </div>
-              )}
+              {/* Solo iniciales */}
+              {user?.nombre?.charAt(0) || ""}{user?.apellido?.charAt(0) || ""}
             </div>
 
             <UserDrawer
               isOpen={isDrawerOpen}
               onClose={() => setIsDrawerOpen(false)}
-              usuario={usuario}
-              logout={logout}
             />
           </div>
         ) : (
-          <Link to="/login">Iniciar sesión</Link>
+          <Link to="/login" className="btn-login">Iniciar sesión</Link>
         )}
       </div>
     </nav>

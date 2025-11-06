@@ -2,12 +2,11 @@ import { useState, useEffect, useCallback, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useHeartbeat } from '../hooks/useHeartbeat';
 import '../assets/styles/DashboardAdmin.css'; // CSS mejorado
-import { API_BASE_URL } from '../config/api.js'
 
 export function DashboardAdmin() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [stats, setStats] = useState({ total: 0 });
-  const { usuario, token } = useContext(AuthContext);
+  const { user, token } = useContext(AuthContext);
 
   // ✅ Activar heartbeat automático
   useHeartbeat();
@@ -16,7 +15,7 @@ export function DashboardAdmin() {
     if (!token) return;
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/admin/online-users`, {
+      const response = await fetch('http://localhost:5000/api/admin/online-users', {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
@@ -40,14 +39,14 @@ export function DashboardAdmin() {
   }, [token]);
 
   useEffect(() => {
-    if (!usuario || !token) return;
+    if (!user || !token) return;
 
     fetchOnlineUsers();
     const interval = setInterval(fetchOnlineUsers, 5000);
     return () => clearInterval(interval);
-  }, [usuario, token, fetchOnlineUsers]);
+  }, [user, token, fetchOnlineUsers]);
 
-  if (!usuario) {
+  if (!user) {
     return (
       <div className="p-6 text-center">
         <div className="text-blue-500">Cargando usuario...</div>
@@ -55,7 +54,7 @@ export function DashboardAdmin() {
     );
   }
 
-  const isAdmin = usuario.categoria?.toLowerCase() === 'administrador';
+  const isAdmin = user.categoria?.toLowerCase() === 'administrador';
 
   if (!isAdmin) {
     return (
@@ -63,7 +62,7 @@ export function DashboardAdmin() {
         <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
           No tienes permisos para acceder a esta página.
           <br />
-          <small>Tu categoría: {usuario.categoria || 'no definida'}</small>
+          <small>Tu categoría: {user.categoria || 'no definida'}</small>
         </div>
       </div>
     );
@@ -71,7 +70,7 @@ export function DashboardAdmin() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
-      <h2 className="text-3xl font-bold mb-6">Dashboard Administrativo</h2>
+      <h2 className="text-3xl font-bold mb-6">Panel Administrativo</h2>
 
       {/* Tarjetas principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">

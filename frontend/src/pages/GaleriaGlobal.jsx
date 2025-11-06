@@ -2,7 +2,6 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/global.css";
-import { API_BASE_URL } from '../config/api.js'
 
 function GaleriaGlobal() {
   const [fotos, setFotos] = useState([]);
@@ -11,7 +10,7 @@ function GaleriaGlobal() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedFoto, setSelectedFoto] = useState(null);
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext);
   const { categorias } = useCategorias();
 
   const placeholder = "https://placehold.co/800x600?text=Sin+imagen";
@@ -27,7 +26,7 @@ function GaleriaGlobal() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch(`${API_BASE_URL}/api/fotos/globales`, {
+        const res = await fetch("http://localhost:5000/api/fotos/global", {
           headers: { Authorization: `Bearer ${token}` },
           signal: ac.signal,
         });
@@ -66,6 +65,30 @@ function GaleriaGlobal() {
   const cerrarLightbox = () => setSelectedFoto(null);
   const volverArriba = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  const handleDelete = async (id) => {
+    if (!window.confirm("¿Estás seguro de que quieres eliminar esta foto?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:5000/api/fotos/${id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!res.ok) {
+        throw new Error("Error al eliminar la foto");
+      }
+
+      setFotos(fotos.filter((foto) => foto.id_foto !== id));
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo eliminar la foto");
+    }
+  };
+
   if (loading) return <div className="sin-fotos">Cargando fotos…</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -100,7 +123,7 @@ function GaleriaGlobal() {
         </div>
       </div>
 
-      {/* MASONRY GRID */}
+      
       <div className="masonry-grid">
         {fotosFiltradas.length > 0 ? (
           fotosFiltradas.map((foto) => {
@@ -140,6 +163,17 @@ function GaleriaGlobal() {
                       ? new Date(fechaStr).toLocaleDateString("es-AR")
                       : "Fecha desconocida"}
                   </p>
+                  {(user?.categoria === 'administrador' || user?.categoria === 'admin') && (
+                    <button
+                      className="eliminar-foto-btn"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Evita que se abra el lightbox
+                        handleDelete(foto.id_foto);
+                      }}
+                    >
+                      Eliminar
+                    </button>
+                  )}
                 </div>
               </div>
             );

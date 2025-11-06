@@ -1,4 +1,4 @@
-// src/app.js
+// src/app.js - CON RATE LIMITING PARA LOGIN
 import path from 'path';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -19,73 +19,51 @@ import onlineUsersRoutes from './routes/onlineUsers.routes.js';
 import fileRoutes from './routes/file.routes.js';
 import logsRoutes from "./routes/logs.routes.js";
 
+
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// ✅ 1. CORS - DEBE IR PRIMERO
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'https://sdgi-elindependiente.netlify.app'
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      console.log('❌ Origen bloqueado por CORS:', origin);
-      callback(new Error('No permitido por CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600,
-  optionsSuccessStatus: 200
-}));
-
-// ✅ 2. Manejar OPTIONS
-app.options('*', cors());
-
-// ✅ 3. Middlewares básicos
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
-
-// ✅ 4. HELMET
+// 🔐 1. HELMET - Headers de seguridad
 app.use(
   helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    crossOriginOpenerPolicy: { policy: "same-origin-allow-popups" },
   })
 );
 
-// ✅ 5. RATE LIMITING para login
+// 🌐 2. CORS - Configuración segura (permite ambos puertos en desarrollo)
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://localhost:5174'
+];
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['*'], // Permite todos los headers temporalmente
+  optionsSuccessStatus: 200
+}));
+
+// 🔐 3. RATE LIMITING PARA LOGIN (Protección contra fuerza bruta)
 const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 10,
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 5, // máximo 5 intentos de login cada 15 minutos
   message: {
     error: 'Demasiados intentos de login. Por seguridad, espera 15 minutos.',
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => {
-    const isDev = req.hostname === 'localhost' || req.hostname === '127.0.0.1';
-    return isDev;
-  }
 });
 
-// ✅ 6. Logging middleware
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path} - Origin: ${req.get('origin') || 'No origin'}`);
-  next();
-});
+// 🧩 Middlewares básicos
+app.use(express.json());
 
-// ✅ 7. RUTAS - APLICAR RATE LIMITER COMO MIDDLEWARE EN AUTH
-app.use('/api/auth', loginLimiter, authRoutes); // ✅ Rate limiter aplicado a TODAS las rutas de auth
+// 🛣️ RUTAS CON SEGURIDAD APLICADA
+// Login con rate limiting ESPECÍFICO
+app.use('/api/auth/login', loginLimiter); // Limita solo /login
+app.use('/api/auth', authRoutes); // Rutas normales de auth
+
+// Resto de rutas
 app.use('/api/articles', articleRoutes);
 app.use('/api/fotos', fotoRoutes);
 app.use('/api', userRoutes);
@@ -94,38 +72,19 @@ app.use("/api/notificaciones", notificacionesRoutes);
 app.use('/api', fileRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/admin', onlineUsersRoutes);
-app.use("/api/logs", logsRoutes);
+app.use("/api/logs", logsRoutes); 
 
-// ✅ 8. Archivos estáticos
+// 📂 Ruta estática unificada para todos los archivos subidos
+// Sirve el contenido de la carpeta `backend/uploads` en la ruta `/uploads`
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
-// ✅ 9. Rutas básicas
-app.get('/', (_req, res) => {
-  res.json({ 
-    message: 'Backend Diario Virtual funcionando 👌',
-    cors: 'habilitado',
-    origins: allowedOrigins
-  });
-});
+// 🌱 Rutas básicas
+app.get('/', (_req, res) => res.send('Backend Diario Virtual funcionando 👌'));
+app.get('/test', (req, res) => res.json({ message: 'Test OK' }));
 
-app.get('/test', (req, res) => {
-  res.json({ 
-    message: 'Test OK',
-    origin: req.get('origin'),
-    corsEnabled: true
-  });
-});
-
-// ✅ 10. Manejo de rutas no encontradas
-app.use((req, res) => {
-  res.status(404).json({ 
-    error: 'Ruta no encontrada',
-    path: req.path,
-    method: req.method
-  });
-});
-
-// ✅ 11. Middleware de errores
+// 🧯 Middleware de errores
 app.use(errorHandler);
+
+
 
 export default app;

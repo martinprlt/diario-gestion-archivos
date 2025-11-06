@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { Send, Users, Search, Filter, X } from 'lucide-react';
 import "../assets/styles/notificaciones.css";
-import { API_BASE_URL } from '../config/api.js'
 
 export default function NotificacionesInternas() {
   const [titulo, setTitulo] = useState("");
@@ -25,7 +25,7 @@ export default function NotificacionesInternas() {
         setCargando(true);
         setError("");
 
-        const rU = await fetch(`${API_BASE_URL}/api/usuarios`, {
+        const rU = await fetch("http://localhost:5000/api/usuarios", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!rU.ok) throw new Error(`Error ${rU.status}`);
@@ -39,7 +39,7 @@ export default function NotificacionesInternas() {
         }));
         setUsuarios(normalizados);
 
-        const rR = await fetch(`${API_BASE_URL}/api/roles`, {
+        const rR = await fetch("http://localhost:5000/api/roles", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (rR.ok) {
@@ -55,7 +55,7 @@ export default function NotificacionesInternas() {
     if (token) cargar();
   }, [token]);
 
-  // Filtro de lista
+  // Filtro de usuarios
   const usuariosFiltrados = usuarios.filter((u) => {
     const term = busqueda.toLowerCase();
     const coincideBusqueda =
@@ -73,8 +73,10 @@ export default function NotificacionesInternas() {
       setBusqueda("");
     }
   };
+
   const eliminarUsuario = (id) =>
     setUsuariosSeleccionados((prev) => prev.filter((x) => x.id !== id));
+
   const seleccionarPorRol = (rolNombre) => {
     const delRol = usuarios.filter(
       (u) =>
@@ -96,7 +98,7 @@ export default function NotificacionesInternas() {
           ? usuarios.map((u) => u.id)
           : usuariosSeleccionados.map((u) => u.id);
 
-      const res = await fetch(`${API_BASE_URL}/api/notificaciones/crear`, {
+      const res = await fetch("http://localhost:5000/api/notificaciones/crear", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -128,111 +130,135 @@ export default function NotificacionesInternas() {
   };
 
   return (
-    <div className="ni-container">
-      <div className="ni-header">
-        <span className="ni-picto">✉️</span>
-        <h1>Notificaciones Internas</h1>
-      </div>
+    <div className="notificaciones-container">
+      <div className="notificaciones-content">
+        
+        {/* Header */}
+        <div className="page-header">
+          <div className="header-content">
+            <h1>Notificaciones Internas</h1>
+            <p>Envía notificaciones a los usuarios del sistema</p>
+          </div>
+        </div>
 
-      {/* Franja verde + tarjeta (sin menú) */}
-      <div className="ni-shell">
-        <aside className="ni-band" aria-hidden="true" />
-        <main className="ni-card">
+        {/* Tarjeta principal */}
+        <div className="notificacion-card">
           {error && <div className="error-message">❌ {error}</div>}
 
-          <div className="form-group">
-            <label>Título:</label>
-            <input
-              className="form-input"
-              placeholder="Asunto de la notificación..."
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-            />
+          {/* Información de la notificación */}
+          <div className="form-section">
+            <h3 className="section-title">Información de la Notificación</h3>
+            
+            <div className="form-group">
+              <label>Título</label>
+              <input
+                className="form-input"
+                placeholder="Escribí el título de la notificación..."
+                value={titulo}
+                onChange={(e) => setTitulo(e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label>Mensaje</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Escribí el mensaje de la notificación..."
+                rows="4"
+                value={descripcion}
+                onChange={(e) => setDescripcion(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="form-group">
-            <label>Descripción:</label>
-            <textarea
-              className="form-textarea"
-              placeholder="Mensaje de la notificación..."
-              rows="4"
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Enviar a:</label>
-            <select
-              className="form-select"
-              value={tipoDestino}
-              onChange={(e) => {
-                setTipoDestino(e.target.value);
-                if (e.target.value === "todos") {
-                  setUsuariosSeleccionados([]);
-                  setMostrarSelector(false);
-                }
-              }}
-            >
-              <option value="usuarios">Usuarios específicos</option>
-              <option value="todos">Todos los usuarios</option>
-            </select>
-          </div>
-
-          {tipoDestino === "usuarios" && (
-            <div className="selector-usuarios">
-              <div className="tags-container">
-                {usuariosSeleccionados.length === 0 ? (
-                  <span className="placeholder-tag">
-                    Ningún usuario seleccionado
-                  </span>
-                ) : (
-                  usuariosSeleccionados.map((u) => (
-                    <div key={u.id} className="usuario-tag">
-                      <span>{u.nombre} {u.apellido}</span>
-                      <button
-                        type="button"
-                        className="tag-eliminar"
-                        onClick={() => eliminarUsuario(u.id)}
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-
-              <button
-                type="button"
-                className="btn-abrir-selector"
-                onClick={() => setMostrarSelector(!mostrarSelector)}
+          {/* Destinatarios */}
+          <div className="form-section">
+            <h3 className="section-title">Destinatarios</h3>
+            
+            <div className="form-group">
+              <label>Tipo de envío</label>
+              <select
+                className="form-select"
+                value={tipoDestino}
+                onChange={(e) => {
+                  setTipoDestino(e.target.value);
+                  if (e.target.value === "todos") {
+                    setUsuariosSeleccionados([]);
+                    setMostrarSelector(false);
+                  }
+                }}
               >
-                {mostrarSelector ? "▲ Ocultar selector" : "▼ Seleccionar usuarios"}
-              </button>
+                <option value="usuarios">Usuarios específicos</option>
+                <option value="todos">Todos los usuarios</option>
+              </select>
+            </div>
 
-              {mostrarSelector && (
-                <div className="selector-avanzado">
-                  <div className="filtros-selector">
-                    <input
-                      className="busqueda-input"
-                      placeholder="Buscar por nombre o email..."
-                      value={busqueda}
-                      onChange={(e) => setBusqueda(e.target.value)}
-                    />
-                    <select
-                      className="filtro-rol"
-                      value={filtroRol}
-                      onChange={(e) => setFiltroRol(e.target.value)}
-                    >
-                      <option value="">Todos los roles</option>
-                      {roles.map((rol) => (
-                        <option key={rol.id_rol || rol.id} value={rol.nombre}>
-                          {rol.nombre}
-                        </option>
-                      ))}
-                    </select>
+            {tipoDestino === "usuarios" && (
+              <div className="selector-section">
+                <div className="selector-header">Usuarios seleccionados</div>
+
+                <div className="tags-container">
+                  {usuariosSeleccionados.length === 0 ? (
+                    <span className="placeholder-tag">
+                      Ningún usuario seleccionado
+                    </span>
+                  ) : (
+                    usuariosSeleccionados.map((u) => (
+                      <div key={u.id} className="usuario-tag">
+                        <span>{u.nombre} {u.apellido}</span>
+                        <button
+                          type="button"
+                          className="tag-eliminar"
+                          onClick={() => eliminarUsuario(u.id)}
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  className="btn-abrir-selector"
+                  onClick={() => setMostrarSelector(!mostrarSelector)}
+                >
+                  <Users size={16} />
+                  {mostrarSelector ? "Ocultar selector" : "Seleccionar usuarios"}
+                </button>
+
+                {mostrarSelector && (
+                  <>
+                    <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: '#6b7280' }} />
+                        <input
+                          className="form-input"
+                          placeholder="Buscar por nombre o email..."
+                          value={busqueda}
+                          onChange={(e) => setBusqueda(e.target.value)}
+                          style={{ paddingLeft: '2.5rem' }}
+                        />
+                      </div>
+                      
+                      <div style={{ flex: 1 }}>
+                        <select
+                          className="form-select"
+                          value={filtroRol}
+                          onChange={(e) => setFiltroRol(e.target.value)}
+                        >
+                          <option value="">Todos los roles</option>
+                          {roles.map((rol) => (
+                            <option key={rol.id_rol || rol.id} value={rol.nombre}>
+                              {rol.nombre}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
                     <div className="botones-rapidos">
-                      <span>Seleccionar grupo:</span>
+                      <span>Seleccionar por rol:</span>
                       {roles.map((rol) => (
                         <button
                           key={rol.id_rol || rol.id}
@@ -244,64 +270,71 @@ export default function NotificacionesInternas() {
                         </button>
                       ))}
                     </div>
-                  </div>
 
-                  <div className="lista-usuarios">
-                    {cargando ? (
-                      <div className="cargando">🔄 Cargando usuarios…</div>
-                    ) : usuariosFiltrados.length === 0 ? (
-                      <div className="sin-resultados">
-                        {busqueda || filtroRol
-                          ? "No hay usuarios que coincidan"
-                          : "No hay más usuarios disponibles"}
+                    <div className="lista-usuarios">
+                      <div className="lista-header">
+                        Usuarios disponibles ({usuariosFiltrados.length})
                       </div>
-                    ) : (
-                      usuariosFiltrados.map((u) => (
-                        <div
-                          key={u.id}
-                          className="item-usuario"
-                          onClick={() => agregarUsuario(u)}
-                        >
-                          <div className="avatar-usuario">
-                            {u.nombre?.[0]}
-                            {u.apellido?.[0]}
-                          </div>
-                          <div className="info-usuario">
-                            <div className="nombre-usuario">
-                              {u.nombre} {u.apellido}
-                            </div>
-                            <div className="detalle-usuario">
-                              {u.email} • {u.rol}
-                            </div>
-                          </div>
-                          <button type="button" className="btn-agregar">+</button>
+                      {cargando ? (
+                        <div className="cargando">Cargando usuarios…</div>
+                      ) : usuariosFiltrados.length === 0 ? (
+                        <div className="sin-resultados">
+                          {busqueda || filtroRol
+                            ? "No hay usuarios que coincidan con la búsqueda"
+                            : "No hay más usuarios disponibles"}
                         </div>
-                      ))
-                    )}
-                  </div>
+                      ) : (
+                        usuariosFiltrados.map((u) => (
+                          <div
+                            key={u.id}
+                            className="item-usuario"
+                            onClick={() => agregarUsuario(u)}
+                          >
+                            <div className="usuario-info">
+                              <div className="avatar-usuario">
+                                {u.nombre?.[0]}{u.apellido?.[0]}
+                              </div>
+                              <div className="info-usuario">
+                                <div className="nombre-usuario">
+                                  {u.nombre} {u.apellido}
+                                </div>
+                                <div className="detalle-usuario">
+                                  {u.email} • {u.rol}
+                                </div>
+                              </div>
+                            </div>
+                            <button type="button" className="btn-agregar">+ Agregar</button>
+                          </div>
+                        ))
+                      )}
+                    </div>
 
-                  <div className="contador-selector">
-                    <strong>{usuariosSeleccionados.length}</strong> usuario(s) seleccionado(s)
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+                    <div className="contador-selector">
+                      <strong>{usuariosSeleccionados.length}</strong> usuario(s) seleccionado(s)
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
 
-          {tipoDestino === "todos" && (
-            <div className="info-message">
-              📢 La notificación se enviará a <strong>TODOS</strong> los usuarios ({usuarios.length})
-            </div>
-          )}
+            {tipoDestino === "todos" && (
+              <div className="info-message">
+                ℹ️ La notificación se enviará a <strong>TODOS</strong> los usuarios del sistema ({usuarios.length})
+              </div>
+            )}
+          </div>
 
-          <button className="btn-generar" onClick={generar} disabled={cargando}>
-            {cargando
-              ? "🔄 Enviando..."
-              : `📨 Enviar a ${
-                  tipoDestino === "todos" ? usuarios.length : usuariosSeleccionados.length
-                } usuario(s)`}
+          {/* Botón enviar */}
+          <button
+            className="btn-enviar"
+            onClick={generar}
+            disabled={cargando}
+          >
+            <Send size={18} />
+            Enviar Notificación
           </button>
-        </main>
+        </div>
+
       </div>
     </div>
   );

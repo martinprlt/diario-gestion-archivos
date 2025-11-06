@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { AuthContext } from './AuthContext';
 export function AuthProvider({ children }) {
-  const [usuario, setUsuario] = useState(null);
+  const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export function AuthProvider({ children }) {
     
     if (storedUser && storedToken) {
       try {
-        setUsuario(JSON.parse(storedUser));
+        setUser(JSON.parse(storedUser));
         setToken(storedToken);
       } catch (error) {
         console.error("Error parsing stored user data:", error);
@@ -38,7 +38,7 @@ export function AuthProvider({ children }) {
     try {
       localStorage.setItem('usuario', JSON.stringify(userToStore));
       localStorage.setItem('token', authToken);
-      setUsuario(userToStore);
+      setUser(userToStore);
       setToken(authToken);
     } catch (error) {
       console.error("Error saving auth data to localStorage:", error);
@@ -48,12 +48,13 @@ export function AuthProvider({ children }) {
   const logout = () => {
     localStorage.removeItem('usuario');
     localStorage.removeItem('token');
-    setUsuario(null);
+    setUser(null);
     setToken(null);
+    window.location.href = '/';
   };
 
   return (
-    <AuthContext.Provider value={{ usuario, token, setUsuario, login, logout }}>
+    <AuthContext.Provider value={{ user, token, setUser, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

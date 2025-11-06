@@ -1,6 +1,5 @@
 // 📁 src/context/CategoriasContext.jsx - VERSIÓN LIMPIA
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { API_BASE_URL } from '../config/api.js'
 
 const CategoriasContext = createContext();
 
@@ -22,7 +21,7 @@ export const CategoriasProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      const response = await fetch(`${API_BASE_URL}/api/categorias`);
+      const response = await fetch('http://localhost:5000/api/categorias');
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

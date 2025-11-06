@@ -2,7 +2,6 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
 import "../assets/styles/galeriaPersonal.css";
-import { API_BASE_URL } from '../config/api.js'
 
 function GaleriaPersonal() {
   const [fotos, setFotos] = useState([]);
@@ -16,7 +15,7 @@ function GaleriaPersonal() {
   useEffect(() => {
     const fetchFotos = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/fotos/my`, {
+        const res = await fetch("http://localhost:5000/api/fotos/my", {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error("Error al cargar tus fotos personales");
@@ -33,7 +32,7 @@ function GaleriaPersonal() {
   const handleDelete = async (fotoId) => {
     if (window.confirm("¿Estás seguro de que quieres eliminar esta foto?")) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/fotos/${fotoId}`, {
+        const res = await fetch(`http://localhost:5000/api/fotos/${fotoId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -53,7 +52,7 @@ function GaleriaPersonal() {
   const handleToggleVisibilidad = async (fotoId) => {
     try {
       const res = await fetch(
-        `${API_BASE_URL}/api/fotos/${fotoId}/toggle-visibility`,
+        `http://localhost:5000/api/fotos/${fotoId}/toggle-visibility`,
         {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },

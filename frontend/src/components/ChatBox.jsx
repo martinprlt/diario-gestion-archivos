@@ -1,6 +1,6 @@
-// ChatBox.jsx - Actualizado
+// ChatBox.jsx - VERSIÓN LIMPIA
 import React, { useState, useRef, useEffect } from "react";
-import { useChat } from "../context/ChatContext.jsx";
+import { useChat } from "../context/chatContext.jsx";
 import { Send } from "lucide-react";
 
 const ChatBox = ({ receptor, userId }) => {
@@ -21,12 +21,30 @@ const ChatBox = ({ receptor, userId }) => {
       (m.emisor_id === receptor.id && m.receptor_id === userId)
   );
 
+  // Función segura para formatear hora
+  const formatearHora = (fechaString) => {
+    try {
+      const fecha = new Date(fechaString);
+      if (isNaN(fecha.getTime())) {
+        return "Ahora";
+      }
+      return fecha.toLocaleTimeString('es-AR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    // eslint-disable-next-line no-unused-vars
+    } catch (error) {
+      return "Ahora";
+    }
+  };
+
+  // Scroll al final cuando cambien los mensajes
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [mensajesFiltrados]);
 
   return (
-    <>
+    <div className="chat-box-wrapper">
       {/* Header del chat */}
       <div className="chat-header">
         <div className="chat-header-info">
@@ -51,28 +69,20 @@ const ChatBox = ({ receptor, userId }) => {
         ) : (
           mensajesFiltrados.map((m) => {
             const esPropio = m.emisor_id === userId;
+            const hora = formatearHora(m.fecha_envio);
+
             return (
               <div
-                key={m.id_mensaje}
+                key={m.id_mensaje || m.id}
                 className={`message-bubble ${
                   esPropio ? "message-sent" : "message-received"
                 }`}
               >
-                {/* Nombre del remitente (solo para mensajes recibidos) */}
                 {!esPropio && (
                   <div className="message-sender">{receptor.nombre}</div>
                 )}
-
-                {/* Contenido del mensaje */}
                 <div className="message-text">{m.contenido}</div>
-
-                {/* Hora del mensaje */}
-                <div className="message-time">
-                  {new Date(m.fecha_envio).toLocaleTimeString('es-AR', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </div>
+                <div className="message-time">{hora}</div>
               </div>
             );
           })
@@ -99,7 +109,7 @@ const ChatBox = ({ receptor, userId }) => {
           <span>Enviar</span>
         </button>
       </div>
-    </>
+    </div>
   );
 };
 

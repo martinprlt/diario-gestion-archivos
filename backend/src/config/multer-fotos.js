@@ -1,12 +1,22 @@
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
+import { UPLOADS_PATH } from './multer.js'; // Importar la ruta centralizada
+
+// Asegurarse de que el subdirectorio 'fotos' exista
+const fotosUploadPath = path.join(UPLOADS_PATH, 'fotos');
+if (!fs.existsSync(fotosUploadPath)) {
+  fs.mkdirSync(fotosUploadPath, { recursive: true });
+}
 
 const storage = multer.diskStorage({
-  destination: './uploads/fotos/', // Cambiar carpeta
+  destination: (req, file, cb) => {
+    cb(null, fotosUploadPath); // Usar la ruta absoluta y asegurada
+  },
   filename: (req, file, cb) => {
-    const fileHash = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`; 
-    const fileExt = path.extname(file.originalname); 
-    cb(null, `${fileHash}${fileExt}`); 
+    const fileHash = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    const fileExt = path.extname(file.originalname);
+    cb(null, `${fileHash}${fileExt}`);
   }
 });
 

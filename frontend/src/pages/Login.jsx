@@ -2,7 +2,6 @@
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.js';
-import { API_BASE_URL } from '../config/api.js'
 import LoginForm from '../components/LoginForm';
 import '../assets/styles/login.css';
 
@@ -13,7 +12,7 @@ function Login() {
 
   const handleLogin = async (credentials) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -32,15 +31,18 @@ function Login() {
         const rol = data.user.categoria;
         
         switch(rol) {
-  case 'Periodista':
-  case 'Fotografo': 
-  case 'Editor':
-  case 'Administrador':
-    navigate('/dashboard');  // ✅ Todos van al dashboard
-    break;
-  default:
-    navigate('/');
-}
+          case 'Periodista':
+            navigate('/notas');
+            break;
+          case 'Fotografo':
+            navigate('/galeria');
+            break;
+          case 'Editor':
+            navigate('/editor');
+            break;
+          default:
+            navigate('/');
+        }
       } else {
         setError(data.message || 'Credenciales incorrectas');
       }

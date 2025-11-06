@@ -17,31 +17,30 @@ import NotificacionesInternas from './pages/NotificacionesInternas';
 import GestionUsuario from './pages/GestionUsuario';
 import ArticulosEnRevision from './pages/ArticulosEnRevision.jsx';
 import ArticulosAprobados from './pages/ArticulosAprobados.jsx';
-import Dashboard from './pages/Dashboard.jsx';
 import ConfiguracionUsuario from './pages/ConfiguracionUsuario';
 import RevisionEditor from './pages/RevisionEditor';
 import AdminLogs from './pages/AdminLogs.jsx';
 import { AuthProvider } from './context/AuthProvider.jsx';
 import { DashboardAdmin } from './pages/DashboardAdmin.jsx';
-import ChatPage from './pages/ChatPage.jsx'; 
-import { useHeartbeat } from './hooks/useHeartbeat'; 
-import { useContext } from 'react';
+import ChatPage from './pages/ChatPage.jsx'; // Importar ChatPage
+import { useHeartbeat } from './hooks/useHeartbeat'; // ⬅️ IMPORTAR
+import { useContext } from 'react'; // ⬅️ IMPORTAR
 import { AuthContext } from './context/AuthContext'; 
 
-
+// ✅ Componente que activa el heartbeat para TODOS
 function GlobalHeartbeat() {
-  useHeartbeat(); 
-  return null;
+  useHeartbeat(); // Este hook se ejecuta en TODA la app
+  return null; // No renderiza nada
 }
 
-
+// ✅ Wrapper para activar heartbeat solo si hay usuario
 function AppContent() {
   const { user } = useContext(AuthContext);
   
   return (
     <>
       <Navbar />
-      {}
+      {/* ✅ Si hay usuario logueado, activar heartbeat global */}
       {user && <GlobalHeartbeat />}
       
       <Routes>
@@ -50,8 +49,6 @@ function AppContent() {
         <Route path="/recuperar" element={<Recuperar />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/configuracion" element={<ConfiguracionUsuario />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-
 
         <Route element={<ProtectedRoute allow={['periodista']} />}>
           <Route path="/periodista-upload" element={<PeriodistaUpload />} />

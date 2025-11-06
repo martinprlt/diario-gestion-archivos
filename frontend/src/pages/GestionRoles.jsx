@@ -2,7 +2,6 @@ import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { Users, Shield } from 'lucide-react'; // Importar íconos
 import '../assets/styles/gestionRoles.css';
-import { API_BASE_URL } from '../config/api.js'
 
 export default function GestionRoles() {
   const [roles, setRoles] = useState([]);
@@ -22,7 +21,7 @@ export default function GestionRoles() {
       setError('');
       
       // Cargar roles
-      const rolesRes = await fetch(`${API_BASE_URL}/api/roles`, {
+      const rolesRes = await fetch('http://localhost:5000/api/roles', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -31,7 +30,7 @@ export default function GestionRoles() {
       setRoles(rolesData);
 
       // Cargar usuarios
-      const usuariosRes = await fetch(`${API_BASE_URL}/api/usuarios`, {
+      const usuariosRes = await fetch('http://localhost:5000/api/usuarios', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       
@@ -49,7 +48,7 @@ export default function GestionRoles() {
   // 🔹 FUNCIÓN PARA REASIGNAR ROL
   const reasignarRol = async (usuarioId, nuevoRolId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/usuarios/${usuarioId}/rol`, {
+      const response = await fetch(`http://localhost:5000/api/usuarios/${usuarioId}/rol`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -211,7 +210,6 @@ export default function GestionRoles() {
   );
 }
 
-// 🔹 COMPONENTE DE FILA DE USUARIO
 function UsuarioFila({ usuario, roles, onReasignar }) {
   const [nuevoRolId, setNuevoRolId] = useState('');
 
@@ -227,9 +225,12 @@ function UsuarioFila({ usuario, roles, onReasignar }) {
     onReasignar(usuario.id, parseInt(nuevoRolId));
   };
 
-  // ✅ Obtener el nombre del rol actual
-  const getRolNombre = (rolId) => {
-    const rol = roles.find(r => r.id_rol === rolId);
+
+  // ✅ FUNCIÓN MEJORADA para obtener el nombre del rol actual
+  const getRolNombre = (usuario) => {
+    if (usuario.rol_nombre) return usuario.rol_nombre;        // caso: backend devuelve rol_nombre
+    if (usuario.rol?.nombre) return usuario.rol.nombre;        // caso: backend devuelve objeto rol
+    const rol = roles.find(r => r.id_rol === usuario.rol_id);  // caso: backend devuelve solo rol_id
     return rol ? rol.nombre : 'Sin rol asignado';
   };
 

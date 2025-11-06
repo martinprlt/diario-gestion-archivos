@@ -4,10 +4,69 @@ WebApp de gestión de archivos diseñada para resolver las deficiencias actuales
 
 ## Características Principales
 
-*   **Gestión de Usuarios y Roles:** Sistema completo para administrar los permisos de los diferentes miembros del equipo (periodistas, editores, fotógrafos, etc.).
+*   **Gestión de Usuarios y Roles:** Sistema completo para administrar los permisos de los diferentes miembros del equipo.
+*   **Flujo de Trabajo Editorial:** Proceso claro para la subida, revisión y aprobación de artículos.
 *   **Subida y Gestión de Archivos:** Permite a los periodistas y fotógrafos subir sus artículos y material gráfico de forma segura.
+*   **Galería Multimedia:** Galerías personales y globales para la gestión de imágenes.
 *   **Sistema de Notificaciones:** Facilita la comunicación interna entre los miembros del equipo.
+*   **Chat en Tiempo Real:** Herramienta de comunicación instantánea para una colaboración más fluida.
 *   **Organización por Categorías:** Clasificación de artículos para una mejor organización y búsqueda.
+
+## Funcionalidades por Rol de Usuario
+
+El sistema está diseñado con roles específicos para organizar el flujo de trabajo editorial:
+
+### Administrador
+*   **Gestión Total de Usuarios:** Crear, editar, eliminar y asignar roles a los usuarios.
+*   **Gestión de Contenido:** Administrar categorías y supervisar todos los artículos y archivos del sistema.
+*   **Panel de Control:** Acceso a un dashboard para la administración general del sitio.
+
+### Editor
+*   **Revisión de Artículos:** Evaluar los artículos enviados por los periodistas.
+*   **Aprobación y Rechazo:** Aprobar, rechazar o solicitar modificaciones en los artículos.
+*   **Supervisión:** Visualizar el estado de todos los artículos en el sistema.
+
+### Periodista
+*   **Subida de Artículos:** Enviar nuevos artículos para su revisión.
+*   **Seguimiento:** Consultar el estado de sus envíos (pendiente, en revisión, aprobado).
+*   **Notificaciones:** Recibir alertas sobre el progreso de sus artículos.
+
+### Fotógrafo
+*   **Gestión de Imágenes:** Subir y administrar archivos multimedia.
+*   **Galería Personal:** Mantener una galería propia de imágenes.
+*   **Galería Global:** Acceder a un banco de imágenes compartido por todos los fotógrafos.
+
+## Estructura del Proyecto
+
+### Backend (Node.js + Express)
+*   **`src/config`**: Conexión a la base de datos (MongoDB), configuración de subida de archivos (Multer) y envío de correos (Nodemailer).
+*   **`src/controllers`**: Lógica que maneja las peticiones HTTP para cada recurso (usuarios, artículos, etc.).
+*   **`src/models`**: Esquemas de datos (Mongoose) que definen la estructura de la información.
+*   **`src/routes`**: Definición de los endpoints de la API.
+*   **`src/middlewares`**: Funciones para autenticación (JWT), manejo de errores y otras tareas intermedias.
+*   **`src/chat`**: Lógica para el chat en tiempo real con Socket.io.
+
+### Frontend (React + Vite)
+*   **`src/components`**: Componentes de React reutilizables (Navbar, formularios, etc.).
+*   **`src/pages`**: Componentes que representan las páginas completas de la aplicación (Login, Dashboard, etc.).
+*   **`src/context`**: Manejo del estado global de la aplicación con la Context API de React (autenticación, chat, etc.).
+*   **`src/routes`**: Configuración de las rutas de la aplicación, incluyendo rutas protegidas.
+*   **`src/assets`**: Archivos estáticos como imágenes y hojas de estilo CSS.
+
+## Patrones de Diseño Utilizados
+
+Este proyecto aplica varios patrones de diseño y arquitectónicos para asegurar un código mantenible, escalable y bien organizado.
+
+### Backend
+*   **Modelo-Vista-Controlador (MVC):** La arquitectura del backend está estructurada siguiendo el patrón MVC.
+    *   **Modelos:** Definen la estructura de los datos y la lógica de negocio (`/src/models`).
+    *   **Vistas:** Representadas por las respuestas JSON que la API envía al cliente.
+    *   **Controladores:** Manejan las solicitudes HTTP, interactúan con los modelos y envían las respuestas (`/src/controllers`).
+
+### Frontend
+*   **Arquitectura Basada en Componentes:** La interfaz de usuario está construida con React, utilizando componentes reutilizables y autocontenidos.
+*   **Patrón Proveedor (Provider Pattern):** Se utiliza la Context API de React para proveer un estado global a los componentes que lo necesitan (`/src/context`), evitando el "prop drilling".
+*   **Patrón Observador (Observer Pattern):** Los componentes se "suscriben" a los cambios en los contextos de React. Cuando el estado cambia en un proveedor, los componentes suscritos se actualizan y renderizan automáticamente.
 
 ## Cómo Probar el Sistema
 

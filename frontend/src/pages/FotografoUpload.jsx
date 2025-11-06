@@ -3,7 +3,6 @@ import React, { useRef, useState } from 'react';
 import { useCategorias } from '../context/CategoriasContext.jsx'; // 👈 NUEVA IMPORTACIÓN
 import '../assets/styles/fotografo-upload.css';
 import axios from 'axios';
-import { API_BASE_URL } from '../config/api.js'
 
 export default function FotografoUpload() {
   const { categorias, loading, error } = useCategorias(); // 👈 USAR EL HOOK
@@ -63,7 +62,7 @@ export default function FotografoUpload() {
 
       const token = localStorage.getItem('token');
       
-      const response = await axios.post(`${API_BASE_URL}/api/fotos/upload`, formData, {
+      const response = await axios.post('http://localhost:5000/api/fotos/upload', formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

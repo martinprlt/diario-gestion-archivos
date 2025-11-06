@@ -39,11 +39,11 @@ export async function verifyToken(req, res, next) {
       categoria: user.categoria.toLowerCase()
     };
 
-    console.log(`Token válido: ${req.user.usuario} (${req.user.categoria})`);
+    console.log(`✅ Token válido: ${req.user.usuario} (${req.user.categoria})`);
     next();
 
   } catch (err) {
-    console.error("Error en verifyToken:", err.message);
+    console.error("🔴 Error en verifyToken:", err.message);
     
     if (err.name === 'TokenExpiredError') {
       return res.status(401).json({
@@ -64,18 +64,18 @@ export async function checkAdminRole(req, res, next) {
     const categoria = req.user.categoria?.toLowerCase();
     
     if (categoria === 'administrador' || categoria === 'admin') {
-      console.log(' Usuario admin verificado:', req.user.usuario);
+      console.log('✅ Usuario admin verificado:', req.user.usuario);
       return next();
     }
 
-    console.log(' Acceso denegado:', req.user.usuario, 'es', categoria);
+    console.log('❌ Acceso denegado:', req.user.usuario, 'es', categoria);
     return res.status(403).json({ 
       message: "Acceso denegado: se requiere rol de administrador",
       tuCategoria: req.user.categoria 
     });
 
   } catch (err) {
-    console.error(" Error en checkAdminRole:", err);
+    console.error("🔴 Error en checkAdminRole:", err);
     res.status(500).json({ message: "Error al verificar rol" });
   }
 }
@@ -85,18 +85,18 @@ export async function checkEditorRole(req, res, next) {
     const categoria = req.user.categoria?.toLowerCase();
     
     if (categoria === 'editor') {
-      console.log('Usuario editor verificado:', req.user.usuario);
+      console.log('✅ Usuario editor verificado:', req.user.usuario);
       return next();
     }
 
-    console.log(' Acceso denegado:', req.user.usuario, 'es', categoria);
+    console.log('❌ Acceso denegado:', req.user.usuario, 'es', categoria);
     return res.status(403).json({ 
       message: "Acceso denegado: se requiere rol de editor",
       tuCategoria: req.user.categoria 
     });
 
   } catch (err) {
-    console.error(" Error en checkEditorRole:", err);
+    console.error("🔴 Error en checkEditorRole:", err);
     res.status(500).json({ message: "Error al verificar rol" });
   }
 }
@@ -118,11 +118,11 @@ export function checkRole(rolesPermitidos) {
       
       // Verificar si el usuario tiene uno de los roles permitidos
       if (rolesNormalizados.includes(categoria)) {
-        console.log(` Rol verificado: ${req.user.usuario} (${categoria})`);
+        console.log(`✅ Rol verificado: ${req.user.usuario} (${categoria})`);
         return next();
       }
 
-      console.log(` Acceso denegado: ${req.user.usuario} es ${categoria}, se requiere: ${rolesPermitidos.join(' o ')}`);
+      console.log(`❌ Acceso denegado: ${req.user.usuario} es ${categoria}, se requiere: ${rolesPermitidos.join(' o ')}`);
       return res.status(403).json({ 
         message: `Acceso denegado: se requiere rol de ${rolesPermitidos.join(' o ')}`,
         tuCategoria: req.user.categoria,
@@ -130,7 +130,7 @@ export function checkRole(rolesPermitidos) {
       });
 
     } catch (err) {
-      console.error("Error en checkRole:", err);
+      console.error("🔴 Error en checkRole:", err);
       res.status(500).json({ message: "Error al verificar permisos" });
     }
   };
