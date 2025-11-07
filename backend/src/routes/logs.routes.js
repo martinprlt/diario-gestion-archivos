@@ -1,8 +1,8 @@
-// src/routes/logs.routes.js
+// backend/src/routes/logs.routes.js - IMPORTACIONES CORREGIDAS
 import { Router } from "express";
 import { 
-  getAllLogs, 
-  getLogStats, 
+  getLogs,           // ✅ CAMBIADO: getAllLogs → getLogs
+  getLogsStats,      // ✅ CAMBIADO: getLogStats → getLogsStats
   getAccionesDisponibles,
   deleteLogs 
 } from "../controllers/logs.controller.js";
@@ -15,10 +15,10 @@ router.use(verifyToken);
 router.use(checkRole(['Admin', 'Administrador']));
 
 // Obtener todos los logs con filtros
-router.get("/", getAllLogs);
+router.get("/", getLogs);  // ✅ CAMBIADO: getAllLogs → getLogs
 
 // Obtener estadísticas
-router.get("/stats", getLogStats);
+router.get("/stats", getLogsStats);  // ✅ CAMBIADO: getLogStats → getLogsStats
 
 // Obtener tipos de acciones disponibles
 router.get("/acciones", getAccionesDisponibles);

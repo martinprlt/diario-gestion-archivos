@@ -1,10 +1,10 @@
-// src/controllers/logs.controller.js
+// backend/src/controllers/logs.controller.js - NOMBRES CORREGIDOS
 import { pool } from "../config/db.js";
 
 // =============================
-// OBTENER TODOS LOS LOGS (Solo Admin)
+// OBTENER TODOS LOS LOGS (Solo Admin) - NOMBRE CORREGIDO
 // =============================
-export const getAllLogs = async (req, res) => {
+export const getLogs = async (req, res) => {  // ✅ CAMBIADO: getAllLogs → getLogs
   try {
     const { limite = 100, pagina = 1, usuario_id, accion, desde, hasta } = req.query;
     
@@ -93,14 +93,17 @@ export const getAllLogs = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Error al obtener logs:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.status(500).json({ 
+      message: "Error interno del servidor",
+      error: error.message 
+    });
   }
 };
 
 // =============================
-// OBTENER ESTADÍSTICAS DE LOGS
+// OBTENER ESTADÍSTICAS DE LOGS - NOMBRE CORREGIDO
 // =============================
-export const getLogStats = async (req, res) => {
+export const getLogsStats = async (req, res) => {  // ✅ CAMBIADO: getLogStats → getLogsStats
   try {
     // Total de acciones por tipo
     const accionesPorTipo = await pool.query(`
@@ -150,7 +153,10 @@ export const getLogStats = async (req, res) => {
 
   } catch (error) {
     console.error("❌ Error al obtener estadísticas:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    res.status(500).json({ 
+      message: "Error interno del servidor",
+      error: error.message 
+    });
   }
 };
 
@@ -173,11 +179,11 @@ export const getAccionesDisponibles = async (req, res) => {
 };
 
 // =============================
-// LIMPIAR LOGS ANTIGUOS (Opcional - usar con cuidado)
+// LIMPIAR LOGS ANTIGUOS (Opcional)
 // =============================
 export const deleteLogs = async (req, res) => {
   try {
-    const { dias } = req.body; // Eliminar logs más antiguos que X días
+    const { dias } = req.body;
 
     if (!dias || dias < 30) {
       return res.status(400).json({ 
