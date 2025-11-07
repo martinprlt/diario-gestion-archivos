@@ -12,7 +12,7 @@ function Notas() {
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
 
-  const { token, user } = useContext(AuthContext); // ✅ Agregamos user
+  const { token, user } = useContext(AuthContext);
   const { categorias } = useCategorias();
   const navigate = useNavigate();
 
@@ -23,7 +23,6 @@ function Notas() {
     }
   }, [token]);
 
-  // Cargar artículos (borradores y rechazados)
   const fetchArticulos = async () => {
     try {
       const response = await apiFetch(apiEndpoints.myArticles);
@@ -42,28 +41,23 @@ function Notas() {
     }
   };
 
-  // ✅ CORREGIDO: Cargar notificaciones del usuario
   const fetchNotificaciones = async () => {
     try {
-      // ✅ Usar apiEndpoints.userNotifications correctamente
       if (!user || !user.id_usuario) {
         console.warn('⚠️ No hay usuario logueado para cargar notificaciones');
         return;
       }
-
       const response = await apiFetch(apiEndpoints.userNotifications(user.id_usuario));
-      
       if (response.ok) {
         const data = await response.json();
         setNotificaciones(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('❌ Error al cargar notificaciones:', err);
-      setNotificaciones([]); // Fallback a array vacío
+      setNotificaciones([]);
     }
   };
 
-  // Helpers
   const getNombreCategoria = (categoriaId) => {
     if (!categoriaId) return 'Sin categoría';
     const cat = categorias.find((c) => c.id_categoria === categoriaId);
@@ -93,21 +87,22 @@ function Notas() {
     }
   };
 
-  // ✅ CORREGIDO: Descargar artículo
+  const getEstadoUI = (estado = '') => {
+    const e = estado.toLowerCase();
+    if (e.includes('rechaz')) return { cls: 'estado--bad', icon: '⛔' };
+    if (e.includes('aprob') || e.includes('public')) return { cls: 'estado--ok', icon: '✅' };
+    if (e.includes('borrad')) return { cls: 'estado--rev', icon: '📝' };
+    return { cls: 'estado--rev', icon: '⏳' };
+  };
+
   const handleDownload = async (id, nota) => {
     try {
       const response = await apiFetch(apiEndpoints.downloadArticle(id));
-      
-      if (!response.ok) {
-        throw new Error('Error en la respuesta del servidor');
-      }
+      if (!response.ok) throw new Error('Error en la respuesta del servidor');
       
       const data = await response.json();
-      console.log('🔍 Respuesta downloadArticle:', data);
-      
       if (data.success && data.downloadUrl) {
         const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
-        console.log('🔗 Abriendo URL de descarga:', downloadUrl);
         window.open(downloadUrl, '_blank');
       } else {
         throw new Error(data.message || 'Error al descargar');
@@ -118,12 +113,8 @@ function Notas() {
     }
   };
 
-  // ✅ CORREGIDO: Enviar a revisión
   const handleSendToReview = async (id, titulo) => {
     try {
-      console.log('📤 Enviando artículo a revisión:', id);
-      
-      // ✅ Usar apiEndpoints.sendToReview correctamente
       const response = await apiFetch(apiEndpoints.sendToReview(id), {
         method: 'POST',
       });
@@ -134,8 +125,6 @@ function Notas() {
       }
       
       const data = await response.json();
-      console.log('✅ Respuesta del servidor:', data);
-
       setNotas((prev) => prev.filter((item) => item.id_articulo !== id));
       alert(`✅ "${titulo}" enviado a revisión exitosamente`);
     } catch (err) {
@@ -144,12 +133,10 @@ function Notas() {
     }
   };
 
-  // ✅ CORREGIDO: Eliminar artículo
   const handleDelete = async (id, titulo = 'este artículo') => {
     if (!window.confirm(`¿Eliminar "${titulo}" permanentemente?`)) return;
     
     try {
-      // ✅ Usar apiEndpoints.deleteArticle correctamente
       const response = await apiFetch(apiEndpoints.deleteArticle(id), {
         method: 'DELETE',
       });
@@ -160,7 +147,6 @@ function Notas() {
       }
       
       const data = await response.json();
-      
       if (!data.success) {
         throw new Error(data.message || 'Error al eliminar');
       }
@@ -173,7 +159,6 @@ function Notas() {
     }
   };
 
-  // ✅ CORREGIDO: Ver artículo
   const handleView = async (id, nota) => {
     try {
       const response = await apiFetch(apiEndpoints.viewArticle(id));
@@ -183,10 +168,7 @@ function Notas() {
       }
       
       const data = await response.json();
-      console.log('🔍 Respuesta viewArticle:', data);
-      
       if (data.success && data.viewUrl) {
-        console.log('🔗 Abriendo URL:', data.viewUrl);
         window.open(data.viewUrl, '_blank');
       } else {
         throw new Error(data.message || 'Error al visualizar');
@@ -201,15 +183,6 @@ function Notas() {
     navigate('/periodista-upload', {
       state: { articulo: nota, modo: 'modificacion' },
     });
-  };
-
-  // Estado visual
-  const getEstadoUI = (estado = '') => {
-    const e = estado.toLowerCase();
-    if (e.includes('rechaz')) return { cls: 'estado--bad', icon: '⛔' };
-    if (e.includes('aprob') || e.includes('public')) return { cls: 'estado--ok', icon: '✅' };
-    if (e.includes('borrad')) return { cls: 'estado--rev', icon: '📝' };
-    return { cls: 'estado--rev', icon: '⏳' };
   };
 
   // Filtro de búsqueda
@@ -249,7 +222,7 @@ function Notas() {
           </div>
         </div>
 
-        {/* Lista (mobile) */}
+        {/* ✅ VISTA MOBILE/TABLET (Cards) */}
         <div className="notas-list">
           {notasFiltradas.length === 0 ? (
             <div className="empty-state">No hay artículos para mostrar.</div>
@@ -335,6 +308,114 @@ function Notas() {
             })
           )}
         </div>
+
+        {/* ✅ VISTA DESKTOP (Tabla) */}
+        <table className="notas-table">
+          <thead>
+            <tr>
+              <th className="col-titulo">Título</th>
+              <th className="col-categoria">Categoría</th>
+              <th className="col-estado">Estado</th>
+              <th className="col-fecha">Fecha</th>
+              <th className="col-acciones">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {notasFiltradas.length === 0 ? (
+              <tr>
+                <td colSpan="5" style={{ textAlign: 'center', padding: '2rem' }}>
+                  <div className="empty-state">No hay artículos para mostrar.</div>
+                </td>
+              </tr>
+            ) : (
+              notasFiltradas.map((nota) => {
+                const comentario = getComentarioRechazo(nota.id_articulo, nota.titulo);
+                const { cls: estadoCls, icon: estadoIcon } = getEstadoUI(nota.estado);
+
+                return (
+                  <tr key={nota.id_articulo}>
+                    <td className="col-titulo">
+                      <div className="nota-titulo">{nota.titulo}</div>
+                      {nota.estado === 'rechazado' && comentario && (
+                        <div className="motivo" style={{ marginTop: '0.5rem', fontSize: '0.8rem' }}>
+                          {comentario}
+                        </div>
+                      )}
+                    </td>
+                    <td className="col-categoria">
+                      <span className="chip chip--cat">
+                        {getNombreCategoria(nota.categoria_id)}
+                      </span>
+                    </td>
+                    <td className="col-estado">
+                      <span className={`nota-estado ${estadoCls}`}>
+                        <i>{estadoIcon}</i> {nota.estado || 'Borrador'}
+                      </span>
+                    </td>
+                    <td className="col-fecha">
+                      {formatDate(nota.fecha_creacion)}
+                    </td>
+                    <td className="col-acciones">
+                      <div className="table-actions">
+                        <button
+                          className="btn-action btn--light btn-table"
+                          onClick={() => handleDownload(nota.id_articulo, nota)}
+                          title="Descargar"
+                        >
+                          📥
+                        </button>
+                        <button
+                          className="btn-action btn--light btn-table"
+                          onClick={() => handleView(nota.id_articulo, nota)}
+                          title="Leer"
+                        >
+                          👁️
+                        </button>
+
+                        {nota.estado === 'borrador' && (
+                          <button
+                            className="btn-action btn--info btn-table"
+                            onClick={() => handleSendToReview(nota.id_articulo, nota.titulo)}
+                            title="Enviar a revisión"
+                          >
+                            📤
+                          </button>
+                        )}
+
+                        {nota.estado === 'rechazado' && (
+                          <>
+                            <button
+                              className="btn-action btn--info btn-table"
+                              onClick={() => handleSendToReview(nota.id_articulo, nota.titulo)}
+                              title="Reenviar a revisión"
+                            >
+                              🔄
+                            </button>
+                            <button
+                              className="btn-action btn--warn btn-table"
+                              onClick={() => handleModificar(nota)}
+                              title="Modificar"
+                            >
+                              ✏️
+                            </button>
+                          </>
+                        )}
+
+                        <button
+                          className="btn-action btn--danger btn-table"
+                          onClick={() => handleDelete(nota.id_articulo, nota.titulo)}
+                          title="Eliminar"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );

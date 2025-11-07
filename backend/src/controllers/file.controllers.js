@@ -696,7 +696,7 @@ export const rejectArticle = async (req, res) => {
       VALUES ($1, $2, $3, false, NOW())
     `, [
       'Artículo rechazado',
-      `🔴 ARTÍCULO RECHAZADO\n\nTu artículo "${article.titulo}" fue rechazado por el editor.\n\n📝 Comentario: ${comentario}\n\nPor favor, modifica el artículo y envíalo nuevamente a revisión.`,
+      `ARTÍCULO RECHAZADO\n\nTu artículo "${article.titulo}" fue rechazado por el editor.\n\n Comentario: ${comentario}\n\nPor favor, modifica el artículo y envíalo nuevamente a revisiOn.`,
       article.periodista_id
     ]);
 

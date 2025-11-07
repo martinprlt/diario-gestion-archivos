@@ -1,10 +1,9 @@
 // 📁 src/context/CategoriasContext.jsx - CORREGIDO
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { apiFetch, apiEndpoints } from '../config/api';
+import { API_URL } from '../config/api';
 
 const CategoriasContext = createContext();
 
-// ✅ PRIMERO el hook - para Fast Refresh
 export const useCategorias = () => {
   const context = useContext(CategoriasContext);
   if (!context) {
@@ -13,7 +12,6 @@ export const useCategorias = () => {
   return context;
 };
 
-// ✅ LUEGO el provider
 export const CategoriasProvider = ({ children }) => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,24 +20,39 @@ export const CategoriasProvider = ({ children }) => {
   const cargarCategorias = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // ✅ CORREGIDO: usar 'categorias' en lugar de 'categories'
-      const response = await apiFetch(apiEndpoints.categorias);
+      console.log('🚀 Cargando categorías desde:', `${API_URL}/api/categorias`);
+      
+      // ✅ USAR FETCH DIRECTAMENTE (sin apiFetch)
+      const response = await fetch(`${API_URL}/api/categorias`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          // ⚠️ NO incluir Authorization - categorías es pública
+        },
+      });
+
+      console.log('📡 Status:', response.status, response.statusText);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
       }
-      
+
       const data = await response.json();
+      console.log('✅ Categorías cargadas:', data.length, 'elementos');
+      
       setCategorias(data);
-      setError(null);
       return data;
+      
     } catch (err) {
       console.error('❌ Error cargando categorías:', err);
       setError(err.message);
       
-      // Datos de fallback
+      // Fallback por si acaso
       const fallback = [
+        { id_categoria: 1, nombre: "Política" },
+        { id_categoria: 2, nombre: "Deportes" },
         { id_categoria: 3, nombre: "Economía" },
         { id_categoria: 4, nombre: "Cultura" },
         { id_categoria: 5, nombre: "Tecnología" },
@@ -49,6 +62,8 @@ export const CategoriasProvider = ({ children }) => {
         { id_categoria: 9, nombre: "Educación" },
         { id_categoria: 10, nombre: "Entretenimiento" }
       ];
+      
+      console.warn('⚠️ Usando categorías de fallback');
       setCategorias(fallback);
       return fallback;
     } finally {
@@ -78,5 +93,4 @@ export const CategoriasProvider = ({ children }) => {
   );
 };
 
-// ✅ Export default opcional para evitar warnings
 export default CategoriasContext;
