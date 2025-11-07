@@ -1,15 +1,25 @@
+// src/context/ChatContext.jsx - VERSIÓN COMPATIBLE CON FAST REFRESH
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
-import { API_URL } from "../config/api"; // ✅ Importar solo la URL base
+import { API_URL } from "../config/api";
 
 const ChatContext = createContext();
 
+// ✅ PRIMERO el hook personalizado (para Fast Refresh)
+export const useChat = () => {
+  const context = useContext(ChatContext);
+  if (!context) {
+    throw new Error('useChat debe usarse dentro de ChatProvider');
+  }
+  return context;
+};
+
+// ✅ LUEGO el provider
 export const ChatProvider = ({ children, userId }) => {
   const [mensajes, setMensajes] = useState([]);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    // ✅ Usar API_URL centralizada
     const newSocket = io(API_URL);
     setSocket(newSocket);
 
@@ -46,11 +56,18 @@ export const ChatProvider = ({ children, userId }) => {
     }
   }, [socket, userId]);
 
+  const value = {
+    mensajes, 
+    enviarMensaje, 
+    solicitarHistorial
+  };
+
   return (
-    <ChatContext.Provider value={{ mensajes, enviarMensaje, solicitarHistorial }}>
+    <ChatContext.Provider value={value}>
       {children}
     </ChatContext.Provider>
   );
 };
 
-export const useChat = () => useContext(ChatContext);
+// ✅ OPCIÓN: Export default para evitar warnings
+export default ChatContext;

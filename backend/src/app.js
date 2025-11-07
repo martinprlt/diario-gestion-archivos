@@ -1,4 +1,4 @@
-// src/app.js - BACKEND DIARIO VIRTUAL (CORS UNIFICADO + RATE LIMIT LOGIN)
+// src/app.js - BACKEND PARA RAILWAY (TRUST PROXY + CORS + RATE LIMIT)
 import path from 'path';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
@@ -19,6 +19,13 @@ import errorHandler from './middlewares/error.middleware.js';
 
 const app = express();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+/* =====================================================
+   🌐 0. TRUST PROXY - CRÍTICO PARA RAILWAY
+===================================================== */
+// ✅ Railway usa proxy reverso, debemos confiar en él
+app.set('trust proxy', 1); // Confiar en el primer proxy
+console.log('✅ Trust proxy habilitado (Railway compatible)');
 
 /* =====================================================
    🌐 1. CORS UNIFICADO - Configuración centralizada
@@ -68,7 +75,7 @@ app.use(
 );
 
 /* =====================================================
-   🔒 3. RATE LIMITING PARA LOGIN
+   🔒 3. RATE LIMITING PARA LOGIN (COMPATIBLE CON RAILWAY)
 ===================================================== */
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutos
@@ -76,8 +83,16 @@ const loginLimiter = rateLimit({
   message: {
     error: 'Demasiados intentos de login. Por seguridad, espera 15 minutos.',
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  // ✅ CRÍTICO: Configuración para Railway
+  skipSuccessfulRequests: false,
+  skipFailedRequests: false,
+  // ✅ Railway usa X-Forwarded-For, esto lo maneja correctamente
+  keyGenerator: (req) => {
+    // Usar la IP real del cliente (Railway la pasa en X-Forwarded-For)
+    return req.ip || req.connection.remoteAddress;
+  }
 });
 
 /* =====================================================

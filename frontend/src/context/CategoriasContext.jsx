@@ -1,10 +1,10 @@
-// 📁 src/context/CategoriasContext.jsx - VERSIÓN CON API CONFIG
+// 📁 src/context/CategoriasContext.jsx - CORREGIDO
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { apiFetch, apiEndpoints } from '../config/api'; // ✅ Importar configuración de API
+import { apiFetch, apiEndpoints } from '../config/api';
 
 const CategoriasContext = createContext();
 
-// eslint-disable-next-line react-refresh/only-export-components
+// ✅ PRIMERO el hook - para Fast Refresh
 export const useCategorias = () => {
   const context = useContext(CategoriasContext);
   if (!context) {
@@ -13,6 +13,7 @@ export const useCategorias = () => {
   return context;
 };
 
+// ✅ LUEGO el provider
 export const CategoriasProvider = ({ children }) => {
   const [categorias, setCategorias] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,8 +23,8 @@ export const CategoriasProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      // ✅ Usar apiFetch y apiEndpoints
-      const response = await apiFetch(apiEndpoints.categories);
+      // ✅ CORREGIDO: usar 'categorias' en lugar de 'categories'
+      const response = await apiFetch(apiEndpoints.categorias);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -34,8 +35,10 @@ export const CategoriasProvider = ({ children }) => {
       setError(null);
       return data;
     } catch (err) {
+      console.error('❌ Error cargando categorías:', err);
       setError(err.message);
       
+      // Datos de fallback
       const fallback = [
         { id_categoria: 3, nombre: "Economía" },
         { id_categoria: 4, nombre: "Cultura" },
@@ -74,3 +77,6 @@ export const CategoriasProvider = ({ children }) => {
     </CategoriasContext.Provider>
   );
 };
+
+// ✅ Export default opcional para evitar warnings
+export default CategoriasContext;
