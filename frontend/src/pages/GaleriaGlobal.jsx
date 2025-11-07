@@ -1,7 +1,9 @@
+// 📁 frontend/src/pages/GaleriaGlobal.jsx - VERSIÓN FINAL
+
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
-import { apiEndpoints, apiFetch } from "../config/api"; // ✅ Importamos config central
+import { apiEndpoints, apiFetch } from "../config/api";
 import "../assets/styles/global.css";
 
 function GaleriaGlobal() {
@@ -19,7 +21,7 @@ function GaleriaGlobal() {
   const normalizar = (s = "") =>
     s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
-  // 🔹 Cargar fotos globales
+  // Cargar fotos globales
   useEffect(() => {
     const ac = new AbortController();
 
@@ -34,6 +36,7 @@ function GaleriaGlobal() {
         });
 
         if (!res.ok) throw new Error("Error al cargar las fotos");
+        
         const data = await res.json();
         setFotos(data || []);
       } catch (err) {
@@ -67,7 +70,7 @@ function GaleriaGlobal() {
   const cerrarLightbox = () => setSelectedFoto(null);
   const volverArriba = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // 🔹 Eliminar foto
+  // Eliminar foto (solo admin)
   const handleDelete = async (id) => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar esta foto?")) {
       return;
@@ -76,19 +79,16 @@ function GaleriaGlobal() {
     try {
       const res = await apiFetch(`${apiEndpoints.photos}/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) {
-        throw new Error("Error al eliminar la foto");
-      }
+      if (!res.ok) throw new Error("Error al eliminar la foto");
 
       setFotos(fotos.filter((foto) => foto.id_foto !== id));
+      alert("✅ Foto eliminada correctamente");
     } catch (err) {
       console.error(err);
-      setError("No se pudo eliminar la foto");
+      alert("❌ No se pudo eliminar la foto");
     }
   };
 
@@ -142,9 +142,7 @@ function GaleriaGlobal() {
                 <div className="imagen-wrapper">
                   <img
                     src={foto.url?.startsWith("http") ? foto.url : placeholder}
-                    onError={(e) => {
-                      e.currentTarget.src = placeholder;
-                    }}
+                    onError={(e) => { e.currentTarget.src = placeholder; }}
                     alt={foto.titulo || "Foto sin título"}
                     className="imagen-galeria"
                   />
@@ -157,7 +155,7 @@ function GaleriaGlobal() {
                   <h3>{foto.titulo || "Sin título"}</h3>
                   <p className="descripcion">{foto.descripcion || "Sin descripción"}</p>
                   <p className="autor">
-                    📷 {foto.fotografo_nombre || "Autor desconocido"}
+                    📷 {foto.fotografo_nombre_completo || "Autor desconocido"}
                   </p>
                   <p className="fecha">
                     📅{" "}
@@ -165,8 +163,7 @@ function GaleriaGlobal() {
                       ? new Date(fechaStr).toLocaleDateString("es-AR")
                       : "Fecha desconocida"}
                   </p>
-                  {(user?.categoria === "administrador" ||
-                    user?.categoria === "admin") && (
+                  {(user?.categoria === "administrador" || user?.categoria === "admin") && (
                     <button
                       className="eliminar-foto-btn"
                       onClick={(e) => {
@@ -182,7 +179,11 @@ function GaleriaGlobal() {
             );
           })
         ) : (
-          <p className="sin-fotos">No hay fotos disponibles 😕</p>
+          <p className="sin-fotos">
+            {searchTerm || categoriaFiltro
+              ? "No se encontraron fotos con esos filtros"
+              : "No hay fotos disponibles 😕"}
+          </p>
         )}
       </div>
 
@@ -190,20 +191,14 @@ function GaleriaGlobal() {
         <div className="lightbox" onClick={cerrarLightbox}>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img
-              src={
-                selectedFoto.url?.startsWith("http")
-                  ? selectedFoto.url
-                  : placeholder
-              }
-              onError={(e) => {
-                e.currentTarget.src = placeholder;
-              }}
+              src={selectedFoto.url?.startsWith("http") ? selectedFoto.url : placeholder}
+              onError={(e) => { e.currentTarget.src = placeholder; }}
               alt={selectedFoto.titulo || "Foto"}
               className="lightbox-img"
             />
             <p className="lightbox-text">
               <strong>{selectedFoto.titulo || "Sin título"}</strong> —{" "}
-              {selectedFoto.fotografo_nombre || "Autor desconocido"}
+              {selectedFoto.fotografo_nombre_completo || "Autor desconocido"}
             </p>
             <button className="cerrar-btn" onClick={cerrarLightbox}>
               ✕

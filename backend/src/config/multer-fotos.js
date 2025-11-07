@@ -1,17 +1,19 @@
+// 📁 src/config/multer-fotos.js - ACTUALIZADO PARA CLOUDINARY
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
-import { UPLOADS_PATH } from './multer.js'; // Importar la ruta centralizada
+import { UPLOADS_PATH } from './multer.js';
 
-// Asegurarse de que el subdirectorio 'fotos' exista
-const fotosUploadPath = path.join(UPLOADS_PATH, 'fotos');
-if (!fs.existsSync(fotosUploadPath)) {
-  fs.mkdirSync(fotosUploadPath, { recursive: true });
+// ✅ Crear carpeta temporal para fotos (solo para procesamiento antes de Cloudinary)
+const fotosTempPath = path.join(UPLOADS_PATH, 'temp-fotos');
+if (!fs.existsSync(fotosTempPath)) {
+  fs.mkdirSync(fotosTempPath, { recursive: true });
+  console.log('📁 Carpeta temporal para fotos creada:', fotosTempPath);
 }
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, fotosUploadPath); // Usar la ruta absoluta y asegurada
+    cb(null, fotosTempPath); // ⬅️ Carpeta TEMPORAL para procesamiento
   },
   filename: (req, file, cb) => {
     const fileHash = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;

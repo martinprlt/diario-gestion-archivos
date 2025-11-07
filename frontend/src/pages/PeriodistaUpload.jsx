@@ -1,17 +1,16 @@
 // 📁 src/pages/PeriodistaUpload.jsx
-import React, { useState, useContext, useEffect } from "react";
-import { AuthContext } from "../context/AuthContext.js";
-import { useCategorias } from "../context/CategoriasContext.jsx";
-import { apiEndpoints, API_URL } from "../config/api.js"; // ✅ usamos configuración global
-import "../assets/styles/periodista-upload.css";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useContext, useEffect } from 'react';
+import { AuthContext } from '../context/AuthContext.js';
+import { useCategorias } from '../context/CategoriasContext.jsx'; // 👈 NUEVO
+import '../assets/styles/periodista-upload.css';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function PeriodistaUpload() {
   const { token } = useContext(AuthContext);
-  const { categorias, loading, error } = useCategorias();
+  const { categorias, loading, error } = useCategorias(); // 👈 USAR CONTEXT
 
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
+  const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
   const [file, setFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [uploadStatus, setUploadStatus] = useState(null);
@@ -26,16 +25,16 @@ export default function PeriodistaUpload() {
   useEffect(() => {
     if (location.state && location.state.articulo) {
       const articulo = location.state.articulo;
-      const esModificacion = location.state.modo === "modificacion";
-
+      const esModificacion = location.state.modo === 'modificacion';
+      
       setIsModoEdicion(true);
       setArticuloEditando(articulo);
       setTitle(articulo.titulo);
-      setCategory(articulo.categoria_id?.toString() || "");
-
+      setCategory(articulo.categoria_id?.toString() || '');
+      
       if (esModificacion) {
-        setUploadStatus({
-          info: "⚠️ Este artículo fue rechazado. Modifícalo y envíalo nuevamente a revisión.",
+        setUploadStatus({ 
+          info: '⚠️ Este artículo fue rechazado. Modifícalo y envíalo nuevamente a revisión.' 
         });
       }
     }
@@ -52,7 +51,7 @@ export default function PeriodistaUpload() {
     const selectedFile = e.target.files[0];
     if (selectedFile) {
       setFile(selectedFile);
-      if (selectedFile.type === "application/pdf") {
+      if (selectedFile.type === 'application/pdf') {
         setPreview(URL.createObjectURL(selectedFile));
       } else {
         setPreview(null);
@@ -64,71 +63,74 @@ export default function PeriodistaUpload() {
     e.preventDefault();
 
     if (!file && !isModoEdicion) {
-      alert("Por favor, selecciona un archivo");
+      alert('Por favor, selecciona un archivo');
       return;
     }
 
     if (!title) {
-      alert("Por favor, ingresa un título");
+      alert('Por favor, ingresa un título');
       return;
     }
 
     if (!category) {
-      alert("Debes seleccionar una categoría");
+      alert('Debes seleccionar una categoría');
       return;
     }
 
     const formData = new FormData();
-    if (file) formData.append("archivo", file);
-    formData.append("titulo", title);
-    formData.append("categoria_id", category);
+    if (file) formData.append('archivo', file);
+    formData.append('titulo', title);
+    formData.append('categoria_id', category);
 
     if (isModoEdicion && articuloEditando) {
-      formData.append("articulo_id", articuloEditando.id_articulo);
+      formData.append('articulo_id', articuloEditando.id_articulo);
     }
 
     setUploadStatus({ loading: true });
 
     try {
-      const response = await fetch(apiEndpoints.uploadArticle, {
-        method: "POST",
+      const response = await fetch('http://localhost:5000/api/articles/upload', {
+        method: 'POST',
         headers: {
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        body: formData,
+        body: formData
       });
 
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message || "Error al subir");
 
-      setUploadStatus({
-        success: isModoEdicion
-          ? "Artículo actualizado correctamente"
-          : "Artículo subido correctamente",
+      if (!response.ok) throw new Error(data.message || 'Error al subir');
+
+      setUploadStatus({ 
+        success: isModoEdicion 
+          ? 'Artículo actualizado correctamente' 
+          : 'Artículo subido correctamente' 
       });
       setIsSubmitted(true);
     } catch (err) {
-      console.error("❌ Error en handleSubmit:", err);
+      console.error('❌ Error en handleSubmit:', err);
       setUploadStatus({ error: err.message });
     }
   };
 
   const handleCancel = () => {
     if (isModoEdicion) {
-      navigate("/ArticulosEnRevision");
+      navigate('/ArticulosEnRevision');
     } else {
-      navigate("/notas");
+      navigate('/notas');
     }
   };
 
   return (
     <div className="periodista-upload-container">
       <div className="upload-header">
-        {isModoEdicion ? "MODIFICAR ARTÍCULO" : "SUBIR ARTÍCULO"}
+        {isModoEdicion ? 'MODIFICAR ARTÍCULO' : 'SUBIR ARTÍCULO'}
       </div>
-
+      
       <div className="upload-wrapper">
-        <aside className="sidebar">{/* Opciones adicionales */}</aside>
+        <aside className="sidebar">
+          {/* Opciones del sidebar si las necesitas */}
+        </aside>
 
         <main className="upload-main">
           <form onSubmit={handleSubmit} className="upload-form">
@@ -154,17 +156,14 @@ export default function PeriodistaUpload() {
                 />
               </div>
 
+              {/* 👈 SELECT DE CATEGORÍAS ACTUALIZADO */}
               <div className="form-group">
                 <label htmlFor="category">Categoría *</label>
-
+                
                 {loading ? (
-                  <div className="loading-categorias">
-                    🔄 Cargando categorías...
-                  </div>
+                  <div className="loading-categorias">🔄 Cargando categorías...</div>
                 ) : error ? (
-                  <div className="error-categorias">
-                    ❌ Error cargando categorías
-                  </div>
+                  <div className="error-categorias">❌ Error cargando categorías</div>
                 ) : (
                   <select
                     id="category"
@@ -172,7 +171,7 @@ export default function PeriodistaUpload() {
                     onChange={(e) => setCategory(e.target.value)}
                     disabled={isSubmitted}
                     required
-                    className={!category ? "field-error" : ""}
+                    className={!category ? 'field-error' : ''}
                   >
                     <option value="">Selecciona una categoría</option>
                     {categorias.map((cat) => (
@@ -182,17 +181,15 @@ export default function PeriodistaUpload() {
                     ))}
                   </select>
                 )}
-
+                
                 {!category && categorias.length > 0 && (
-                  <span className="field-error-text">
-                    Debes seleccionar una categoría
-                  </span>
+                  <span className="field-error-text">Debes seleccionar una categoría</span>
                 )}
               </div>
 
               <div className="form-group">
                 <label htmlFor="file">
-                  {isModoEdicion ? "Nuevo archivo (opcional)" : "Archivo"}
+                  {isModoEdicion ? 'Nuevo archivo (opcional)' : 'Archivo'}
                 </label>
                 <div className="file-upload-wrapper">
                   <input
@@ -203,13 +200,14 @@ export default function PeriodistaUpload() {
                     disabled={isSubmitted}
                   />
                   <label htmlFor="file" className="file-upload-label">
-                    {file ? file.name : "Seleccionar archivo"}
+                    {file ? file.name : 'Seleccionar archivo'}
                   </label>
                 </div>
                 <p className="file-hint">
-                  {isModoEdicion
-                    ? "Selecciona un nuevo archivo para reemplazar el actual (opcional)"
-                    : "Formatos aceptados: PDF, DOC, DOCX"}
+                  {isModoEdicion 
+                    ? 'Selecciona un nuevo archivo para reemplazar el actual (opcional)'
+                    : 'Formatos aceptados: PDF, DOC, DOCX'
+                  }
                 </p>
               </div>
 
@@ -222,19 +220,14 @@ export default function PeriodistaUpload() {
 
               {!isSubmitted ? (
                 <div className="form-actions">
-                  <button
-                    type="submit"
-                    className="upload-button"
-                    disabled={uploadStatus?.loading}
-                  >
-                    {uploadStatus?.loading
-                      ? "Procesando..."
-                      : isModoEdicion
-                      ? "Actualizar artículo"
-                      : "Subir artículo"}
+                  <button type="submit" className="upload-button" disabled={uploadStatus?.loading}>
+                    {uploadStatus?.loading 
+                      ? 'Procesando...' 
+                      : isModoEdicion ? 'Actualizar artículo' : 'Subir artículo'
+                    }
                   </button>
-                  <button
-                    type="button"
+                  <button 
+                    type="button" 
                     className="cancel-button"
                     onClick={handleCancel}
                     disabled={uploadStatus?.loading}
@@ -246,12 +239,12 @@ export default function PeriodistaUpload() {
                 <div className="upload-success">
                   <p>{uploadStatus.success}</p>
                   <div className="success-actions">
-                    <button
-                      type="button"
+                    <button 
+                      type="button" 
                       className="new-upload-button"
                       onClick={() => {
-                        setTitle("");
-                        setCategory("");
+                        setTitle('');
+                        setCategory('');
                         setFile(null);
                         setPreview(null);
                         setIsSubmitted(false);
@@ -260,10 +253,10 @@ export default function PeriodistaUpload() {
                         setArticuloEditando(null);
                       }}
                     >
-                      {isModoEdicion ? "Modificar otro" : "Subir nuevo artículo"}
+                      {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
                     </button>
-                    <button
-                      type="button"
+                    <button 
+                      type="button" 
                       className="back-button"
                       onClick={handleCancel}
                     >
@@ -278,16 +271,16 @@ export default function PeriodistaUpload() {
               <h2>Vista previa</h2>
               <div className="preview-box">
                 {preview ? (
-                  <iframe src={preview} title="Vista previa del documento" />
+                  <iframe
+                    src={preview}
+                    title="Vista previa del documento"
+                  />
                 ) : (
                   <div className="preview-placeholder">
                     {file ? (
                       <p>Vista previa no disponible para este tipo de archivo</p>
                     ) : isModoEdicion && articuloEditando ? (
-                      <p>
-                        Modo edición: selecciona un nuevo archivo para ver vista
-                        previa
-                      </p>
+                      <p>Modo edición: selecciona un nuevo archivo para ver vista previa</p>
                     ) : (
                       <>
                         <p>No hay archivo seleccionado</p>

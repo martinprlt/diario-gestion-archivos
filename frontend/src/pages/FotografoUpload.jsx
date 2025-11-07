@@ -1,12 +1,14 @@
-// 📁 src/pages/FotografoUpload.jsx
-import React, { useRef, useState, useEffect } from 'react';
+// 📁 frontend/src/pages/FotografoUpload.jsx - VERSIÓN FINAL
+
+import React, { useRef, useState, useEffect, useContext } from 'react';
 import { useCategorias } from '../context/CategoriasContext.jsx';
-import { API_URL } from '../config/api.js';
+import { AuthContext } from '../context/AuthContext.js';
+import { apiEndpoints } from '../config/api.js';
 import '../assets/styles/fotografo-upload.css';
-import axios from 'axios';
 
 export default function FotografoUpload() {
   const { categorias, loading, error } = useCategorias();
+  const { token } = useContext(AuthContext);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -20,7 +22,6 @@ export default function FotografoUpload() {
   const inputFileRef = useRef();
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
 
-  // 🔹 Establecer categoría por defecto cuando se cargan las categorías
   useEffect(() => {
     if (categorias.length > 0 && !category) {
       setCategory(categorias[0].id_categoria.toString());
@@ -61,23 +62,31 @@ export default function FotografoUpload() {
       formData.append('categoria_id', category);
       formData.append('es_global', 'true');
 
-      const token = localStorage.getItem('token');
-
-      const response = await axios.post(`${API_URL}/api/fotos/upload`, formData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data',
-        },
+      const response = await fetch(`${apiEndpoints.photos}/upload`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
       });
 
-      if (response.status === 201) {
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || `Error ${response.status}`);
+      }
+
+      if (data.success) {
         setArchivoSubido(true);
         setMostrarConfirmacion(false);
         setFileName(title);
-        alert('✅ Foto subida exitosamente');
+        alert('✅ Foto subida correctamente');
+      } else {
+        throw new Error(data.message || 'Error desconocido');
       }
-    } catch {
-      setErrorUpload('Error al subir la foto. Intenta nuevamente.');
+
+    } catch (err) {
+      console.error('Error:', err);
+      setErrorUpload(err.message);
+      alert(`❌ Error: ${err.message}`);
     } finally {
       setCargando(false);
     }
@@ -90,7 +99,7 @@ export default function FotografoUpload() {
     setMostrarConfirmacion(false);
     setTitle('');
     setDescription('');
-    setCategory('');
+    setCategory(categorias[0]?.id_categoria.toString() || '');
     setArchivoSeleccionado(null);
     setErrorUpload('');
   };
@@ -114,7 +123,6 @@ export default function FotografoUpload() {
       <div className="upload-header">FOTÓGRAFO</div>
       <div className="upload-wrapper">
         <aside className="sidebar"></aside>
-
         <main className="upload-main">
           <div className="upload-form">
             <div className="left-section">
@@ -127,7 +135,7 @@ export default function FotografoUpload() {
                 placeholder="Ingresar título"
                 disabled={archivoSubido || cargando}
               />
-
+              
               <label htmlFor="description">Descripción</label>
               <textarea
                 id="description"
@@ -137,7 +145,7 @@ export default function FotografoUpload() {
                 disabled={archivoSubido || cargando}
                 rows="3"
               />
-
+              
               <label htmlFor="category">Categoría *</label>
               {loading ? (
                 <div className="loading-categorias">🔄 Cargando categorías...</div>
@@ -150,7 +158,6 @@ export default function FotografoUpload() {
                   onChange={(e) => setCategory(e.target.value)}
                   disabled={archivoSubido || cargando}
                   required
-                  className={!category ? 'field-error' : ''}
                 >
                   <option value="">Selecciona una categoría</option>
                   {categorias.map((cat) => (
@@ -159,10 +166,6 @@ export default function FotografoUpload() {
                     </option>
                   ))}
                 </select>
-              )}
-
-              {!category && categorias.length > 0 && (
-                <span className="field-error-text">Debes seleccionar una categoría</span>
               )}
 
               <button
@@ -216,7 +219,6 @@ export default function FotografoUpload() {
                       BORRAR ENTREGA
                     </button>
                   </div>
-
                   <table className="status-table">
                     <tbody>
                       <tr>
@@ -225,7 +227,7 @@ export default function FotografoUpload() {
                       </tr>
                       <tr>
                         <td><strong>Última modificación</strong></td>
-                        <td>{new Date().toLocaleString()}</td>
+                        <td>{new Date().toLocaleString('es-AR')}</td>
                       </tr>
                       <tr>
                         <td><strong>Categoría</strong></td>
@@ -243,7 +245,7 @@ export default function FotografoUpload() {
                           </a>
                           <br />
                           <span className="fecha-envio">
-                            {new Date().toLocaleString()}
+                            {new Date().toLocaleString('es-AR')}
                           </span>
                         </td>
                       </tr>
