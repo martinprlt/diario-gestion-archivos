@@ -1,39 +1,57 @@
-// src/chat/chatServer.js - CORREGIDO
+// src/chat/chat.server.js - ACTUALIZADO
 import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
 
 export const initChatServer = (httpServer) => {
+  // Configuración CORS sincronizada con app.js
+  const allowedOrigins = [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://courteous-smile-production-8eb8.up.railway.app',
+    process.env.FRONTEND_URL
+  ].filter(Boolean);
+
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:5173",
-      methods: ["GET", "POST"]
-    }
+      origin: allowedOrigins,
+      methods: ["GET", "POST"],
+      credentials: true
+    },
+    // Configuración adicional para producción
+    pingTimeout: 60000,
+    pingInterval: 25000
   });
 
   io.on("connection", (socket) => {
-    console.log("🟢 Usuario conectado:", socket.id);
+    console.log("🟢 Usuario conectado al chat:", socket.id);
 
     socket.on("registrarUsuario", (userId) => {
+      if (!userId) {
+        console.log("❌ userId no proporcionado");
+        return;
+      }
+      
       socket.userId = userId;
-      socket.join(`user_${userId}`); // ← Agregar a sala del usuario
-      console.log(`Usuario ${userId} registrado con socket ${socket.id}`);
+      socket.join(`user_${userId}`);
+      console.log(`👤 Usuario ${userId} registrado en sala user_${userId}`);
+      
+      // Debug: listar salas
+      const rooms = Array.from(socket.rooms);
+      console.log(`🏠 Socket ${socket.id} en salas:`, rooms);
     });
 
     socket.on("solicitarHistorial", async ({ emisorId, receptorId }) => {
       try {
         console.log(`📨 Solicitando historial entre ${emisorId} y ${receptorId}`);
+        
+        if (!emisorId || !receptorId) {
+          console.log("❌ IDs no válidos para historial");
+          socket.emit("historial", []);
+          return;
+        }
+        
         const mensajes = await obtenerMensajes(emisorId, receptorId);
         console.log(`📊 Historial obtenido: ${mensajes.length} mensajes`);
-        
-        // DEBUG: Verificar estructura de mensajes
-        if (mensajes.length > 0) {
-          console.log("🔍 Primer mensaje del historial:", {
-            contenido: mensajes[0].contenido,
-            fecha_original: mensajes[0].fecha,
-            fecha_envio: mensajes[0].fecha_envio,
-            id_mensaje: mensajes[0].id_mensaje
-          });
-        }
         
         socket.emit("historial", mensajes);
       } catch (error) {
@@ -45,10 +63,17 @@ export const initChatServer = (httpServer) => {
     socket.on("enviarMensaje", async (data) => {
       const { emisorId, receptorId, contenido } = data;
 
-      // Verificación para asegurar que receptorId no es nulo
+      // Validaciones
       if (!receptorId) {
-        console.error("❌ Error: receptorId es nulo. Mensaje no guardado.");
+        console.error("❌ Error: receptorId es nulo");
+        socket.emit("error_mensaje", { error: "receptorId es requerido" });
         return; 
+      }
+
+      if (!contenido || contenido.trim() === '') {
+        console.error("❌ Error: contenido vacío");
+        socket.emit("error_mensaje", { error: "El mensaje no puede estar vacío" });
+        return;
       }
 
       console.log(`💬 Mensaje de ${emisorId} para ${receptorId}: ${contenido}`);
@@ -57,28 +82,34 @@ export const initChatServer = (httpServer) => {
         const mensajeGuardado = await guardarMensaje(emisorId, receptorId, contenido);
 
         if (mensajeGuardado) {
-          console.log("✅ Mensaje guardado:", {
-            id: mensajeGuardado.id,
-            fecha_envio: mensajeGuardado.fecha_envio,
-            contenido: mensajeGuardado.contenido
-          });
+          console.log("✅ Mensaje guardado en BD:", mensajeGuardado.id);
 
-          // Emitir usando rooms (más eficiente)
+          // Emitir al receptor (si está conectado)
           socket.to(`user_${receptorId}`).emit("recibirMensaje", mensajeGuardado);
-          // También emitir al emisor para confirmación
-          socket.emit("recibirMensaje", mensajeGuardado);
+          
+          // Confirmación al emisor
+          socket.emit("mensajeEnviado", mensajeGuardado);
+          
+          console.log(`📤 Mensaje enviado a sala user_${receptorId}`);
         } else {
           console.error("❌ No se pudo guardar el mensaje");
+          socket.emit("error_mensaje", { error: "No se pudo guardar el mensaje" });
         }
       } catch (error) {
         console.error("❌ Error guardando mensaje:", error);
+        socket.emit("error_mensaje", { error: "Error del servidor" });
       }
     });
 
-    socket.on("disconnect", () => {
-      console.log(`🔴 Usuario desconectado: ${socket.id}`);
+    socket.on("disconnect", (reason) => {
+      console.log(`🔴 Usuario desconectado: ${socket.id} - Razón: ${reason}`);
+    });
+
+    socket.on("error", (error) => {
+      console.error(`💥 Error en socket ${socket.id}:`, error);
     });
   });
 
+  console.log('✅ Servidor de Chat inicializado con CORS:', allowedOrigins);
   return io;
 };
