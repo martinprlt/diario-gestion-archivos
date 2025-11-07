@@ -1,36 +1,68 @@
-// config/db.js - VERSIÓN CORREGIDA PARA RAILWAY
+// config/db.js - VERSIÓN CORREGIDA
 import pg from 'pg';
-import dotenv from 'dotenv';
-dotenv.config();
 
 const { Pool } = pg;
 
-// Para Railway usa DATABASE_URL, para desarrollo local usa variables separadas
-const poolConfig = process.env.NODE_ENV === 'production' 
-  ? {
-      connectionString: process.env.DATABASE_URL, // ← CAMBIA AQUÍ
+// Configuración para Railway - usa DATABASE_PUBLIC_URL para conexiones externas
+const getPoolConfig = () => {
+  // PRIORIDAD 1: DATABASE_PUBLIC_URL (conexión externa)
+  if (process.env.DATABASE_PUBLIC_URL) {
+    console.log('🔗 Usando DATABASE_PUBLIC_URL (conexión externa)');
+    return {
+      connectionString: process.env.DATABASE_PUBLIC_URL,
       ssl: { rejectUnauthorized: false }
-    }
-  : {
-      host: process.env.DB_HOST || 'localhost',
-      port: process.env.DB_PORT || 5432,
-      user: process.env.DB_USER || 'postgres', 
-      password: process.env.DB_PASSWORD || 'tu_password_local',
-      database: process.env.DB_NAME || 'tu_bd_local',
     };
+  }
+  
+  // PRIORIDAD 2: Variables individuales externas
+  if (process.env.DB_HOST && process.env.DB_USER && process.env.DB_PASSWORD) {
+    console.log('🔗 Usando variables individuales externas');
+    return {
+      host: process.env.DB_HOST,
+      port: process.env.DB_PORT || 5432,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+      ssl: { rejectUnauthorized: false }
+    };
+  }
+  
+  // PRIORIDAD 3: DATABASE_URL (conexión interna - solo si estás en mismo servicio)
+  if (process.env.DATABASE_URL) {
+    console.log('🔗 Usando DATABASE_URL (conexión interna)');
+    return {
+      connectionString: process.env.DATABASE_URL,
+      ssl: { rejectUnauthorized: false }
+    };
+  }
+  
+  // Desarrollo local
+  console.log('🔧 Usando configuración local');
+  return {
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
+    user: process.env.DB_USER || 'postgres', 
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'IndependienteDB',
+  };
+};
 
-export const pool = new Pool(poolConfig);
+export const pool = new Pool(getPoolConfig());
 
 export async function testDB() {
   try {
     const client = await pool.connect();
-    console.log('✅ Conexión exitosa a PostgreSQL');
-    console.log('📍 Entorno:', process.env.NODE_ENV);
-    console.log('🔗 Usando:', process.env.NODE_ENV === 'production' ? 'DATABASE_URL' : 'Variables locales');
+    console.log('🎉 ¡CONEXIÓN EXITOSA A POSTGRESQL EN RAILWAY!');
+    
+    // Test adicional para verificar datos
+    const result = await client.query('SELECT current_database(), version()');
+    console.log('📊 Base de datos:', result.rows[0].current_database);
+    
     client.release();
+    return true;
   } catch (err) {
-    console.error('❌ Error conectando a la BD:', err.message);
-    console.log('🔍 DATABASE_URL disponible:', !!process.env.DATABASE_URL);
-    process.exit(1);
+    console.error('💥 ERROR de conexión:', err.message);
+    console.log('🔧 Configuración intentada:', getPoolConfig());
+    return false;
   }
 }
