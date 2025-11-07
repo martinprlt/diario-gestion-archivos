@@ -1,15 +1,14 @@
-// 📁 frontend/src/pages/PeriodistaUpload.jsx - CORREGIR
-
+// 📁 frontend/src/pages/PeriodistaUpload.jsx - CORREGIDO
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useCategorias } from '../context/CategoriasContext.jsx';
-import { apiEndpoints } from '../config/api.js'; // ⬅️ IMPORTAR
+import { apiEndpoints, apiFetch } from '../config/api.js'; // ✅ USAR apiFetch
 import '../assets/styles/periodista-upload.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function PeriodistaUpload() {
   const { token } = useContext(AuthContext);
-  const { categorias, loading, error } = useCategorias();
+  const { categorias, loading: categoriasLoading, error: categoriasError } = useCategorias();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -67,7 +66,7 @@ export default function PeriodistaUpload() {
       return;
     }
 
-    if (!title) {
+    if (!title.trim()) {
       alert('Por favor, ingresa un título');
       return;
     }
@@ -79,38 +78,54 @@ export default function PeriodistaUpload() {
 
     const formData = new FormData();
     if (file) formData.append('archivo', file);
-    formData.append('titulo', title);
+    formData.append('titulo', title.trim());
     formData.append('categoria_id', category);
 
     if (isModoEdicion && articuloEditando) {
       formData.append('articulo_id', articuloEditando.id_articulo);
     }
 
-    setUploadStatus({ loading: true });
+    setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
 
     try {
-      // ✅ USAR apiEndpoints EN LUGAR DE URL HARDCODEADA
-      const response = await fetch(`${apiEndpoints.articles}/upload`, {
+      console.log('📤 Iniciando upload...');
+      
+      // ✅ USAR apiFetch QUE MANEJA MEJOR LOS ERRORES
+      const response = await apiFetch(apiEndpoints.uploadArticle, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
+        body: formData,
+        // ✅ NO incluir Content-Type - FormData lo establece automáticamente
       });
+
+      // ✅ VERIFICAR SI LA RESPUESTA ES JSON ANTES DE PARSEAR
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        const text = await response.text();
+        console.error('❌ El servidor devolvió HTML en lugar de JSON:', text.substring(0, 200));
+        throw new Error('El servidor respondió con una página de error. Verifica la consola del backend.');
+      }
 
       const data = await response.json();
+      console.log('📥 Respuesta del servidor:', data);
 
-      if (!response.ok) throw new Error(data.message || 'Error al subir');
+      if (!response.ok) {
+        throw new Error(data.message || `Error ${response.status} al subir el artículo`);
+      }
 
       setUploadStatus({ 
-        success: isModoEdicion 
-          ? 'Artículo actualizado correctamente' 
-          : 'Artículo subido correctamente' 
+        success: true,
+        message: isModoEdicion 
+          ? '✅ Artículo actualizado correctamente' 
+          : '✅ Artículo subido correctamente' 
       });
       setIsSubmitted(true);
+      
     } catch (err) {
-      console.error('❌ Error en handleSubmit:', err);
-      setUploadStatus({ error: err.message });
+      console.error('❌ Error completo en handleSubmit:', err);
+      setUploadStatus({ 
+        error: true, 
+        message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
+      });
     }
   };
 
@@ -121,6 +136,39 @@ export default function PeriodistaUpload() {
       navigate('/notas');
     }
   };
+
+  const resetForm = () => {
+    setTitle('');
+    setCategory('');
+    setFile(null);
+    setPreview(null);
+    setIsSubmitted(false);
+    setUploadStatus(null);
+    setIsModoEdicion(false);
+    setArticuloEditando(null);
+  };
+
+  // 🔍 Función de diagnóstico
+  const testEndpoint = async () => {
+    try {
+      console.log('🧪 Probando endpoint de upload...');
+      const testResponse = await fetch(apiEndpoints.uploadArticle, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log('🔍 Test endpoint status:', testResponse.status);
+      console.log('🔍 Test endpoint URL:', apiEndpoints.uploadArticle);
+    } catch (error) {
+      console.error('❌ Error en test endpoint:', error);
+    }
+  };
+
+  // Ejecutar test al cargar el componente
+  useEffect(() => {
+    if (token) {
+      testEndpoint();
+    }
+  }, [token]);
 
   return (
     <div className="periodista-upload-container">
@@ -158,9 +206,9 @@ export default function PeriodistaUpload() {
               <div className="form-group">
                 <label htmlFor="category">Categoría *</label>
                 
-                {loading ? (
+                {categoriasLoading ? (
                   <div className="loading-categorias">🔄 Cargando categorías...</div>
-                ) : error ? (
+                ) : categoriasError ? (
                   <div className="error-categorias">❌ Error cargando categorías</div>
                 ) : (
                   <select
@@ -209,19 +257,26 @@ export default function PeriodistaUpload() {
                 </p>
               </div>
 
+              {/* Mensajes de estado */}
               {uploadStatus?.info && (
                 <div className="info-message">{uploadStatus.info}</div>
               )}
-              {uploadStatus?.error && (
-                <div className="error-message">{uploadStatus.error}</div>
+              {uploadStatus?.message && (
+                <div className={`status-message ${uploadStatus.error ? 'error' : uploadStatus.success ? 'success' : 'info'}`}>
+                  {uploadStatus.message}
+                </div>
               )}
 
               {!isSubmitted ? (
                 <div className="form-actions">
-                  <button type="submit" className="upload-button" disabled={uploadStatus?.loading}>
+                  <button 
+                    type="submit" 
+                    className="upload-button" 
+                    disabled={uploadStatus?.loading}
+                  >
                     {uploadStatus?.loading 
-                      ? 'Procesando...' 
-                      : isModoEdicion ? 'Actualizar artículo' : 'Subir artículo'
+                      ? '📤 Procesando...' 
+                      : isModoEdicion ? '✏️ Actualizar artículo' : '📤 Subir artículo'
                     }
                   </button>
                   <button 
@@ -230,35 +285,26 @@ export default function PeriodistaUpload() {
                     onClick={handleCancel}
                     disabled={uploadStatus?.loading}
                   >
-                    Cancelar
+                    ↩️ Cancelar
                   </button>
                 </div>
               ) : (
                 <div className="upload-success">
-                  <p>{uploadStatus.success}</p>
+                  <p className="success-message">{uploadStatus.message}</p>
                   <div className="success-actions">
                     <button 
                       type="button" 
                       className="new-upload-button"
-                      onClick={() => {
-                        setTitle('');
-                        setCategory('');
-                        setFile(null);
-                        setPreview(null);
-                        setIsSubmitted(false);
-                        setUploadStatus(null);
-                        setIsModoEdicion(false);
-                        setArticuloEditando(null);
-                      }}
+                      onClick={resetForm}
                     >
-                      {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
+                      📄 {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
                     </button>
                     <button 
                       type="button" 
                       className="back-button"
                       onClick={handleCancel}
                     >
-                      Volver
+                      📋 Volver a mis artículos
                     </button>
                   </div>
                 </div>
@@ -272,17 +318,18 @@ export default function PeriodistaUpload() {
                   <iframe
                     src={preview}
                     title="Vista previa del documento"
+                    className="preview-iframe"
                   />
                 ) : (
                   <div className="preview-placeholder">
                     {file ? (
-                      <p>Vista previa no disponible para este tipo de archivo</p>
+                      <p>📄 Vista previa no disponible para este tipo de archivo</p>
                     ) : isModoEdicion && articuloEditando ? (
-                      <p>Modo edición: selecciona un nuevo archivo para ver vista previa</p>
+                      <p>✏️ Modo edición: selecciona un nuevo archivo para ver vista previa</p>
                     ) : (
                       <>
-                        <p>No hay archivo seleccionado</p>
-                        <p>Selecciona un archivo para ver la vista previa</p>
+                        <p>📁 No hay archivo seleccionado</p>
+                        <p>Selecciona un archivo PDF para ver la vista previa</p>
                       </>
                     )}
                   </div>
