@@ -16,6 +16,12 @@ export const apiEndpoints = {
   articles: `${baseURL}/api/articles`,
   myArticles: `${baseURL}/api/articles/my`,
   uploadArticle: `${baseURL}/api/articles/upload`,
+  downloadArticle: (id) => `${baseURL}/api/articles/download/${id}`,        // ✅ NUEVO
+  viewArticle: (id) => `${baseURL}/api/articles/view/${id}`,                // ✅ NUEVO
+  sendToReview: (id) => `${baseURL}/api/articles/${id}/send-to-review`,     // ✅ NUEVO
+  deleteArticle: (id) => `${baseURL}/api/articles/${id}`,                   // ✅ NUEVO
+  getArticleById: (id) => `${baseURL}/api/articles/${id}`,                  // ✅ NUEVO
+  
   
   // Users
   users: `${baseURL}/api/usuarios`,
