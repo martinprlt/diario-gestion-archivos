@@ -5,8 +5,6 @@ import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
-
-// 🔹 Importar rutas
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import rolesRoutes from './routes/roles.routes.js';
@@ -28,7 +26,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
-  'https://courteous-smile-production-8eb8.up.railway.app',
+  'https://sgdi-independiente.up.railway.app',
   process.env.FRONTEND_URL
 ].filter(Boolean); // elimina nulos o undefined
 

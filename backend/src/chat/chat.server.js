@@ -7,7 +7,7 @@ export const initChatServer = (httpServer) => {
   const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
-    'https://courteous-smile-production-8eb8.up.railway.app',
+    'https://sgdi-independiente.up.railway.app',
     process.env.FRONTEND_URL
   ].filter(Boolean);
 
