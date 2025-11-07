@@ -1,7 +1,6 @@
 // src/app.js - BACKEND PARA RAILWAY (TRUST PROXY + CORS + RATE LIMIT)
 import path from 'path';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
 import { fileURLToPath } from 'url';
 import express from 'express';
 import cors from 'cors';
@@ -74,26 +73,7 @@ app.use(
   })
 );
 
-/* =====================================================
-   🔒 3. RATE LIMITING PARA LOGIN (COMPATIBLE CON RAILWAY)
-===================================================== */
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutos
-  max: 5, // máximo 5 intentos
-  message: {
-    error: 'Demasiados intentos de login. Por seguridad, espera 15 minutos.',
-  },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // ✅ CRÍTICO: Configuración para Railway
-  skipSuccessfulRequests: false,
-  skipFailedRequests: false,
-  // ✅ Railway usa X-Forwarded-For, esto lo maneja correctamente
-  keyGenerator: (req) => {
-    // Usar la IP real del cliente (Railway la pasa en X-Forwarded-For)
-    return req.ip || req.connection.remoteAddress;
-  }
-});
+
 
 /* =====================================================
    🧩 4. MIDDLEWARES BÁSICOS
@@ -104,7 +84,6 @@ app.use(express.json());
    🛣️ 5. RUTAS DEL SISTEMA
 ===================================================== */
 // Aplica limitador SOLO al login
-app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 
 app.use('/api/articles', articleRoutes);

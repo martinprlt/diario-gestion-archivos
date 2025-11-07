@@ -1,24 +1,23 @@
+// frontend/src/hooks/useHeartbeat.js - CORREGIDO
 import { useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { apiEndpoints, apiFetch } from '../config/api'; // ✅ Usar configuración global
 
 export const useHeartbeat = () => {
-  const { usuario, token, logout } = useContext(AuthContext);
+  const { user, token, logout } = useContext(AuthContext);
 
   useEffect(() => {
-    if (!usuario || !token) {
+    if (!user || !token) {
       return;
     }
 
-    console.log('💓 Heartbeat iniciado para:', usuario.nombre);
+    console.log('💓 Heartbeat iniciado para:', user.nombre);
 
     const sendHeartbeat = async () => {
       try {
-        const response = await fetch('http://localhost:5000/api/admin/heartbeat', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        // ✅ Usar apiEndpoints en lugar de localhost
+        const response = await apiFetch(apiEndpoints.heartbeat, {
+          method: 'POST'
         });
 
         if (response.ok) {
@@ -34,9 +33,12 @@ export const useHeartbeat = () => {
       }
     };
 
+    // Enviar heartbeat inmediatamente
     sendHeartbeat();
+    
+    // Luego cada 30 segundos
     const intervalId = setInterval(sendHeartbeat, 30000);
 
     return () => clearInterval(intervalId);
-  }, [usuario, token, logout]);
+  }, [user, token, logout]);
 };

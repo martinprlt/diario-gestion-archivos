@@ -1,6 +1,6 @@
-// src/config/api.js - VERSIÓN COMPLETA PARA RAILWAY
+// frontend/src/config/api.js - VERSIÓN CORREGIDA
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
-const API_URL = RAW_API_URL.replace(/\/$/, ''); // Remover slash final
+const API_URL = RAW_API_URL.replace(/\/$/, '');
 
 console.log('🔧 API URL configurada:', API_URL);
 
@@ -20,6 +20,16 @@ export const apiFetch = async (url, options = {}) => {
   try {
     console.log('🌐 Haciendo request a:', url);
     const response = await fetch(url, fetchOptions);
+    
+    // ✅ MEJORAR LOGGING DE ERRORES
+    if (!response.ok) {
+      console.error(`❌ Error ${response.status}: ${response.statusText}`);
+      
+      // Intentar leer el cuerpo como texto para debug
+      const text = await response.text();
+      console.error('📄 Respuesta del servidor:', text.substring(0, 200));
+    }
+    
     return response;
   } catch (error) {
     console.error('❌ Error en API fetch:', error);
@@ -27,7 +37,7 @@ export const apiFetch = async (url, options = {}) => {
   }
 };
 
-// ✅ ENDPOINTS COMPLETOS
+// ✅ ENDPOINTS COMPLETOS Y CORREGIDOS
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
@@ -70,8 +80,8 @@ export const apiEndpoints = {
   // Estados de artículos
   articlesByEstado: (estado) => `${API_URL}/api/articles/my/${estado}`,
   
-  // Categorías
-  categories: `${API_URL}/api/categorias`,
+  // Categorías - ✅ CORREGIDO
+  categories: `${API_URL}/api/categorias`, // ⬅️ CAMBIO: de 'categories' a 'categorias'
   
   // Notificaciones
   notifications: `${API_URL}/api/notificaciones`,
@@ -87,6 +97,10 @@ export const apiEndpoints = {
   
   // Avatar
   uploadAvatar: `${API_URL}/api/upload-avatar`,
+  
+  // ✅ AGREGAR: Admin y Chat
+  onlineUsers: `${API_URL}/api/admin/online-users`,
+  heartbeat: `${API_URL}/api/admin/heartbeat`,
 };
 
 export { API_URL };

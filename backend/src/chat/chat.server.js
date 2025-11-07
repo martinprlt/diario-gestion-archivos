@@ -1,4 +1,4 @@
-// src/chat/chat.server.js - ACTUALIZADO
+// backend/src/chat/chat.server.js - CONFIGURADO PARA RAILWAY
 import { Server } from "socket.io";
 import { guardarMensaje, obtenerMensajes } from "./chat.controller.js";
 
@@ -17,13 +17,24 @@ export const initChatServer = (httpServer) => {
       methods: ["GET", "POST"],
       credentials: true
     },
-    // Configuración adicional para producción
+    // ✅ CRÍTICO PARA RAILWAY: Configuración de transporte
+    transports: ['websocket', 'polling'], // ⬅️ Permitir ambos
+    allowEIO3: true, // ⬅️ Compatibilidad con Engine.IO v3
     pingTimeout: 60000,
-    pingInterval: 25000
+    pingInterval: 25000,
+    // ✅ RAILWAY: Path específico para websockets
+    path: '/socket.io/',
+    // ✅ Configuración adicional para producción
+    allowUpgrades: true,
+    upgradeTimeout: 10000,
+    maxHttpBufferSize: 1e6, // 1MB
+    perMessageDeflate: false // ⬅️ Desactivar compresión para mejor rendimiento
   });
 
   io.on("connection", (socket) => {
     console.log("🟢 Usuario conectado al chat:", socket.id);
+    console.log("🌍 Origen:", socket.handshake.headers.origin);
+    console.log("🔌 Transporte:", socket.conn.transport.name);
 
     socket.on("registrarUsuario", (userId) => {
       if (!userId) {
@@ -108,8 +119,16 @@ export const initChatServer = (httpServer) => {
     socket.on("error", (error) => {
       console.error(`💥 Error en socket ${socket.id}:`, error);
     });
+    
+    // ✅ AGREGAR: Manejo de reconexión
+    socket.on("reconnect", (attemptNumber) => {
+      console.log(`🔄 Socket ${socket.id} reconectado (intento ${attemptNumber})`);
+    });
   });
 
-  console.log('✅ Servidor de Chat inicializado con CORS:', allowedOrigins);
+  console.log('✅ Servidor de Chat inicializado');
+  console.log('🌍 CORS permitido:', allowedOrigins);
+  console.log('🚀 Transports:', ['websocket', 'polling']);
+  
   return io;
 };

@@ -1,51 +1,49 @@
-// 📁 src/pages/DashboardAdmin.jsx
+// frontend/src/pages/DashboardAdmin.jsx - CORREGIDO
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useHeartbeat } from '../hooks/useHeartbeat';
+import { apiEndpoints, apiFetch } from '../config/api'; // ✅ Importar configuración
 import '../assets/styles/DashboardAdmin.css';
 
 export function DashboardAdmin() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [stats, setStats] = useState({ total: 0 });
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
 
   useHeartbeat();
 
   const fetchOnlineUsers = useCallback(async () => {
-    if (!token) return;
-
     try {
-      const response = await fetch('http://localhost:5000/api/admin/online-users', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // ✅ Usar apiEndpoints y apiFetch
+      const response = await apiFetch(apiEndpoints.onlineUsers);
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Error: ${response.status} - ${errorData.message}`);
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(`Error: ${response.status} - ${errorData.message || response.statusText}`);
       }
 
       const data = await response.json();
+      console.log('👥 Usuarios online recibidos:', data.total);
+      
       setOnlineUsers(data.onlineUsers || []);
       setStats({
         total: data.total || 0,
         lastUpdated: data.lastUpdated
       });
-    } catch {
+    } catch (error) {
+      console.error('❌ Error cargando usuarios online:', error);
       setOnlineUsers([]);
       setStats({ total: 0 });
     }
-  }, [token]);
+  }, []); // ✅ Sin dependencia de token, apiFetch lo maneja
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
 
     fetchOnlineUsers();
     const interval = setInterval(fetchOnlineUsers, 5000);
     return () => clearInterval(interval);
-  }, [user, token, fetchOnlineUsers]);
+  }, [user, fetchOnlineUsers]);
 
   if (!user) {
     return (
