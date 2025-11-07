@@ -58,9 +58,12 @@ export default function PeriodistaUpload() {
     }
   };
 
- const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
 
+  console.log('🚀 handleSubmit iniciado');
+
+  // Validaciones
   if (!file && !isModoEdicion) {
     alert('Por favor, selecciona un archivo');
     return;
@@ -76,22 +79,32 @@ export default function PeriodistaUpload() {
     return;
   }
 
+  // Preparar FormData
   const formData = new FormData();
-  if (file) formData.append('archivo', file);
+  if (file) {
+    formData.append('archivo', file);
+    console.log('📎 Archivo agregado:', file.name);
+  }
   formData.append('titulo', title.trim());
   formData.append('categoria_id', category);
 
   if (isModoEdicion && articuloEditando) {
     formData.append('articulo_id', articuloEditando.id_articulo);
+    console.log('✏️ Modo edición - ID:', articuloEditando.id_articulo);
   }
+
+  console.log('📦 FormData preparado con keys:', [...formData.keys()]);
 
   setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
 
   try {
-    console.log('📤 Iniciando upload...');
+    console.log('📤 Llamando a apiUpload...');
+    console.log('🌐 URL destino:', apiEndpoints.uploadArticle);
     
-    // ✅ USAR LA NUEVA FUNCIÓN apiUpload ESPECÍFICA PARA ARCHIVOS
+    // ✅ USAR apiUpload (NO apiFetch)
     const response = await apiUpload(apiEndpoints.uploadArticle, formData);
+
+    console.log('📡 Respuesta recibida - Status:', response.status);
 
     const data = await response.json();
     console.log('✅ Upload exitoso:', data);
@@ -106,6 +119,8 @@ export default function PeriodistaUpload() {
     
   } catch (err) {
     console.error('❌ Error completo en handleSubmit:', err);
+    console.error('🔍 Error stack:', err.stack);
+    
     setUploadStatus({ 
       error: true, 
       message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 

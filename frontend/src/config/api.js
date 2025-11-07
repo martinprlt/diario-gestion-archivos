@@ -1,10 +1,12 @@
-// frontend/src/config/api.js - VERSIÓN CORREGIDA CON apiUpload
+// frontend/src/config/api.js - VERSIÓN COMPLETA CORREGIDA
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
 const API_URL = RAW_API_URL.replace(/\/$/, '');
 
 console.log('🔧 API URL configurada:', API_URL);
 
-// ✅ Función para fetch con autenticación (JSON)
+// ========================================
+// FUNCIÓN PARA REQUESTS JSON (CON TOKEN)
+// ========================================
 export const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem('token');
   
@@ -18,7 +20,7 @@ export const apiFetch = async (url, options = {}) => {
   };
 
   try {
-    console.log('🌐 Haciendo request a:', url);
+    console.log('🌐 Request JSON a:', url);
     const response = await fetch(url, fetchOptions);
     
     if (!response.ok) {
@@ -29,12 +31,14 @@ export const apiFetch = async (url, options = {}) => {
     
     return response;
   } catch (error) {
-    console.error('❌ Error en API fetch:', error);
+    console.error('❌ Error en apiFetch:', error);
     throw error;
   }
 };
 
-// ✅ NUEVA: Función para uploads de archivos (FormData)
+// ========================================
+// ✅ FUNCIÓN PARA UPLOADS DE ARCHIVOS (FORMDATA)
+// ========================================
 export const apiUpload = async (url, formData) => {
   const token = localStorage.getItem('token');
   
@@ -44,32 +48,38 @@ export const apiUpload = async (url, formData) => {
 
   try {
     console.log('📤 Subiendo archivo a:', url);
+    console.log('📦 FormData keys:', [...formData.keys()]);
     
     const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${token}`,
-        // ⚠️ NO incluir 'Content-Type' - el navegador lo establece automáticamente para FormData
+        // ⚠️ CRÍTICO: NO incluir 'Content-Type'
+        // El navegador lo establece automáticamente con boundary para FormData
       },
       body: formData
     });
 
+    console.log('📡 Response status:', response.status);
+
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Error en upload:', response.status, errorText);
-      throw new Error(`Error ${response.status}: ${errorText}`);
+      console.error('❌ Error en upload:', errorText);
+      throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
     }
 
     console.log('✅ Upload exitoso');
     return response;
     
   } catch (error) {
-    console.error('❌ Error en apiUpload:', error);
+    console.error('💥 Error en apiUpload:', error);
     throw error;
   }
 };
 
-// ✅ ENDPOINTS COMPLETOS
+// ========================================
+// ENDPOINTS DE LA API
+// ========================================
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
@@ -94,7 +104,7 @@ export const apiEndpoints = {
   viewFoto: (id) => `${API_URL}/api/fotos/view/${id}`,
   
   // Artículos
-  uploadArticle: `${API_URL}/api/articles/upload`,
+  uploadArticle: `${API_URL}/api/articles/upload`, // ✅ UPLOAD
   myArticles: `${API_URL}/api/articles/my`,
   articleById: (id) => `${API_URL}/api/articles/${id}`,
   updateArticle: (id) => `${API_URL}/api/articles/${id}`,
