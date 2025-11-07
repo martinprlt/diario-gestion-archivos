@@ -12,7 +12,7 @@ function Notas() {
   const [error, setError] = useState(null);
   const [busqueda, setBusqueda] = useState('');
 
-  const { token } = useContext(AuthContext);
+  const { token, user } = useContext(AuthContext); // ✅ Agregamos user
   const { categorias } = useCategorias();
   const navigate = useNavigate();
 
@@ -42,16 +42,24 @@ function Notas() {
     }
   };
 
-  // Cargar notificaciones del usuario
+  // ✅ CORREGIDO: Cargar notificaciones del usuario
   const fetchNotificaciones = async () => {
     try {
-      const response = await apiFetch(`${apiEndpoints.articles}/user/notifications`);
+      // ✅ Usar apiEndpoints.userNotifications correctamente
+      if (!user || !user.id_usuario) {
+        console.warn('⚠️ No hay usuario logueado para cargar notificaciones');
+        return;
+      }
+
+      const response = await apiFetch(apiEndpoints.userNotifications(user.id_usuario));
+      
       if (response.ok) {
         const data = await response.json();
-        setNotificaciones(data);
+        setNotificaciones(Array.isArray(data) ? data : []);
       }
     } catch (err) {
       console.error('❌ Error al cargar notificaciones:', err);
+      setNotificaciones([]); // Fallback a array vacío
     }
   };
 
@@ -85,92 +93,109 @@ function Notas() {
     }
   };
 
-  // Acciones
-const handleDownload = async (id, nota) => {
-  try {
-    const response = await apiFetch(apiEndpoints.downloadArticle(id));
-    
-    if (!response.ok) {
-      throw new Error('Error en la respuesta del servidor');
+  // ✅ CORREGIDO: Descargar artículo
+  const handleDownload = async (id, nota) => {
+    try {
+      const response = await apiFetch(apiEndpoints.downloadArticle(id));
+      
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+      
+      const data = await response.json();
+      console.log('🔍 Respuesta downloadArticle:', data);
+      
+      if (data.success && data.downloadUrl) {
+        const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
+        console.log('🔗 Abriendo URL de descarga:', downloadUrl);
+        window.open(downloadUrl, '_blank');
+      } else {
+        throw new Error(data.message || 'Error al descargar');
+      }
+    } catch (err) {
+      console.error('❌ Error al descargar:', err);
+      alert(`❌ ${err.message}`);
     }
-    
-    // ✅ EXTRAER el JSON de la respuesta
-    const data = await response.json();
-    
-    console.log('🔍 Respuesta downloadArticle:', data);
-    
-    if (data.success && data.downloadUrl) {
-      // ✅ Forzar descarga
-      const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
-      console.log('🔗 Abriendo URL de descarga:', downloadUrl);
-      window.open(downloadUrl, '_blank');
-    } else {
-      throw new Error(data.message || 'Error al descargar');
-    }
-  } catch (err) {
-    console.error('❌ Error al descargar:', err);
-    alert(`❌ ${err.message}`);
-  }
-};
+  };
 
+  // ✅ CORREGIDO: Enviar a revisión
   const handleSendToReview = async (id, titulo) => {
     try {
-      const response = await apiFetch(`${apiEndpoints.articles}/${id}/send-to-review`, {
+      console.log('📤 Enviando artículo a revisión:', id);
+      
+      // ✅ Usar apiEndpoints.sendToReview correctamente
+      const response = await apiFetch(apiEndpoints.sendToReview(id), {
         method: 'POST',
       });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al enviar a revisión');
+      }
+      
       const data = await response.json();
-      if (!response.ok) throw new Error(data.message);
+      console.log('✅ Respuesta del servidor:', data);
 
       setNotas((prev) => prev.filter((item) => item.id_articulo !== id));
       alert(`✅ "${titulo}" enviado a revisión exitosamente`);
     } catch (err) {
+      console.error('❌ Error al enviar a revisión:', err);
       alert(`❌ Error: ${err.message}`);
-      console.error('Error al enviar a revisión:', err);
     }
   };
 
+  // ✅ CORREGIDO: Eliminar artículo
   const handleDelete = async (id, titulo = 'este artículo') => {
     if (!window.confirm(`¿Eliminar "${titulo}" permanentemente?`)) return;
+    
     try {
-      const response = await apiFetch(`${apiEndpoints.articles}/${id}`, {
+      // ✅ Usar apiEndpoints.deleteArticle correctamente
+      const response = await apiFetch(apiEndpoints.deleteArticle(id), {
         method: 'DELETE',
       });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || 'Error al eliminar');
+      }
+      
       const data = await response.json();
-      if (!data.success) throw new Error(data.message);
+      
+      if (!data.success) {
+        throw new Error(data.message || 'Error al eliminar');
+      }
 
       setNotas((prev) => prev.filter((item) => item.id_articulo !== id));
       alert(`✅ "${titulo}" fue eliminado correctamente`);
     } catch (err) {
+      console.error('❌ Error al eliminar:', err);
       alert(`❌ Error: ${err.message}`);
-      console.error('Error al eliminar:', err);
     }
   };
 
- const handleView = async (id, nota) => {
-  try {
-    const response = await apiFetch(apiEndpoints.viewArticle(id));
-    
-    if (!response.ok) {
-      throw new Error('Error en la respuesta del servidor');
+  // ✅ CORREGIDO: Ver artículo
+  const handleView = async (id, nota) => {
+    try {
+      const response = await apiFetch(apiEndpoints.viewArticle(id));
+      
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+      
+      const data = await response.json();
+      console.log('🔍 Respuesta viewArticle:', data);
+      
+      if (data.success && data.viewUrl) {
+        console.log('🔗 Abriendo URL:', data.viewUrl);
+        window.open(data.viewUrl, '_blank');
+      } else {
+        throw new Error(data.message || 'Error al visualizar');
+      }
+    } catch (err) {
+      console.error('❌ Error al visualizar:', err);
+      alert(`❌ ${err.message}`);
     }
-    
-    // ✅ EXTRAER el JSON de la respuesta
-    const data = await response.json();
-    
-    console.log('🔍 Respuesta viewArticle:', data);
-    
-    if (data.success && data.viewUrl) {
-      // ✅ ABRIR la URL de Cloudinary
-      console.log('🔗 Abriendo URL:', data.viewUrl);
-      window.open(data.viewUrl, '_blank');
-    } else {
-      throw new Error(data.message || 'Error al visualizar');
-    }
-  } catch (err) {
-    console.error('❌ Error al visualizar:', err);
-    alert(`❌ ${err.message}`);
-  }
-};
+  };
 
   const handleModificar = (nota) => {
     navigate('/periodista-upload', {
@@ -310,9 +335,6 @@ const handleDownload = async (id, nota) => {
             })
           )}
         </div>
-
-        {/* Tabla (desktop) */}
-        {/* ... el bloque de la tabla queda igual que antes ... */}
       </div>
     </div>
   );
