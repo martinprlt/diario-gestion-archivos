@@ -1,69 +1,43 @@
-// 📁 src/config/api.js - VERSIÓN MEJORADA
+// frontend/src/config/api.js - VERSIÓN CORREGIDA
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
 const API_URL = RAW_API_URL.replace(/\/$/, '');
 
 console.log('🔧 API URL configurada:', API_URL);
 
-// ✅ Función fetch mejorada con manejo de errores
+// Función para hacer fetch con autenticación
 export const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem('token');
   
   const fetchOptions = {
-    ...options,
     headers: {
+      'Content-Type': 'application/json',
       ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
+    ...options,
   };
-
-  // ✅ NO forzar 'Content-Type' para FormData
-  if (!(options.body instanceof FormData)) {
-    fetchOptions.headers['Content-Type'] = 'application/json';
-  }
 
   try {
     console.log('🌐 Haciendo request a:', url);
     const response = await fetch(url, fetchOptions);
     
+    // ✅ MEJORAR LOGGING DE ERRORES
     if (!response.ok) {
-      let errorMessage = `Error ${response.status}: ${response.statusText}`;
+      console.error(`❌ Error ${response.status}: ${response.statusText}`);
       
-      try {
-        const errorText = await response.text();
-        console.error('📄 Respuesta del servidor:', errorText.substring(0, 500));
-        
-        if (errorText) {
-          try {
-            const errorData = JSON.parse(errorText);
-            errorMessage = errorData.message || errorData.error || errorMessage;
-          } catch {
-            errorMessage = errorText || errorMessage;
-          }
-        }
-      } catch (textError) {
-        console.error('❌ Error leyendo respuesta:', textError);
-      }
-      
-      throw new Error(errorMessage);
+      // Intentar leer el cuerpo como texto para debug
+      const text = await response.text();
+      console.error('📄 Respuesta del servidor:', text.substring(0, 200));
     }
     
     return response;
   } catch (error) {
-    console.error('❌ Error en API fetch:', {
-      url,
-      error: error.message,
-      type: error.name
-    });
-    
-    if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-      throw new Error('Error de conexión. Verifica tu internet o si el servidor está disponible.');
-    }
-    
+    console.error('❌ Error en API fetch:', error);
     throw error;
   }
 };
 
-// ✅ ENDPOINTS CORREGIDOS
+// ✅ ENDPOINTS COMPLETOS Y CORREGIDOS
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
@@ -87,7 +61,7 @@ export const apiEndpoints = {
   downloadFoto: (id) => `${API_URL}/api/fotos/download/${id}`,
   viewFoto: (id) => `${API_URL}/api/fotos/view/${id}`,
   
-  // Artículos - ✅ CORREGIDOS
+  // Artículos
   uploadArticle: `${API_URL}/api/articles/upload`,
   myArticles: `${API_URL}/api/articles/my`,
   articleById: (id) => `${API_URL}/api/articles/${id}`,
@@ -106,25 +80,25 @@ export const apiEndpoints = {
   // Estados de artículos
   articlesByEstado: (estado) => `${API_URL}/api/articles/my/${estado}`,
   
-  // Categorías
-  categories: `${API_URL}/api/categorias`,
+  // Categorías - ✅ CORREGIDO
+  categories: `${API_URL}/api/categorias`, // ⬅️ CAMBIO: de 'categories' a 'categorias'
   
   // Notificaciones
   notifications: `${API_URL}/api/notificaciones`,
-  userNotifications: (userId) => `${API_URL}/api/notificaciones/user/${userId}`,
+  userNotifications: (userId) => `${API_URL}/api/notificaciones/${userId}`,
   markNotificationRead: `${API_URL}/api/notificaciones/marcar-leida`,
   createNotification: `${API_URL}/api/notificaciones/crear`,
   
   // Roles
   roles: `${API_URL}/api/roles`,
   
-  // Logs
+  // Logs (Admin)
   logs: `${API_URL}/api/logs`,
   
   // Avatar
   uploadAvatar: `${API_URL}/api/upload-avatar`,
   
-  // Admin
+  // ✅ AGREGAR: Admin y Chat
   onlineUsers: `${API_URL}/api/admin/online-users`,
   heartbeat: `${API_URL}/api/admin/heartbeat`,
 };

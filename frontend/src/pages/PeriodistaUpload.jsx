@@ -1,14 +1,15 @@
-// 📁 src/pages/PeriodistaUpload.jsx - CORREGIDO
+// 📁 frontend/src/pages/PeriodistaUpload.jsx - CORREGIR
+
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useCategorias } from '../context/CategoriasContext.jsx';
-import { apiEndpoints, apiFetch } from '../config/api.js'; // ✅ USAR apiFetch
+import { apiEndpoints } from '../config/api.js'; // ⬅️ IMPORTAR
 import '../assets/styles/periodista-upload.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 export default function PeriodistaUpload() {
   const { token } = useContext(AuthContext);
-  const { categorias, loading: categoriasLoading, error: categoriasError } = useCategorias();
+  const { categorias, loading, error } = useCategorias();
 
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState('');
@@ -22,7 +23,6 @@ export default function PeriodistaUpload() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 🔹 Verificar si estamos en modo edición
   useEffect(() => {
     if (location.state && location.state.articulo) {
       const articulo = location.state.articulo;
@@ -41,7 +41,6 @@ export default function PeriodistaUpload() {
     }
   }, [location.state]);
 
-  // 🔹 Establecer categoría por defecto
   useEffect(() => {
     if (categorias.length > 0 && !category) {
       setCategory(categorias[0].id_categoria.toString());
@@ -68,7 +67,7 @@ export default function PeriodistaUpload() {
       return;
     }
 
-    if (!title.trim()) {
+    if (!title) {
       alert('Por favor, ingresa un título');
       return;
     }
@@ -80,43 +79,38 @@ export default function PeriodistaUpload() {
 
     const formData = new FormData();
     if (file) formData.append('archivo', file);
-    formData.append('titulo', title.trim());
+    formData.append('titulo', title);
     formData.append('categoria_id', category);
 
     if (isModoEdicion && articuloEditando) {
       formData.append('articulo_id', articuloEditando.id_articulo);
     }
 
-    setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
+    setUploadStatus({ loading: true });
 
     try {
-      // ✅ USAR apiFetch en lugar de fetch directo
-      const response = await apiFetch(apiEndpoints.uploadArticle, {
+      // ✅ USAR apiEndpoints EN LUGAR DE URL HARDCODEADA
+      const response = await fetch(`${apiEndpoints.articles}/upload`, {
         method: 'POST',
-        body: formData,
-        // ✅ NO incluir Content-Type header - FormData lo establece automáticamente
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
       });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.message || 'Error al subir el artículo');
-      }
+      if (!response.ok) throw new Error(data.message || 'Error al subir');
 
       setUploadStatus({ 
-        success: true,
-        message: isModoEdicion 
-          ? '✅ Artículo actualizado correctamente' 
-          : '✅ Artículo subido correctamente' 
+        success: isModoEdicion 
+          ? 'Artículo actualizado correctamente' 
+          : 'Artículo subido correctamente' 
       });
       setIsSubmitted(true);
-      
     } catch (err) {
       console.error('❌ Error en handleSubmit:', err);
-      setUploadStatus({ 
-        error: true, 
-        message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
-      });
+      setUploadStatus({ error: err.message });
     }
   };
 
@@ -128,17 +122,6 @@ export default function PeriodistaUpload() {
     }
   };
 
-  const resetForm = () => {
-    setTitle('');
-    setCategory('');
-    setFile(null);
-    setPreview(null);
-    setIsSubmitted(false);
-    setUploadStatus(null);
-    setIsModoEdicion(false);
-    setArticuloEditando(null);
-  };
-
   return (
     <div className="periodista-upload-container">
       <div className="upload-header">
@@ -146,9 +129,7 @@ export default function PeriodistaUpload() {
       </div>
       
       <div className="upload-wrapper">
-        <aside className="sidebar">
-          {/* Opciones del sidebar si las necesitas */}
-        </aside>
+        <aside className="sidebar"></aside>
 
         <main className="upload-main">
           <form onSubmit={handleSubmit} className="upload-form">
@@ -177,9 +158,9 @@ export default function PeriodistaUpload() {
               <div className="form-group">
                 <label htmlFor="category">Categoría *</label>
                 
-                {categoriasLoading ? (
+                {loading ? (
                   <div className="loading-categorias">🔄 Cargando categorías...</div>
-                ) : categoriasError ? (
+                ) : error ? (
                   <div className="error-categorias">❌ Error cargando categorías</div>
                 ) : (
                   <select
@@ -228,26 +209,19 @@ export default function PeriodistaUpload() {
                 </p>
               </div>
 
-              {/* Mensajes de estado */}
               {uploadStatus?.info && (
                 <div className="info-message">{uploadStatus.info}</div>
               )}
-              {uploadStatus?.message && (
-                <div className={`status-message ${uploadStatus.error ? 'error' : uploadStatus.success ? 'success' : 'info'}`}>
-                  {uploadStatus.message}
-                </div>
+              {uploadStatus?.error && (
+                <div className="error-message">{uploadStatus.error}</div>
               )}
 
               {!isSubmitted ? (
                 <div className="form-actions">
-                  <button 
-                    type="submit" 
-                    className="upload-button" 
-                    disabled={uploadStatus?.loading}
-                  >
+                  <button type="submit" className="upload-button" disabled={uploadStatus?.loading}>
                     {uploadStatus?.loading 
-                      ? '📤 Procesando...' 
-                      : isModoEdicion ? '✏️ Actualizar artículo' : '📤 Subir artículo'
+                      ? 'Procesando...' 
+                      : isModoEdicion ? 'Actualizar artículo' : 'Subir artículo'
                     }
                   </button>
                   <button 
@@ -256,26 +230,35 @@ export default function PeriodistaUpload() {
                     onClick={handleCancel}
                     disabled={uploadStatus?.loading}
                   >
-                    ↩️ Cancelar
+                    Cancelar
                   </button>
                 </div>
               ) : (
                 <div className="upload-success">
-                  <p className="success-message">{uploadStatus.message}</p>
+                  <p>{uploadStatus.success}</p>
                   <div className="success-actions">
                     <button 
                       type="button" 
                       className="new-upload-button"
-                      onClick={resetForm}
+                      onClick={() => {
+                        setTitle('');
+                        setCategory('');
+                        setFile(null);
+                        setPreview(null);
+                        setIsSubmitted(false);
+                        setUploadStatus(null);
+                        setIsModoEdicion(false);
+                        setArticuloEditando(null);
+                      }}
                     >
-                      📄 {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
+                      {isModoEdicion ? 'Modificar otro' : 'Subir nuevo artículo'}
                     </button>
                     <button 
                       type="button" 
                       className="back-button"
                       onClick={handleCancel}
                     >
-                      📋 Volver a mis artículos
+                      Volver
                     </button>
                   </div>
                 </div>
@@ -289,18 +272,17 @@ export default function PeriodistaUpload() {
                   <iframe
                     src={preview}
                     title="Vista previa del documento"
-                    className="preview-iframe"
                   />
                 ) : (
                   <div className="preview-placeholder">
                     {file ? (
-                      <p>📄 Vista previa no disponible para este tipo de archivo</p>
+                      <p>Vista previa no disponible para este tipo de archivo</p>
                     ) : isModoEdicion && articuloEditando ? (
-                      <p>✏️ Modo edición: selecciona un nuevo archivo para ver vista previa</p>
+                      <p>Modo edición: selecciona un nuevo archivo para ver vista previa</p>
                     ) : (
                       <>
-                        <p>📁 No hay archivo seleccionado</p>
-                        <p>Selecciona un archivo PDF para ver la vista previa</p>
+                        <p>No hay archivo seleccionado</p>
+                        <p>Selecciona un archivo para ver la vista previa</p>
                       </>
                     )}
                   </div>
