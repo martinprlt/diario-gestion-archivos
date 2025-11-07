@@ -58,76 +58,60 @@ export default function PeriodistaUpload() {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+ const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    if (!file && !isModoEdicion) {
-      alert('Por favor, selecciona un archivo');
-      return;
-    }
+  if (!file && !isModoEdicion) {
+    alert('Por favor, selecciona un archivo');
+    return;
+  }
 
-    if (!title.trim()) {
-      alert('Por favor, ingresa un título');
-      return;
-    }
+  if (!title.trim()) {
+    alert('Por favor, ingresa un título');
+    return;
+  }
 
-    if (!category) {
-      alert('Debes seleccionar una categoría');
-      return;
-    }
+  if (!category) {
+    alert('Debes seleccionar una categoría');
+    return;
+  }
 
-    const formData = new FormData();
-    if (file) formData.append('archivo', file);
-    formData.append('titulo', title.trim());
-    formData.append('categoria_id', category);
+  const formData = new FormData();
+  if (file) formData.append('archivo', file);
+  formData.append('titulo', title.trim());
+  formData.append('categoria_id', category);
 
-    if (isModoEdicion && articuloEditando) {
-      formData.append('articulo_id', articuloEditando.id_articulo);
-    }
+  if (isModoEdicion && articuloEditando) {
+    formData.append('articulo_id', articuloEditando.id_articulo);
+  }
 
-    setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
+  setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
 
-    try {
-      console.log('📤 Iniciando upload...');
-      
-      // ✅ USAR apiFetch QUE MANEJA MEJOR LOS ERRORES
-      const response = await apiFetch(apiEndpoints.uploadArticle, {
-        method: 'POST',
-        body: formData,
-        // ✅ NO incluir Content-Type - FormData lo establece automáticamente
-      });
+  try {
+    console.log('📤 Iniciando upload...');
+    
+    // ✅ USAR LA NUEVA FUNCIÓN apiUpload ESPECÍFICA PARA ARCHIVOS
+    const response = await apiUpload(apiEndpoints.uploadArticle, formData);
 
-      // ✅ VERIFICAR SI LA RESPUESTA ES JSON ANTES DE PARSEAR
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.error('❌ El servidor devolvió HTML en lugar de JSON:', text.substring(0, 200));
-        throw new Error('El servidor respondió con una página de error. Verifica la consola del backend.');
-      }
+    const data = await response.json();
+    console.log('✅ Upload exitoso:', data);
 
-      const data = await response.json();
-      console.log('📥 Respuesta del servidor:', data);
-
-      if (!response.ok) {
-        throw new Error(data.message || `Error ${response.status} al subir el artículo`);
-      }
-
-      setUploadStatus({ 
-        success: true,
-        message: isModoEdicion 
-          ? '✅ Artículo actualizado correctamente' 
-          : '✅ Artículo subido correctamente' 
-      });
-      setIsSubmitted(true);
-      
-    } catch (err) {
-      console.error('❌ Error completo en handleSubmit:', err);
-      setUploadStatus({ 
-        error: true, 
-        message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
-      });
-    }
-  };
+    setUploadStatus({ 
+      success: true,
+      message: isModoEdicion 
+        ? '✅ Artículo actualizado correctamente' 
+        : '✅ Artículo subido correctamente' 
+    });
+    setIsSubmitted(true);
+    
+  } catch (err) {
+    console.error('❌ Error completo en handleSubmit:', err);
+    setUploadStatus({ 
+      error: true, 
+      message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
+    });
+  }
+};
 
   const handleCancel = () => {
     if (isModoEdicion) {
