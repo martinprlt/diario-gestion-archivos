@@ -1,14 +1,14 @@
-// config/db.js - VERSIÓN PRODUCCIÓN
+// config/db.js - VERSIÓN CORREGIDA PARA RAILWAY
 import pg from 'pg';
 import dotenv from 'dotenv';
 dotenv.config();
 
 const { Pool } = pg;
 
-// Para producción usa DATABASE_PUBLIC_URL, para desarrollo local usa variables separadas
+// Para Railway usa DATABASE_URL, para desarrollo local usa variables separadas
 const poolConfig = process.env.NODE_ENV === 'production' 
   ? {
-      connectionString: process.env.DATABASE_PUBLIC_URL, // ← URL EXTERNA
+      connectionString: process.env.DATABASE_URL, // ← CAMBIA AQUÍ
       ssl: { rejectUnauthorized: false }
     }
   : {
@@ -26,10 +26,11 @@ export async function testDB() {
     const client = await pool.connect();
     console.log('✅ Conexión exitosa a PostgreSQL');
     console.log('📍 Entorno:', process.env.NODE_ENV);
-    console.log('🔗 Tipo:', process.env.NODE_ENV === 'production' ? 'DATABASE_PUBLIC_URL' : 'Variables locales');
+    console.log('🔗 Usando:', process.env.NODE_ENV === 'production' ? 'DATABASE_URL' : 'Variables locales');
     client.release();
   } catch (err) {
-    console.error('❌ Error conectando a la BD:', err);
+    console.error('❌ Error conectando a la BD:', err.message);
+    console.log('🔍 DATABASE_URL disponible:', !!process.env.DATABASE_URL);
     process.exit(1);
   }
 }
