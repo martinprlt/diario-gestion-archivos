@@ -145,4 +145,14 @@ export const apiEndpoints = {
   heartbeat: `${API_URL}/api/admin/heartbeat`,
 };
 
+// ========================================
+// 🔍 VERIFICACIÓN DE EXPORTS
+// ========================================
+console.log('✅ api.js cargado con exports:', {
+  apiFetch: typeof apiFetch,
+  apiUpload: typeof apiUpload,
+  apiEndpoints: typeof apiEndpoints,
+  API_URL: API_URL
+});
+
 export { API_URL };
