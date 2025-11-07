@@ -210,19 +210,24 @@ export const downloadArticle = async (req, res) => {
       return res.status(404).json({ message: "Artículo no encontrado" });
     }
 
-    const { cloudinary_url, nombre_original } = result.rows[0];
+    const { cloudinary_url, nombre_original, tipo_archivo } = result.rows[0];
 
     if (!cloudinary_url) {
-      return res.status(404).json({ message: "Archivo no disponible" });
+      return res.status(404).json({ message: "Archivo no disponible en Cloudinary" });
     }
 
-    // Redirigir a Cloudinary para descarga
-    res.redirect(cloudinary_url);
+    // ✅ CORREGIDO: Enviar JSON con la URL de descarga
+    res.json({
+      success: true,
+      downloadUrl: cloudinary_url,
+      filename: nombre_original,
+      fileType: nombre_original.split('.').pop()?.toLowerCase() || tipo_archivo
+    });
 
     await logAction({
       usuario_id: req.userId,
       accion: 'descargar',
-      descripcion: `Descargó artículo ID ${id} desde Cloudinary`
+      descripcion: `Solicitó descarga de artículo ID ${id} (${nombre_original})`
     });
 
   } catch (error) {

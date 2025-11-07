@@ -1,8 +1,7 @@
-// src/pages/ArticulosAprobados.jsx
+// src/pages/ArticulosAprobados.jsx - CORREGIDO
 import React, { useState, useEffect, useContext } from 'react';
-import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
-import { API_URL } from '../config/api.js';
+import { apiEndpoints, apiFetch } from '../config/api.js';
 import '../assets/styles/articulos-aprobado.css';
 
 const ArticulosAprobados = () => {
@@ -14,21 +13,23 @@ const ArticulosAprobados = () => {
   useEffect(() => {
     const fetchArticulosAprobados = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/articles/editor/approved`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const response = await apiFetch(apiEndpoints.articlesByStatus('aprobado'));
+        
+        if (!response.ok) {
+          throw new Error('Error al cargar artículos aprobados');
+        }
 
-        if (Array.isArray(response.data)) {
-          setArticulos(response.data);
+        const data = await response.json();
+        
+        if (Array.isArray(data)) {
+          setArticulos(data);
         } else {
           setError("Se recibió un formato de datos inesperado del servidor.");
         }
       } catch (err) {
         setError(
           'No se pudieron cargar los artículos aprobados. ' +
-          (err.response?.data?.message || err.message)
+          (err.message || 'Error desconocido')
         );
       } finally {
         setLoading(false);
@@ -40,22 +41,19 @@ const ArticulosAprobados = () => {
 
   const handleDownload = async (id, nombreOriginal) => {
     try {
-      const response = await axios.get(`${API_URL}/api/articles/download/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: 'blob',
-      });
-
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', nombreOriginal);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch {
-      alert('No se pudo descargar el archivo.');
+      const response = await apiFetch(apiEndpoints.downloadArticle(id));
+      const data = await response.json();
+      
+      if (data.success && data.downloadUrl) {
+        // ✅ Forzar descarga para cualquier tipo de archivo
+        const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
+        window.open(downloadUrl, '_blank');
+      } else {
+        throw new Error(data.message || 'Error al descargar');
+      }
+    } catch (err) {
+      console.error('❌ Error al descargar:', err);
+      alert(`❌ ${err.message}`);
     }
   };
 
@@ -81,8 +79,8 @@ const ArticulosAprobados = () => {
             {articulos.map((articulo) => (
               <tr key={articulo.id_articulo}>
                 <td>{articulo.titulo}</td>
-                <td>{`${articulo.periodista_nombre} ${articulo.periodista_apellido} (${articulo.periodista_usuario})`}</td>
-                <td>{new Date(articulo.fecha_publicacion).toLocaleDateString()}</td>
+                <td>{`${articulo.periodista_nombre} ${articulo.periodista_apellido}`}</td>
+                <td>{articulo.fecha_publicacion ? new Date(articulo.fecha_publicacion).toLocaleDateString() : 'N/A'}</td>
                 <td>
                   <button
                     className="btn-download"

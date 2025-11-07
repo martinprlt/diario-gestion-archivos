@@ -86,32 +86,32 @@ function Notas() {
   };
 
   // Acciones
-  const handleDownload = async (id, nota) => {
-    if (!nota?.ruta_archivo || !nota?.nombre_archivo) {
-      alert('⚠️ Este artículo no tiene archivo asociado');
-      return;
+const handleDownload = async (id, nota) => {
+  try {
+    const response = await apiFetch(apiEndpoints.downloadArticle(id));
+    
+    if (!response.ok) {
+      throw new Error('Error en la respuesta del servidor');
     }
-    try {
-      const response = await apiFetch(`${apiEndpoints.articles}/download/${id}`);
-      if (!response.ok) throw new Error('Error al descargar');
-      const blob = await response.blob();
-
-      const fileExtension = (nota.nombre_archivo.split('.').pop() || '').trim();
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = nota.nombre_original || `articulo_${id}.${fileExtension}`;
-      document.body.appendChild(link);
-      link.click();
-      setTimeout(() => {
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(link);
-      }, 100);
-    } catch (err) {
-      console.error('❌ Error al descargar:', err);
-      alert(`❌ ${err.message}`);
+    
+    // ✅ EXTRAER el JSON de la respuesta
+    const data = await response.json();
+    
+    console.log('🔍 Respuesta downloadArticle:', data);
+    
+    if (data.success && data.downloadUrl) {
+      // ✅ Forzar descarga
+      const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
+      console.log('🔗 Abriendo URL de descarga:', downloadUrl);
+      window.open(downloadUrl, '_blank');
+    } else {
+      throw new Error(data.message || 'Error al descargar');
     }
-  };
+  } catch (err) {
+    console.error('❌ Error al descargar:', err);
+    alert(`❌ ${err.message}`);
+  }
+};
 
   const handleSendToReview = async (id, titulo) => {
     try {

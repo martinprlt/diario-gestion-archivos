@@ -294,7 +294,7 @@ export const downloadFoto = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT cloudinary_url, nombre_original 
+      `SELECT cloudinary_url, nombre_original, tipo_archivo 
        FROM fotos WHERE id_foto = $1`,
       [id]
     );
@@ -303,19 +303,24 @@ export const downloadFoto = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    const { cloudinary_url, nombre_original } = result.rows[0];
+    const { cloudinary_url, nombre_original, tipo_archivo } = result.rows[0];
 
     if (!cloudinary_url) {
       return res.status(404).json({ message: "Foto no disponible en Cloudinary" });
     }
 
-    // Redirigir a Cloudinary para descarga
-    res.redirect(cloudinary_url);
+    // ✅ CORREGIDO: Enviar JSON, NO redirigir
+    res.json({
+      success: true,
+      downloadUrl: cloudinary_url,
+      filename: nombre_original,
+      fileType: nombre_original.split('.').pop()?.toLowerCase() || tipo_archivo
+    });
 
     await logAction({
       usuario_id: req.userId,
       accion: 'descargar',
-      descripcion: `Descargó foto ID ${id} desde Cloudinary`
+      descripcion: `Solicitó descarga de foto ID ${id} (${nombre_original})`
     });
 
   } catch (error) {
@@ -332,7 +337,7 @@ export const viewFoto = async (req, res) => {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT cloudinary_url, tipo_archivo 
+      `SELECT cloudinary_url, nombre_original, tipo_archivo 
        FROM fotos WHERE id_foto = $1`,
       [id]
     );
@@ -341,19 +346,24 @@ export const viewFoto = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    const { cloudinary_url } = result.rows[0];
+    const { cloudinary_url, nombre_original, tipo_archivo } = result.rows[0];
 
     if (!cloudinary_url) {
       return res.status(404).json({ message: "Foto no disponible en Cloudinary" });
     }
 
-    // Redirigir a Cloudinary para visualización
-    res.redirect(cloudinary_url);
+    // ✅ CORREGIDO: Enviar JSON, NO redirigir
+    res.json({
+      success: true,
+      viewUrl: cloudinary_url,
+      filename: nombre_original,
+      fileType: nombre_original.split('.').pop()?.toLowerCase() || tipo_archivo
+    });
 
     await logAction({
       usuario_id: req.userId,
       accion: 'visualizar',
-      descripcion: `Visualizó foto ID ${id} desde Cloudinary`
+      descripcion: `Solicitó visualización de foto ID ${id} (${nombre_original})`
     });
 
   } catch (error) {
@@ -361,7 +371,6 @@ export const viewFoto = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
-
 // =============================
 // OBTENER FOTOS FILTRADAS
 // =============================
