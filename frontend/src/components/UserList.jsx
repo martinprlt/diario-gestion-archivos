@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useContext } from "react";
 import { useChat } from "../context/ChatContext.jsx";
 import { AuthContext } from "../context/AuthContext.js";
+import { apiFetch, apiEndpoints } from "../config/api"; 
 import "../assets/styles/userlist.css";
 
 const UserList = ({ onSelectUser, userId }) => {
@@ -11,32 +12,30 @@ const UserList = ({ onSelectUser, userId }) => {
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    if (token) {
-      setCargando(true);
-      fetch("http://localhost:5000/api/usuarios", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-        .then((res) => {
-          if (!res.ok) throw new Error("Error al cargar usuarios");
-          return res.json();
-        })
-        .then((data) => {
-          const usuariosFiltrados = Array.isArray(data) 
-            ? data.filter((u) => u.id !== userId)
-            : [];
-          setUsuarios(usuariosFiltrados);
-        })
-        .catch((err) => {
-          console.error("Error cargando usuarios:", err);
-          setUsuarios([]);
-        })
-        .finally(() => {
-          setCargando(false);
-        });
-    }
-  }, [userId, token]);
+    const cargarUsuarios = async () => {
+      try {
+        setCargando(true);
+        
+        // ✅ Usar apiFetch y apiEndpoints
+        const response = await apiFetch(apiEndpoints.users);
+        
+        if (!response.ok) throw new Error("Error al cargar usuarios");
+        
+        const data = await response.json();
+        const usuariosFiltrados = Array.isArray(data) 
+          ? data.filter((u) => u.id !== userId)
+          : [];
+        setUsuarios(usuariosFiltrados);
+      } catch (err) {
+        console.error("Error cargando usuarios:", err);
+        setUsuarios([]);
+      } finally {
+        setCargando(false);
+      }
+    };
+
+    cargarUsuarios();
+  }, [userId]); // ✅ Eliminar dependencia de token
 
   const handleSelectUser = (user) => {
     setUsuarioActivo(user.id);

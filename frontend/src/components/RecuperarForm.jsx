@@ -1,6 +1,7 @@
 // src/components/RecuperarForm.jsx
 import { useState } from 'react';
 import '../assets/styles/recuperar.css';
+import { apiFetch, apiEndpoints } from '../config/api'; 
 
 function RecuperarForm() {
   const [email, setEmail] = useState('');
@@ -11,10 +12,9 @@ function RecuperarForm() {
     e.preventDefault();
 
     try {
-      // Llamada al backend (ajustá el endpoint según tu API)
-      const response = await fetch('http://localhost:3000/api/recuperar', {
+      // ✅ Usar apiFetch y apiEndpoints
+      const response = await apiFetch(apiEndpoints.forgotPassword, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email }),
       });
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Tag, Plus, Trash2, List } from 'lucide-react';
 import "../assets/styles/gestionCategorias.css";
+import { apiFetch, apiEndpoints } from "../config/api";
 
 export default function GestionCategorias() {
   const { token } = useContext(AuthContext);
@@ -12,13 +13,12 @@ export default function GestionCategorias() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  // 🔹 Cargar categorías
   const cargar = async () => {
     try {
       setLoading(true);
       setError("");
-      const res = await fetch("http://localhost:5000/api/categorias", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await apiFetch(apiEndpoints.categories);
       if (!res.ok) throw new Error("Error al cargar categorías");
       setCategorias(await res.json());
     } catch (e) {
@@ -29,19 +29,16 @@ export default function GestionCategorias() {
   };
 
   useEffect(() => {
-    if (token) cargar();
-  }, [token]);
+    cargar();
+  }, []); // ✅ Eliminamos la dependencia de token, apiFetch lo maneja internamente
 
+  // 🔹 Agregar nueva categoría
   const agregar = async (e) => {
     e.preventDefault();
     if (!nombre.trim()) return alert("Ingresá un nombre");
     try {
-      const res = await fetch("http://localhost:5000/api/categorias", {
+      const res = await apiFetch(apiEndpoints.categories, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({ nombre: nombre.trim(), descripcion }),
       });
       if (!res.ok) {
@@ -56,13 +53,14 @@ export default function GestionCategorias() {
     }
   };
 
+  // 🔹 Eliminar categoría
   const eliminar = async (id, nombreCat) => {
     const ok = confirm(`¿Eliminar la categoría "${nombreCat}"?`);
     if (!ok) return;
     try {
-      const res = await fetch(`http://localhost:5000/api/categorias/${id}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
+      // ✅ Usar el endpoint correcto para eliminar categorías
+      const res = await apiFetch(`${apiEndpoints.categories}/${id}`, { 
+        method: "DELETE" 
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
@@ -92,7 +90,6 @@ export default function GestionCategorias() {
   return (
     <div className="gestion-categorias-container">
       <div className="gestion-categorias-content">
-        
         {/* Header */}
         <div className="page-header">
           <div className="header-content">
@@ -136,7 +133,7 @@ export default function GestionCategorias() {
           </div>
         </div>
 
-        {/* Formulario - ESTRUCTURA SIMPLIFICADA */}
+        {/* Formulario */}
         <div className="form-section">
           <div className="section-header">
             <Plus size={20} />

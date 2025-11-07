@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Calendar, Filter, TrendingUp, User, Activity, RefreshCw, Search } from 'lucide-react';
 import '../assets/styles/AdminLogs.css';
-
-
-
-const API_URL = 'http://localhost:5000/api';
+import { apiFetch, apiEndpoints } from '../config/api';
 
 export default function AdminLogs() {
   const [logs, setLogs] = useState([]);
@@ -20,65 +17,50 @@ export default function AdminLogs() {
     limite: 50
   });
 
-  // ✅ Usar useCallback para memoizar las funciones
   const fetchLogs = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
+      setLoading(true);
       const params = new URLSearchParams();
-      Object.entries(filtros).forEach(([key, value]) => { 
-        if(value) params.append(key, value); 
+      Object.entries(filtros).forEach(([key, value]) => {
+        if (value) params.append(key, value);
       });
-      
-      const response = await fetch(`${API_URL}/logs?${params}`, { 
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+
+      const response = await apiFetch(`${apiEndpoints.logs}?${params.toString()}`);
       if (!response.ok) throw new Error('Error al cargar logs');
       const data = await response.json();
       setLogs(data.logs || []);
-      setLoading(false);
-      setRefreshing(false);
-    } catch (error) {
-      console.error('Error fetching logs:', error);
+    } catch {
+      setLogs([]);
+    } finally {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [filtros]); // ✅ Dependencias de fetchLogs
+  }, [filtros]);
 
   const fetchStats = useCallback(async () => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_URL}/logs/stats`, { 
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+      const response = await apiFetch(`${apiEndpoints.logs}/stats`);
       if (!response.ok) throw new Error('Error al cargar estadísticas');
       const data = await response.json();
       setStats(data);
-    } catch (error) {
-      console.error('Error fetching stats:', error);
+    } catch {
+      setStats(null);
     }
-  }, []); // ✅ Sin dependencias
+  }, []);
 
   useEffect(() => {
     fetchLogs();
     fetchStats();
-  }, [fetchLogs, fetchStats]); // ✅ Ahora son estables gracias a useCallback
+  }, [fetchLogs, fetchStats]);
 
-  const handleRefresh = () => { 
-    setRefreshing(true); 
-    fetchLogs(); 
-    fetchStats(); 
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchLogs();
+    fetchStats();
   };
 
-  const limpiarFiltros = () => setFiltros({ 
-    accion: '', 
-    usuario_id: '', 
-    desde: '', 
-    hasta: '', 
-    pagina: 1, 
-    limite: 50 
-  });
+  const limpiarFiltros = () =>
+    setFiltros({ accion: '', usuario_id: '', desde: '', hasta: '', pagina: 1, limite: 50 });
 
   const getAccionColor = (accion) => {
     const colores = {
@@ -98,11 +80,9 @@ export default function AdminLogs() {
   const formatFecha = (fecha) => {
     const date = new Date(fecha);
     const diff = Math.floor((new Date() - date) / 1000);
-    
     if (diff < 60) return 'Hace un momento';
     if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
     if (diff < 86400) return `Hace ${Math.floor(diff / 3600)}h`;
-    
     return date.toLocaleString('es-AR', {
       day: '2-digit',
       month: '2-digit',
@@ -132,8 +112,8 @@ export default function AdminLogs() {
             <h1>Logs del Sistema</h1>
             <p>Monitoriza la actividad y acciones de los usuarios</p>
           </div>
-          <button 
-            onClick={handleRefresh} 
+          <button
+            onClick={handleRefresh}
             className={`btn-refresh ${refreshing ? 'refreshing' : ''}`}
             disabled={refreshing}
           >
@@ -153,7 +133,7 @@ export default function AdminLogs() {
               <p className="stat-value">{stats.totalLogs?.toLocaleString() || '0'}</p>
               <p className="stat-description">Registros totales</p>
             </div>
-            
+
             <div className="stat-card border-green">
               <div className="stat-header">
                 <h3 className="stat-title">Usuarios Activos</h3>
@@ -164,7 +144,7 @@ export default function AdminLogs() {
               </p>
               <p className="stat-description">Con actividad registrada</p>
             </div>
-            
+
             <div className="stat-card border-purple">
               <div className="stat-header">
                 <h3 className="stat-title">Tipos de Acciones</h3>
@@ -185,9 +165,9 @@ export default function AdminLogs() {
           <div className="filter-grid">
             <div className="filter-group">
               <label>Tipo de Acción</label>
-              <select 
-                value={filtros.accion} 
-                onChange={e => setFiltros({...filtros, accion: e.target.value, pagina: 1})}
+              <select
+                value={filtros.accion}
+                onChange={e => setFiltros({ ...filtros, accion: e.target.value, pagina: 1 })}
               >
                 <option value="">Todas las acciones</option>
                 <option value="crear">Crear</option>
@@ -201,25 +181,25 @@ export default function AdminLogs() {
                 <option value="reemplazar">Reemplazar</option>
               </select>
             </div>
-            
+
             <div className="filter-group">
               <label>Desde</label>
-              <input 
-                type="date" 
-                value={filtros.desde} 
-                onChange={e => setFiltros({...filtros, desde: e.target.value, pagina: 1})}
+              <input
+                type="date"
+                value={filtros.desde}
+                onChange={e => setFiltros({ ...filtros, desde: e.target.value, pagina: 1 })}
               />
             </div>
-            
+
             <div className="filter-group">
               <label>Hasta</label>
-              <input 
-                type="date" 
-                value={filtros.hasta} 
-                onChange={e => setFiltros({...filtros, hasta: e.target.value, pagina: 1})}
+              <input
+                type="date"
+                value={filtros.hasta}
+                onChange={e => setFiltros({ ...filtros, hasta: e.target.value, pagina: 1 })}
               />
             </div>
-            
+
             <div className="filter-actions">
               <button onClick={limpiarFiltros} className="btn-clear">
                 Limpiar Filtros
@@ -248,23 +228,15 @@ export default function AdminLogs() {
                         <Calendar size={16} className="date-icon" />
                         <span className="date-relative">{formatFecha(log.fecha)}</span>
                       </div>
-                      <div className="date-full">
-                        {new Date(log.fecha).toLocaleString('es-AR')}
-                      </div>
+                      <div className="date-full">{new Date(log.fecha).toLocaleString('es-AR')}</div>
                     </div>
                   </td>
                   <td>
                     <div className="user-cell">
-                      <div className="user-avatar">
-                        {log.nombre?.[0]}{log.apellido?.[0]}
-                      </div>
+                      <div className="user-avatar">{log.nombre?.[0]}{log.apellido?.[0]}</div>
                       <div className="user-info">
-                        <div className="user-name">
-                          {log.nombre} {log.apellido}
-                        </div>
-                        <div className="user-details">
-                          @{log.usuario} · {log.rol}
-                        </div>
+                        <div className="user-name">{log.nombre} {log.apellido}</div>
+                        <div className="user-details">@{log.usuario} · {log.rol}</div>
                       </div>
                     </div>
                   </td>
@@ -273,23 +245,20 @@ export default function AdminLogs() {
                       {log.accion.replace('_', ' ').toUpperCase()}
                     </span>
                   </td>
-                  <td className="description-cell">
-                    {log.descripcion}
-                  </td>
+                  <td className="description-cell">{log.descripcion}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-          
+
           {logs.length === 0 && (
             <div className="no-results">
               <Search size={48} className="no-results-icon" />
               <p>No se encontraron logs</p>
               <p>
-                {filtros.accion || filtros.desde || filtros.hasta 
-                  ? 'Prueba ajustando los filtros' 
-                  : 'Aún no hay registros de actividad en el sistema'
-                }
+                {filtros.accion || filtros.desde || filtros.hasta
+                  ? 'Prueba ajustando los filtros'
+                  : 'Aún no hay registros de actividad en el sistema'}
               </p>
             </div>
           )}

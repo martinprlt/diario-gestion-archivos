@@ -1,6 +1,7 @@
 import { useEffect, useState, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
+import { apiEndpoints, apiFetch } from "../config/api"; // ✅ Importamos config central
 import "../assets/styles/global.css";
 
 function GaleriaGlobal() {
@@ -18,6 +19,7 @@ function GaleriaGlobal() {
   const normalizar = (s = "") =>
     s.toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "").trim();
 
+  // 🔹 Cargar fotos globales
   useEffect(() => {
     const ac = new AbortController();
 
@@ -26,7 +28,7 @@ function GaleriaGlobal() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:5000/api/fotos/global", {
+        const res = await apiFetch(`${apiEndpoints.photos}/global`, {
           headers: { Authorization: `Bearer ${token}` },
           signal: ac.signal,
         });
@@ -65,13 +67,14 @@ function GaleriaGlobal() {
   const cerrarLightbox = () => setSelectedFoto(null);
   const volverArriba = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  // 🔹 Eliminar foto
   const handleDelete = async (id) => {
     if (!window.confirm("¿Estás seguro de que quieres eliminar esta foto?")) {
       return;
     }
 
     try {
-      const res = await fetch(`http://localhost:5000/api/fotos/${id}`, {
+      const res = await apiFetch(`${apiEndpoints.photos}/${id}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -123,7 +126,6 @@ function GaleriaGlobal() {
         </div>
       </div>
 
-      
       <div className="masonry-grid">
         {fotosFiltradas.length > 0 ? (
           fotosFiltradas.map((foto) => {
@@ -163,11 +165,12 @@ function GaleriaGlobal() {
                       ? new Date(fechaStr).toLocaleDateString("es-AR")
                       : "Fecha desconocida"}
                   </p>
-                  {(user?.categoria === 'administrador' || user?.categoria === 'admin') && (
+                  {(user?.categoria === "administrador" ||
+                    user?.categoria === "admin") && (
                     <button
                       className="eliminar-foto-btn"
                       onClick={(e) => {
-                        e.stopPropagation(); // Evita que se abra el lightbox
+                        e.stopPropagation();
                         handleDelete(foto.id_foto);
                       }}
                     >
@@ -183,13 +186,14 @@ function GaleriaGlobal() {
         )}
       </div>
 
-      {/* LIGHTBOX */}
       {selectedFoto && (
         <div className="lightbox" onClick={cerrarLightbox}>
           <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
             <img
               src={
-                selectedFoto.url?.startsWith("http") ? selectedFoto.url : placeholder
+                selectedFoto.url?.startsWith("http")
+                  ? selectedFoto.url
+                  : placeholder
               }
               onError={(e) => {
                 e.currentTarget.src = placeholder;
@@ -208,7 +212,6 @@ function GaleriaGlobal() {
         </div>
       )}
 
-      {/* BOTÓN VOLVER ARRIBA */}
       <button className="volver-arriba" onClick={volverArriba}>
         ↑
       </button>

@@ -8,6 +8,7 @@ import {
   actualizarUsuario,
   eliminarUsuario,
   obtenerRoles,
+  actualizarRolUsuario,
 } from '../controllers/user.controller.js';
 import { verifyToken } from '../middlewares/auth.middleware.js';
 
@@ -22,5 +23,7 @@ router.get('/usuarios/:id', verifyToken, trackUserActivity, obtenerUsuario);
 router.put('/usuarios/:id', verifyToken, trackUserActivity, actualizarUsuario);
 router.delete('/usuarios/:id', verifyToken, trackUserActivity, eliminarUsuario);
 router.get('/roles', verifyToken, trackUserActivity, obtenerRoles);
+router.put('/usuarios/:id/rol', verifyToken, trackUserActivity, actualizarRolUsuario);
+
 
 export default router;

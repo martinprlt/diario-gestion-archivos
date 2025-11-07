@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { Send, Users, Search, Filter, X } from 'lucide-react';
 import "../assets/styles/notificaciones.css";
+import { apiFetch, apiEndpoints } from "../config/api";
 
 export default function NotificacionesInternas() {
   const [titulo, setTitulo] = useState("");
@@ -16,8 +17,6 @@ export default function NotificacionesInternas() {
   const [error, setError] = useState("");
   const [mostrarSelector, setMostrarSelector] = useState(false);
 
-  const { token } = useContext(AuthContext);
-
   // Cargar usuarios y roles
   useEffect(() => {
     const cargar = async () => {
@@ -25,9 +24,8 @@ export default function NotificacionesInternas() {
         setCargando(true);
         setError("");
 
-        const rU = await fetch("http://localhost:5000/api/usuarios", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Cargar usuarios
+        const rU = await apiFetch(apiEndpoints.users);
         if (!rU.ok) throw new Error(`Error ${rU.status}`);
         const du = await rU.json();
         const normalizados = (Array.isArray(du) ? du : []).map((u) => ({
@@ -39,9 +37,8 @@ export default function NotificacionesInternas() {
         }));
         setUsuarios(normalizados);
 
-        const rR = await fetch("http://localhost:5000/api/roles", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // Cargar roles
+        const rR = await apiFetch(apiEndpoints.roles);
         if (rR.ok) {
           const dr = await rR.json();
           if (Array.isArray(dr)) setRoles(dr);
@@ -52,8 +49,8 @@ export default function NotificacionesInternas() {
         setCargando(false);
       }
     };
-    if (token) cargar();
-  }, [token]);
+    cargar();
+  }, []);
 
   // Filtro de usuarios
   const usuariosFiltrados = usuarios.filter((u) => {
@@ -98,12 +95,9 @@ export default function NotificacionesInternas() {
           ? usuarios.map((u) => u.id)
           : usuariosSeleccionados.map((u) => u.id);
 
-      const res = await fetch("http://localhost:5000/api/notificaciones/crear", {
+      // ✅ USAR ENDPOINT CORRECTO para crear notificación
+      const res = await apiFetch(apiEndpoints.createNotification, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
         body: JSON.stringify({
           titulo,
           mensaje: descripcion,

@@ -1,5 +1,6 @@
-// 📁 src/context/CategoriasContext.jsx - VERSIÓN LIMPIA
+// 📁 src/context/CategoriasContext.jsx - VERSIÓN CON API CONFIG
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import { apiFetch, apiEndpoints } from '../config/api'; // ✅ Importar configuración de API
 
 const CategoriasContext = createContext();
 
@@ -21,7 +22,8 @@ export const CategoriasProvider = ({ children }) => {
     try {
       setLoading(true);
       
-      const response = await fetch('http://localhost:5000/api/categorias');
+      // ✅ Usar apiFetch y apiEndpoints
+      const response = await apiFetch(apiEndpoints.categories);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);

@@ -290,41 +290,50 @@
 }
 
 /* ------------------ */
-/* Badges de rol */
+/* Badges de rol - VERSIÓN CORREGIDA */
 /* ------------------ */
 .badge {
-  display: inline-block;
-  padding: 0.4rem 0.9rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  border-radius: 999px;
-  letter-spacing: 0.5px;
-  border: 1.5px solid;
-  text-transform: capitalize;
+  display: inline-block !important;
+  padding: 0.4rem 0.9rem !important;
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  border-radius: 999px !important;
+  letter-spacing: 0.5px !important;
+  border: 1.5px solid !important;
+  text-transform: capitalize !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
+/* CLASES ESPECÍFICAS - usando !important para forzar */
 .badge.rol-administrador {
-  background: #fef2f2;
-  color: #dc2626;
-  border-color: #fecaca;
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-color: #fecaca !important;
 }
 
 .badge.rol-editor {
-  background: #fff7ed;
-  color: #ea580c;
-  border-color: #fed7aa;
+  background: #fff7ed !important;
+  color: #ea580c !important;
+  border-color: #fed7aa !important;
 }
 
 .badge.rol-periodista {
-  background: #f0fdf4;
-  color: var(--verde-medio);
-  border-color: #bbf7d0;
+  background: #f0fdf4 !important;
+  color: #166534 !important;
+  border-color: #bbf7d0 !important;
 }
 
 .badge.rol-fotografo {
-  background: #faf5ff;
-  color: #7c3aed;
-  border-color: #ddd6fe;
+  background: #faf5ff !important;
+  color: #7c3aed !important;
+  border-color: #ddd6fe !important;
+}
+
+.badge.rol-sin-asignar {
+  background: #f3f4f6 !important;
+  color: #6b7280 !important;
+  border-color: #d1d5db !important;
 }
 
 /* ------------------ */

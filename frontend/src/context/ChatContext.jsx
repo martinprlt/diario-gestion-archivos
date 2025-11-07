@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
+import { API_URL } from "../config/api"; // ✅ Importar solo la URL base
 
 const ChatContext = createContext();
 
@@ -8,7 +9,8 @@ export const ChatProvider = ({ children, userId }) => {
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const newSocket = io("http://localhost:5000");
+    // ✅ Usar API_URL centralizada
+    const newSocket = io(API_URL);
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
@@ -46,9 +48,7 @@ export const ChatProvider = ({ children, userId }) => {
 
   return (
     <ChatContext.Provider value={{ mensajes, enviarMensaje, solicitarHistorial }}>
-     <div key="chat-provider-wrapper"> {}
       {children}
-      </div>    
     </ChatContext.Provider>
   );
 };

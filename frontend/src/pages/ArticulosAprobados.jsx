@@ -1,6 +1,8 @@
+// src/pages/ArticulosAprobados.jsx
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { AuthContext } from '../context/AuthContext';
+import { API_URL } from '../config/api.js';
 import '../assets/styles/articulos-aprobado.css';
 
 const ArticulosAprobados = () => {
@@ -12,20 +14,22 @@ const ArticulosAprobados = () => {
   useEffect(() => {
     const fetchArticulosAprobados = async () => {
       try {
-        const response = await axios.get('/api/articles/editor/approved', {
+        const response = await axios.get(`${API_URL}/api/articles/editor/approved`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
-        console.log('Respuesta de la API:', response.data); 
+
         if (Array.isArray(response.data)) {
           setArticulos(response.data);
         } else {
-          console.error("La respuesta de la API no es un array:", response.data);
           setError("Se recibió un formato de datos inesperado del servidor.");
         }
       } catch (err) {
-        setError('No se pudieron cargar los artículos aprobados. ' + (err.response?.data?.message || err.message));
+        setError(
+          'No se pudieron cargar los artículos aprobados. ' +
+          (err.response?.data?.message || err.message)
+        );
       } finally {
         setLoading(false);
       }
@@ -36,11 +40,11 @@ const ArticulosAprobados = () => {
 
   const handleDownload = async (id, nombreOriginal) => {
     try {
-      const response = await axios.get(`/api/articles/download/${id}`, {
+      const response = await axios.get(`${API_URL}/api/articles/download/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-        responseType: 'blob', // importante para descargar archivos
+        responseType: 'blob',
       });
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -50,8 +54,7 @@ const ArticulosAprobados = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
-    } catch (error) {
-      console.error('Error al descargar el archivo:', error);
+    } catch {
       alert('No se pudo descargar el archivo.');
     }
   };

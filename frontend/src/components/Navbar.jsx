@@ -4,6 +4,7 @@ import { AuthContext } from "../context/AuthContext.js";
 import UserDrawer from "./UserDrawer";
 import logo from "../assets/imagenes/logo.png";
 import "../assets/styles/navbar.css";
+import { apiFetch, apiEndpoints } from "../config/api"; // ✅ Importar configuración de API
 
 export default function Navbar() {
   const { user, token } = useContext(AuthContext);
@@ -49,7 +50,6 @@ export default function Navbar() {
       { to: "/galeria-global", texto: "Galería" },
       { to: "/chat", texto: "Chat" },
       { tipo: "notificaciones", texto: "Notificaciones" },
-
     ],
   };
 
@@ -57,15 +57,11 @@ export default function Navbar() {
 
   // Cargar notificaciones
   useEffect(() => {
-    if (user && token) {
+    if (user) {
       const cargarNotificaciones = async () => {
         try {
-          const res = await fetch(
-            `http://localhost:5000/api/notificaciones/${user.id_usuario}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            }
-          );
+          // ✅ Usar apiFetch y apiEndpoints
+          const res = await apiFetch(apiEndpoints.userNotifications(user.id_usuario));
           if (!res.ok) throw new Error("Error al cargar notificaciones");
           const data = await res.json();
           setNotificaciones(data);
@@ -75,13 +71,13 @@ export default function Navbar() {
       };
       cargarNotificaciones();
     }
-  }, [user, token]);
+  }, [user]); // ✅ Eliminar dependencia de token
 
   const marcarComoLeida = async (id) => {
     try {
-      await fetch("http://localhost:5000/api/notificaciones/marcar-leida", {
+      // ✅ Usar apiFetch y apiEndpoints
+      await apiFetch(apiEndpoints.markNotificationRead, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id_notificacion: id }),
       });
       setNotificaciones((prev) =>

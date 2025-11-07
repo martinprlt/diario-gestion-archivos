@@ -1,5 +1,6 @@
 import { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
+import {API_URL } from '../config/api.js';
 import '../assets/styles/articulos-revision.css';
 
 function ArticulosEnRevision() {
@@ -9,33 +10,35 @@ function ArticulosEnRevision() {
   const { token } = useContext(AuthContext);
 
   useEffect(() => {
-    fetchArticulosEnRevision();
+    if (token) fetchArticulosEnRevision();
   }, [token]);
 
+  // 🧩 Cargar artículos en revisión / rechazados / aprobados
   const fetchArticulosEnRevision = async () => {
     try {
-      const response = await fetch('http://localhost:5000/api/articles/my', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const response = await fetch(`${API_URL}/api/articles/my`, {
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error('Error al cargar artículos');
       const data = await response.json();
-      
-      // ✅ Filtrar artículos en revisión, rechazados y aprobados
-      const articulosFiltrados = data.filter(articulo => 
-        articulo.estado === 'en_revision' || 
-        articulo.estado === 'rechazado' || 
-        articulo.estado === 'aprobado'
+
+      const filtrados = data.filter(
+        (art) =>
+          art.estado === 'en_revision' ||
+          art.estado === 'rechazado' ||
+          art.estado === 'aprobado'
       );
-      
-      setArticulos(articulosFiltrados);
+
+      setArticulos(filtrados);
     } catch (err) {
-      console.error('Error:', err);
+      console.error('❌ Error al obtener artículos:', err);
       setError('No se pudieron cargar los artículos');
     } finally {
       setLoading(false);
     }
   };
 
+  // 🧩 Descargar artículo
   const handleDownload = async (id, articulo) => {
     if (!articulo?.ruta_archivo || !articulo?.nombre_archivo) {
       alert('⚠️ Este artículo no tiene archivo asociado');
@@ -43,11 +46,11 @@ function ArticulosEnRevision() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/download/${id}`, {
+      const response = await fetch(`${API_URL}/api/articles/download/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Cache-Control': 'no-cache'
-        }
+          Authorization: `Bearer ${token}`,
+          'Cache-Control': 'no-cache',
+        },
       });
 
       if (!response.ok) {
@@ -58,18 +61,23 @@ function ArticulosEnRevision() {
       const blob = await response.blob();
       const fileExtension = articulo.nombre_archivo.split('.').pop() || '';
       const mimeTypes = {
-        'doc': 'application/msword',
-        'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'pdf': 'application/pdf',
-        'txt': 'text/plain'
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        pdf: 'application/pdf',
+        txt: 'text/plain',
       };
 
-      const url = window.URL.createObjectURL(new Blob([blob], { type: mimeTypes[fileExtension] || 'application/octet-stream' }));
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: mimeTypes[fileExtension] || 'application/octet-stream' })
+      );
+
       const link = document.createElement('a');
       link.href = url;
-      link.download = articulo.nombre_original || `articulo_${id}.${fileExtension}`;
+      link.download =
+        articulo.nombre_original || `articulo_${id}.${fileExtension}`;
       document.body.appendChild(link);
       link.click();
+
       setTimeout(() => {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(link);
@@ -80,6 +88,7 @@ function ArticulosEnRevision() {
     }
   };
 
+  // 🧩 Visualizar artículo
   const handleView = async (id, articulo) => {
     if (!articulo?.ruta_archivo) {
       alert('⚠️ Este artículo no tiene archivo asociado');
@@ -87,11 +96,11 @@ function ArticulosEnRevision() {
     }
 
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
+      const response = await fetch(`${API_URL}/api/articles/view/${id}`, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Pragma': 'no-cache'
-        }
+          Authorization: `Bearer ${token}`,
+          Pragma: 'no-cache',
+        },
       });
 
       if (!response.ok) {
@@ -101,78 +110,75 @@ function ArticulosEnRevision() {
 
       const blob = await response.blob();
       const fileType = articulo.tipo_archivo || 'application/octet-stream';
-      const url = window.URL.createObjectURL(new Blob([blob], { type: fileType }));
+      const url = window.URL.createObjectURL(
+        new Blob([blob], { type: fileType })
+      );
 
       const viewer = window.open(url, '_blank');
-      if (!viewer) alert('⚠️ Por favor desbloquea ventanas emergentes para visualizar el archivo');
+      if (!viewer)
+        alert('⚠️ Desbloqueá las ventanas emergentes para visualizar el archivo');
     } catch (err) {
       console.error('❌ Error al visualizar:', err);
       alert(`❌ ${err.message || 'Error al abrir el archivo'}`);
     }
   };
 
+  // 🧩 Reenviar artículo rechazado
   const handleReenviar = async (id, titulo) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/articles/${id}/send-to-review`, {
+      const response = await fetch(`${API_URL}/api/articles/${id}/send-to-review`, {
         method: 'POST',
-        headers: { 
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       const data = await response.json();
       if (!response.ok) throw new Error(data.message);
 
-      // Actualizar el estado local del artículo
-      setArticulos(prev => prev.map(item => 
-        item.id_articulo === id 
-          ? { ...item, estado: 'en_revision', fecha_modificacion: new Date().toISOString() }
-          : item
-      ));
-      
+      // actualizar el estado local
+      setArticulos((prev) =>
+        prev.map((a) =>
+          a.id_articulo === id
+            ? { ...a, estado: 'en_revision', fecha_modificacion: new Date().toISOString() }
+            : a
+        )
+      );
+
       alert(`✅ "${titulo}" reenviado a revisión exitosamente`);
     } catch (err) {
       alert(`❌ Error: ${err.message}`);
-      console.error("Error al reenviar a revisión:", err);
+      console.error('Error al reenviar:', err);
     }
   };
 
-  const getEstadoBadgeClass = (estado) => {
-    switch (estado) {
-      case 'en_revision': return 'estado-revision';
-      case 'rechazado': return 'estado-rechazado';
-      case 'aprobado': return 'estado-aprobado';
-      default: return 'estado-default';
-    }
-  };
-
-  const getEstadoTexto = (estado) => {
-    switch (estado) {
-      case 'en_revision': return 'En Revisión';
-      case 'rechazado': return 'Rechazado';
-      case 'aprobado': return 'Aprobado';
-      default: return estado;
-    }
-  };
-
+  // 🧩 Helpers
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-
     try {
       const date = new Date(dateString);
-      return isNaN(date.getTime()) ? 'N/A' : date.toLocaleDateString('es-AR', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      return isNaN(date.getTime())
+        ? 'N/A'
+        : date.toLocaleDateString('es-AR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          });
     } catch {
       return 'N/A';
     }
   };
 
+  const estadosUI = {
+    en_revision: { texto: '🕓 En Revisión', clase: 'estado-revision' },
+    rechazado: { texto: '⛔ Rechazado', clase: 'estado-rechazado' },
+    aprobado: { texto: '✅ Aprobado', clase: 'estado-aprobado' },
+  };
+
+  // 🧩 Render principal
   if (loading) return <div className="loading">Cargando artículos...</div>;
   if (error) return <div className="error">{error}</div>;
 
@@ -197,42 +203,49 @@ function ArticulosEnRevision() {
               </tr>
             </thead>
             <tbody>
-              {articulos.map((articulo) => (
-                <tr key={articulo.id_articulo}>
-                  <td className="titulo-columna">{articulo.titulo}</td>
-                  <td>{articulo.categoria_nombre || 'Sin categoría'}</td>
-                  <td>
-                    <span className={`estado-badge ${getEstadoBadgeClass(articulo.estado)}`}>
-                      {getEstadoTexto(articulo.estado)}
-                    </span>
-                  </td>
-                  <td>{formatDate(articulo.fecha_creacion)}</td>
-                  <td>{formatDate(articulo.fecha_modificacion)}</td>
-                  <td className="acciones">
-                    <button 
-                      onClick={() => handleDownload(articulo.id_articulo, articulo)} 
-                      className="btn-accion descargar"
-                    >
-                      📥 Descargar
-                    </button>
-                    <button 
-                      onClick={() => handleView(articulo.id_articulo, articulo)} 
-                      className="btn-accion leer"
-                    >
-                      👁️ Leer
-                    </button>
-                    
-                    {articulo.estado === 'rechazado' && (
-                      <button 
-                        onClick={() => handleReenviar(articulo.id_articulo, articulo.titulo)} 
-                        className="btn-reenviar"
+              {articulos.map((a) => {
+                const estadoUI = estadosUI[a.estado] || {
+                  texto: a.estado || 'Desconocido',
+                  clase: 'estado-default',
+                };
+
+                return (
+                  <tr key={a.id_articulo}>
+                    <td className="titulo-columna">{a.titulo}</td>
+                    <td>{a.categoria_nombre || 'Sin categoría'}</td>
+                    <td>
+                      <span className={`estado-badge ${estadoUI.clase}`}>
+                        {estadoUI.texto}
+                      </span>
+                    </td>
+                    <td>{formatDate(a.fecha_creacion)}</td>
+                    <td>{formatDate(a.fecha_modificacion)}</td>
+                    <td className="acciones">
+                      <button
+                        onClick={() => handleDownload(a.id_articulo, a)}
+                        className="btn-accion descargar"
                       >
-                        🔄 Reenviar
+                        📥 Descargar
                       </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
+                      <button
+                        onClick={() => handleView(a.id_articulo, a)}
+                        className="btn-accion leer"
+                      >
+                        👁️ Leer
+                      </button>
+
+                      {a.estado === 'rechazado' && (
+                        <button
+                          onClick={() => handleReenviar(a.id_articulo, a.titulo)}
+                          className="btn-reenviar"
+                        >
+                          🔄 Reenviar
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

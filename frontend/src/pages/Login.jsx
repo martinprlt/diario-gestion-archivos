@@ -1,9 +1,10 @@
-// src/pages/login.jsx - VERSIÓN LIMPIA
+// src/pages/Login.jsx
 import { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext.js';
 import LoginForm from '../components/LoginForm';
 import '../assets/styles/login.css';
+import { apiEndpoints, apiFetch } from '../config/api.js';
 
 function Login() {
   const [error, setError] = useState('');
@@ -12,25 +13,22 @@ function Login() {
 
   const handleLogin = async (credentials) => {
     try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
+      const response = await apiFetch(apiEndpoints.login, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           email: credentials.email,
-          password: credentials.password
+          password: credentials.password,
         }),
       });
-      
+
       const data = await response.json();
-      
+
       if (response.ok) {
         login(data.user, data.token);
 
         const rol = data.user.categoria;
-        
-        switch(rol) {
+
+        switch (rol) {
           case 'Periodista':
             navigate('/notas');
             break;
@@ -46,8 +44,8 @@ function Login() {
       } else {
         setError(data.message || 'Credenciales incorrectas');
       }
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
+      console.error('❌ Error de conexión:', error);
       setError('Error de conexión con el servidor');
     }
   };

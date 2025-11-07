@@ -1,14 +1,14 @@
+// 📁 src/pages/DashboardAdmin.jsx
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useHeartbeat } from '../hooks/useHeartbeat';
-import '../assets/styles/DashboardAdmin.css'; // CSS mejorado
+import '../assets/styles/DashboardAdmin.css';
 
 export function DashboardAdmin() {
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [stats, setStats] = useState({ total: 0 });
   const { user, token } = useContext(AuthContext);
 
-  // ✅ Activar heartbeat automático
   useHeartbeat();
 
   const fetchOnlineUsers = useCallback(async () => {
@@ -33,8 +33,9 @@ export function DashboardAdmin() {
         total: data.total || 0,
         lastUpdated: data.lastUpdated
       });
-    } catch (error) {
-      console.error('❌ Error fetching online users:', error);
+    } catch {
+      setOnlineUsers([]);
+      setStats({ total: 0 });
     }
   }, [token]);
 
@@ -72,7 +73,6 @@ export function DashboardAdmin() {
     <div className="p-6 max-w-7xl mx-auto">
       <h2 className="text-3xl font-bold mb-6">Panel Administrativo</h2>
 
-      {/* Tarjetas principales */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div className="dashboard-card bg-white p-6 rounded-lg shadow-lg">
           <h3 className="text-gray-600 font-semibold mb-2">Usuarios Online</h3>
@@ -95,7 +95,6 @@ export function DashboardAdmin() {
         </div>
       </div>
 
-      {/* Usuarios Conectados */}
       <div className="dashboard-card bg-white rounded-lg shadow-lg">
         <div className="p-4 border-b flex justify-between items-center">
           <h3 className="text-xl font-semibold">Usuarios Conectados ({stats.total})</h3>
@@ -103,7 +102,7 @@ export function DashboardAdmin() {
             onClick={fetchOnlineUsers}
             className="btn-refresh px-4 py-2 rounded transition"
           >
-            🔄 Actualizar
+            Actualizar
           </button>
         </div>
 
@@ -115,13 +114,13 @@ export function DashboardAdmin() {
             </div>
           ) : (
             <div className="users-grid">
-              {onlineUsers.map((user) => (
-                <div key={user.userId} className="user-card">
+              {onlineUsers.map((u) => (
+                <div key={u.userId} className="user-card">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1">
-                      <p className="font-bold">{user.nombre} {user.apellido}</p>
-                      <p className="text-sm">@{user.username}</p>
-                      <p className="text-xs mt-1">{user.categoria || 'Sin categoría'}</p>
+                      <p className="font-bold">{u.nombre} {u.apellido}</p>
+                      <p className="text-sm">@{u.username}</p>
+                      <p className="text-xs mt-1">{u.categoria || 'Sin categoría'}</p>
                     </div>
                     <div className="flex flex-col items-end">
                       <div className="status-dot" title="En línea"></div>
@@ -131,12 +130,12 @@ export function DashboardAdmin() {
 
                   <div className="border-t pt-2 mt-2 space-y-1">
                     <p className="text-xs text-gray-500">
-                      ⏰ Última actividad: {new Date(user.lastActivity).toLocaleTimeString('es-AR')}
+                      Última actividad: {new Date(u.lastActivity).toLocaleTimeString('es-AR')}
                     </p>
                     <p className="text-xs text-gray-500">
-                      🕐 Conectado hace: {user.onlineFor} min
+                      Conectado hace: {u.onlineFor} min
                     </p>
-                    {user.ip && <p className="text-xs text-gray-400">📍 IP: {user.ip}</p>}
+                    {u.ip && <p className="text-xs text-gray-400">IP: {u.ip}</p>}
                   </div>
                 </div>
               ))}

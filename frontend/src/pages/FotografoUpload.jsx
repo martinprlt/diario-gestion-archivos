@@ -1,15 +1,16 @@
-// 📁 src/pages/FotografoUpload.jsx - VERSIÓN ACTUALIZADA
-import React, { useRef, useState } from 'react';
-import { useCategorias } from '../context/CategoriasContext.jsx'; // 👈 NUEVA IMPORTACIÓN
+// 📁 src/pages/FotografoUpload.jsx
+import React, { useRef, useState, useEffect } from 'react';
+import { useCategorias } from '../context/CategoriasContext.jsx';
+import { API_URL } from '../config/api.js';
 import '../assets/styles/fotografo-upload.css';
 import axios from 'axios';
 
 export default function FotografoUpload() {
-  const { categorias, loading, error } = useCategorias(); // 👈 USAR EL HOOK
-  
+  const { categorias, loading, error } = useCategorias();
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState(''); // 👈 NUEVO ESTADO PARA CATEGORÍA
+  const [category, setCategory] = useState('');
   const [preview, setPreview] = useState(null);
   const [fileName, setFileName] = useState('');
   const [archivoSubido, setArchivoSubido] = useState(false);
@@ -20,7 +21,7 @@ export default function FotografoUpload() {
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
 
   // 🔹 Establecer categoría por defecto cuando se cargan las categorías
-  React.useEffect(() => {
+  useEffect(() => {
     if (categorias.length > 0 && !category) {
       setCategory(categorias[0].id_categoria.toString());
     }
@@ -57,16 +58,16 @@ export default function FotografoUpload() {
       formData.append('archivo', archivoSeleccionado);
       formData.append('titulo', title);
       formData.append('descripcion', description);
-      formData.append('categoria_id', category); // 👈 ENVIAR CATEGORÍA
-      formData.append('es_global', 'true'); // O según tu lógica
+      formData.append('categoria_id', category);
+      formData.append('es_global', 'true');
 
       const token = localStorage.getItem('token');
-      
-      const response = await axios.post('http://localhost:5000/api/fotos/upload', formData, {
+
+      const response = await axios.post(`${API_URL}/api/fotos/upload`, formData, {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
       });
 
       if (response.status === 201) {
@@ -75,8 +76,7 @@ export default function FotografoUpload() {
         setFileName(title);
         alert('✅ Foto subida exitosamente');
       }
-    } catch (error) {
-      console.error('Error al subir foto:', error);
+    } catch {
       setErrorUpload('Error al subir la foto. Intenta nuevamente.');
     } finally {
       setCargando(false);
@@ -90,7 +90,7 @@ export default function FotografoUpload() {
     setMostrarConfirmacion(false);
     setTitle('');
     setDescription('');
-    setCategory(''); // 👈 RESETEAR CATEGORÍA TAMBIÉN
+    setCategory('');
     setArchivoSeleccionado(null);
     setErrorUpload('');
   };
@@ -104,20 +104,16 @@ export default function FotografoUpload() {
   const handleTitleChange = (e) => {
     const nuevoTitulo = e.target.value;
     setTitle(nuevoTitulo);
-    if (!archivoSubido) {
-      setFileName(nuevoTitulo);
-    }
+    if (!archivoSubido) setFileName(nuevoTitulo);
   };
 
-  const handleDescriptionChange = (e) => {
-    setDescription(e.target.value);
-  };
+  const handleDescriptionChange = (e) => setDescription(e.target.value);
 
   return (
     <div className="fotografo-upload-container">
       <div className="upload-header">FOTÓGRAFO</div>
       <div className="upload-wrapper">
-        <aside className="sidebar">{/* Barra verde sin texto */}</aside>
+        <aside className="sidebar"></aside>
 
         <main className="upload-main">
           <div className="upload-form">
@@ -142,7 +138,6 @@ export default function FotografoUpload() {
                 rows="3"
               />
 
-              {/* 👈 NUEVO SELECT DE CATEGORÍAS */}
               <label htmlFor="category">Categoría *</label>
               {loading ? (
                 <div className="loading-categorias">🔄 Cargando categorías...</div>
@@ -165,19 +160,19 @@ export default function FotografoUpload() {
                   ))}
                 </select>
               )}
-              
+
               {!category && categorias.length > 0 && (
                 <span className="field-error-text">Debes seleccionar una categoría</span>
               )}
 
-              <button 
-                className="upload-button" 
+              <button
+                className="upload-button"
                 onClick={handleUploadClick}
                 disabled={cargando}
               >
                 {cargando ? 'Subiendo...' : 'Subir archivo'}
               </button>
-              
+
               <input
                 type="file"
                 accept="image/*"
@@ -187,25 +182,21 @@ export default function FotografoUpload() {
                 disabled={cargando}
               />
 
-              {errorUpload && (
-                <div className="error-message">
-                  ❌ {errorUpload}
-                </div>
-              )}
+              {errorUpload && <div className="error-message">❌ {errorUpload}</div>}
 
               {mostrarConfirmacion && (
                 <div className="confirm-box">
                   <p>¿Está seguro de subir este archivo?</p>
                   <div className="confirm-buttons">
-                    <button 
-                      className="yes-btn" 
+                    <button
+                      className="yes-btn"
                       onClick={confirmarSubida}
                       disabled={cargando}
                     >
                       {cargando ? 'Subiendo...' : 'Sí'}
                     </button>
-                    <button 
-                      className="no-btn" 
+                    <button
+                      className="no-btn"
                       onClick={cancelarSubida}
                       disabled={cargando}
                     >
@@ -239,7 +230,9 @@ export default function FotografoUpload() {
                       <tr>
                         <td><strong>Categoría</strong></td>
                         <td>
-                          {categorias.find(cat => cat.id_categoria.toString() === category)?.nombre || 'No especificada'}
+                          {categorias.find(
+                            (cat) => cat.id_categoria.toString() === category
+                          )?.nombre || 'No especificada'}
                         </td>
                       </tr>
                       <tr>

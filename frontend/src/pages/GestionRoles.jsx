@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-import { Users, Shield } from 'lucide-react'; // Importar íconos
+import { Users, Shield } from 'lucide-react';
+import { apiFetch, apiEndpoints } from '../config/api'; // ✅ Importar configuración de API
 import '../assets/styles/gestionRoles.css';
 
 export default function GestionRoles() {
@@ -20,20 +21,14 @@ export default function GestionRoles() {
       setLoading(true);
       setError('');
       
-      // Cargar roles
-      const rolesRes = await fetch('http://localhost:5000/api/roles', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+      // ✅ Cargar roles usando apiFetch
+      const rolesRes = await apiFetch(apiEndpoints.roles);
       if (!rolesRes.ok) throw new Error('Error al cargar roles');
       const rolesData = await rolesRes.json();
       setRoles(rolesData);
 
-      // Cargar usuarios
-      const usuariosRes = await fetch('http://localhost:5000/api/usuarios', {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      
+      // ✅ Cargar usuarios usando apiFetch
+      const usuariosRes = await apiFetch(apiEndpoints.users);
       if (!usuariosRes.ok) throw new Error('Error al cargar usuarios');
       const usuariosData = await usuariosRes.json();
       setUsuarios(usuariosData);
@@ -45,19 +40,18 @@ export default function GestionRoles() {
     }
   };
 
-  // 🔹 FUNCIÓN PARA REASIGNAR ROL
+  // ✅ FUNCIÓN PARA REASIGNAR ROL usando apiFetch
   const reasignarRol = async (usuarioId, nuevoRolId) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/usuarios/${usuarioId}/rol`, {
+      const response = await apiFetch(apiEndpoints.updateUserRole(usuarioId), {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({ rol_id: nuevoRolId })
       });
 
-      if (!response.ok) throw new Error('Error al actualizar rol');
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || 'Error al actualizar rol');
+      }
       
       alert('✅ Rol actualizado correctamente');
       cargarDatos(); // Recargar datos
@@ -225,19 +219,26 @@ function UsuarioFila({ usuario, roles, onReasignar }) {
     onReasignar(usuario.id, parseInt(nuevoRolId));
   };
 
-
-  // ✅ FUNCIÓN MEJORADA para obtener el nombre del rol actual
+  // ✅ FUNCIÓN CORREGIDA para obtener el nombre del rol actual
   const getRolNombre = (usuario) => {
-    if (usuario.rol_nombre) return usuario.rol_nombre;        // caso: backend devuelve rol_nombre
-    if (usuario.rol?.nombre) return usuario.rol.nombre;        // caso: backend devuelve objeto rol
-    const rol = roles.find(r => r.id_rol === usuario.rol_id);  // caso: backend devuelve solo rol_id
-    return rol ? rol.nombre : 'Sin rol asignado';
+    // Caso 1: Si el backend devuelve rol_nombre directamente
+    if (usuario.rol_nombre) return usuario.rol_nombre;
+    
+    // Caso 2: Si el backend devuelve un objeto rol
+    if (usuario.rol && usuario.rol.nombre) return usuario.rol.nombre;
+    
+    // Caso 3: Buscar el rol en el array de roles usando rol_id
+    const rolEncontrado = roles.find(r => r.id_rol === usuario.rol_id);
+    return rolEncontrado ? rolEncontrado.nombre : 'Sin rol asignado';
   };
 
-  const getRolClass = (rolId) => {
-    const rol = roles.find(r => r.id_rol === rolId);
-    return rol ? `rol-${rol.nombre.toLowerCase()}` : '';
+  const getRolClass = (usuario) => {
+    const rolNombre = getRolNombre(usuario);
+    return rolNombre ? `rol-${rolNombre.toLowerCase()}` : 'rol-sin-asignar';
   };
+
+  const rolNombre = getRolNombre(usuario);
+  const rolClass = getRolClass(usuario);
 
   return (
     <tr>
@@ -258,8 +259,8 @@ function UsuarioFila({ usuario, roles, onReasignar }) {
       </td>
       <td>{usuario.email}</td>
       <td>
-        <span className={`badge ${getRolClass(usuario.rol_id)}`}>
-          {getRolNombre(usuario.rol_id)}
+        <span className={`badge ${rolClass}`}>
+          {rolNombre}
         </span>
       </td>
       <td>

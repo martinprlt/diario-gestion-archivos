@@ -4,6 +4,7 @@ import "../assets/styles/gestionUsuario.css";
 import UsuarioTabla from "../components/UsuarioTabla";
 import UsuarioForm from "../components/UsuarioForm";
 import { AuthContext } from "../context/AuthContext";
+import { apiFetch, apiEndpoints } from "../config/api"; // ✅ Importar configuración de API
 
 export default function GestionUsuario() {
   const [usuarios, setUsuarios] = useState([]);
@@ -38,18 +39,16 @@ export default function GestionUsuario() {
         datosParaBackend.contraseña = usuarioData.contraseña;
       }
 
+      // ✅ Usar apiEndpoints para las URLs
       const url = usuarioData.id 
-        ? `http://localhost:5000/api/usuarios/${usuarioData.id}`
-        : 'http://localhost:5000/api/usuarios';
+        ? apiEndpoints.updateUserRole(usuarioData.id).replace('/rol', '') // Ajustar para edición de usuario
+        : apiEndpoints.users;
 
       const method = usuarioData.id ? 'PUT' : 'POST';
 
-      const response = await fetch(url, {
+      // ✅ Usar apiFetch en lugar de fetch
+      const response = await apiFetch(url, {
         method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify(datosParaBackend)
       });
 
@@ -71,12 +70,8 @@ export default function GestionUsuario() {
     try {
       setCargando(true);
       
-      const response = await fetch('http://localhost:5000/api/usuarios', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
+      // ✅ Usar apiFetch y apiEndpoints
+      const response = await apiFetch(apiEndpoints.users);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status}: ${response.statusText}`);
@@ -89,7 +84,7 @@ export default function GestionUsuario() {
     } finally {
       setCargando(false);
     }
-  }, [token]);
+  }, []); // ✅ token ya está manejado por apiFetch
 
   useEffect(() => {
     cargarUsuarios();
@@ -133,12 +128,9 @@ export default function GestionUsuario() {
 
     if (window.confirm("¿Seguro que quieres desactivar este usuario?")) {
       try {
-        const response = await fetch(`http://localhost:5000/api/usuarios/${id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        // ✅ Usar apiFetch y apiEndpoints
+        const response = await apiFetch(`${apiEndpoints.users}/${id}`, {
+          method: 'DELETE'
         });
 
         if (response.ok) {
@@ -156,11 +148,8 @@ export default function GestionUsuario() {
 
   const obtenerRolId = async (nombreRol) => {
     try {
-      const response = await fetch('http://localhost:5000/api/roles', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      // ✅ Usar apiFetch y apiEndpoints
+      const response = await apiFetch(apiEndpoints.roles);
       
       if (!response.ok) {
         throw new Error(`Error ${response.status} al obtener roles`);

@@ -1,8 +1,8 @@
 // src/pages/ResetPassword.jsx
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import Header from '../components/Header';
-import '../assets/styles/login.css'; // Reutiliza o crea un CSS
+import { apiEndpoints } from '../config/api.js'; // 👈 usar config global
+import '../assets/styles/login.css';
 
 function ResetPassword() {
   const [newPassword, setNewPassword] = useState('');
@@ -15,7 +15,6 @@ function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Extraer el token de la URL
     const queryParams = new URLSearchParams(location.search);
     const tokenFromUrl = queryParams.get('token');
     if (tokenFromUrl) {
@@ -30,27 +29,16 @@ function ResetPassword() {
     setMessage('');
     setError('');
 
-    if (!token) {
-      setError('No hay un token de recuperación válido.');
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError('Las contraseñas no coinciden.');
-      return;
-    }
-
-    if (newPassword.length < 6) { // Ejemplo de validación mínima
-      setError('La contraseña debe tener al menos 6 caracteres.');
-      return;
-    }
+    if (!token) return setError('No hay un token de recuperación válido.');
+    if (newPassword !== confirmPassword)
+      return setError('Las contraseñas no coinciden.');
+    if (newPassword.length < 6)
+      return setError('La contraseña debe tener al menos 6 caracteres.');
 
     try {
-      const response = await fetch('http://localhost:5000/api/auth/reset-password', {
+      const response = await fetch(apiEndpoints.resetPassword, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token, newPassword }),
       });
 
@@ -58,9 +46,7 @@ function ResetPassword() {
 
       if (data.success) {
         setMessage(data.message);
-        setTimeout(() => {
-          navigate('/login'); // Redirigir al login después de un éxito
-        }, 3000); // 3 segundos antes de redirigir
+        setTimeout(() => navigate('/login'), 3000);
       } else {
         setError(data.message || 'Error al restablecer la contraseña.');
       }
@@ -75,6 +61,7 @@ function ResetPassword() {
       <div className="login-container">
         <form className="login-form" onSubmit={handleSubmit}>
           <h2>Establecer nueva contraseña</h2>
+
           {token ? (
             <>
               <input
@@ -94,8 +81,9 @@ function ResetPassword() {
               <button type="submit">Restablecer contraseña</button>
             </>
           ) : (
-            <p>Cargando...</p> // O un spinner, si el token aún no se ha procesado
+            <p>Cargando...</p>
           )}
+
           {message && <p className="success-message">{message}</p>}
           {error && <p className="error-message">{error}</p>}
         </form>

@@ -1,6 +1,8 @@
+// src/pages/RevisionEditor.jsx
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
+import { API_URL } from "../config/api.js";
 import "../assets/styles/EditorRevision.css";
 
 function RevisionEditor() {
@@ -20,15 +22,16 @@ function RevisionEditor() {
   const fetchArticulosEnRevision = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("http://localhost:5000/api/articles/editor/review", {
+      const res = await fetch(`${API_URL}/api/articles/editor/review`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!res.ok) throw new Error("Error al cargar artículos en revisión");
+
       const data = await res.json();
       setArticulos(data);
       setArticulosFiltrados(data);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("Error al cargar artículos en revisión");
     } finally {
       setLoading(false);
@@ -46,6 +49,7 @@ function RevisionEditor() {
       filtrados = filtrados.filter(
         (art) => art.categoria_id.toString() === categoriaFiltro
       );
+
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
       filtrados = filtrados.filter(
@@ -57,20 +61,21 @@ function RevisionEditor() {
             art.periodista_apellido.toLowerCase().includes(term))
       );
     }
+
     setArticulosFiltrados(filtrados);
   }, [articulos, categoriaFiltro, searchTerm]);
 
   // 🔹 Comentarios y decisiones
   const handleComentarioChange = (id, texto) =>
-    setComentarios({ ...comentarios, [id]: texto });
+    setComentarios((prev) => ({ ...prev, [id]: texto }));
 
   const manejarDecision = async (articuloId, decision) => {
     try {
       const comentario = comentarios[articuloId] || "";
       const endpoint =
         decision === "approve"
-          ? `http://localhost:5000/api/articles/${articuloId}/approve`
-          : `http://localhost:5000/api/articles/${articuloId}/reject`;
+          ? `${API_URL}/api/articles/${articuloId}/approve`
+          : `${API_URL}/api/articles/${articuloId}/reject`;
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -90,6 +95,7 @@ function RevisionEditor() {
             decision === "approve" ? "aprobado" : "rechazado"
           } correctamente`
       );
+
       fetchArticulosEnRevision();
     } catch (err) {
       alert(err.message);
@@ -98,7 +104,7 @@ function RevisionEditor() {
 
   // 🔹 Ver y descargar archivos
   const verArchivo = async (id) => {
-    const res = await fetch(`http://localhost:5000/api/articles/view/${id}`, {
+    const res = await fetch(`${API_URL}/api/articles/view/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const blob = await res.blob();
@@ -107,7 +113,7 @@ function RevisionEditor() {
   };
 
   const descargarArchivo = async (id, nombreOriginal) => {
-    const res = await fetch(`http://localhost:5000/api/articles/download/${id}`, {
+    const res = await fetch(`${API_URL}/api/articles/download/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     const blob = await res.blob();
@@ -175,8 +181,7 @@ function RevisionEditor() {
                 🖋 {art.periodista_nombre} {art.periodista_apellido}
               </p>
               <p className="fecha">
-                📅{" "}
-                {new Date(art.fecha_modificacion).toLocaleDateString("es-AR")}
+                📅 {new Date(art.fecha_modificacion).toLocaleDateString("es-AR")}
               </p>
               <textarea
                 placeholder="Comentario del editor..."

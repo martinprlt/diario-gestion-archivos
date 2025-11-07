@@ -168,17 +168,27 @@ export async function actualizarUsuario(req, res) {
 export async function obtenerUsuarios(req, res) {
   try {
     const { rows } = await pool.query(
-      `SELECT id_usuario as id, nombre, apellido, email, usuario, telefono, rol_id 
-       FROM usuarios 
-       WHERE activo = true
-       ORDER BY nombre, apellido`
+      `SELECT u.id_usuario as id,
+              u.nombre,
+              u.apellido,
+              u.email,
+              u.usuario,
+              u.telefono,
+              u.rol_id,
+              r.nombre as rol_nombre
+       FROM usuarios u
+       LEFT JOIN roles r ON u.rol_id = r.id_rol
+       WHERE u.activo = true
+       ORDER BY u.nombre, u.apellido`
     );
+
     res.json(rows);
   } catch (err) {
     console.error('💥 obtenerUsuarios:', err);
     res.status(500).json({ message: 'Error al obtener usuarios' });
   }
 }
+
 
 export async function eliminarUsuario(req, res) {
   const { id } = req.params;
@@ -223,5 +233,31 @@ export async function obtenerRoles(req, res) {
       message: 'Error al obtener roles',
       error: err.message 
     });
+  }
+}
+
+export async function actualizarRolUsuario(req, res) {
+  const { id } = req.params;
+  const { rol_id } = req.body;
+
+  if (!rol_id) return res.status(400).json({ message: 'rol_id es requerido' });
+
+  try {
+    const result = await pool.query(
+      'UPDATE usuarios SET rol_id=$1 WHERE id_usuario=$2 RETURNING id_usuario, nombre, apellido, email, telefono, rol_id',
+      [rol_id, id]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      message: 'Rol actualizado correctamente',
+      usuario: result.rows[0]
+    });
+  } catch (error) {
+    console.error('💥 actualizarRolUsuario:', error);
+    res.status(500).json({ message: 'Error al actualizar el rol del usuario' });
   }
 }

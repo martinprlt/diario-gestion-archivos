@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
+import { apiFetch, apiEndpoints } from "../config/api"; 
 import "../assets/styles/UsuarioForm.css";
 
 export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
@@ -14,14 +15,12 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
     contraseña: "",
   });
   const [rolesDisponibles, setRolesDisponibles] = useState([]);
-  const { token } = useContext(AuthContext);
 
   useEffect(() => {
     const fetchRoles = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/roles", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        // ✅ Usar apiFetch y apiEndpoints
+        const response = await apiFetch(apiEndpoints.roles);
         if (!response.ok) throw new Error(`Error ${response.status}`);
         const data = await response.json();
         setRolesDisponibles(Array.isArray(data) ? data : []);
@@ -30,7 +29,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
       }
     };
 
-    if (token) fetchRoles();
+    fetchRoles(); // ✅ apiFetch maneja el token internamente
 
     if (usuario) {
       setFormData({
@@ -55,7 +54,7 @@ export default function UsuarioForm({ usuario, onGuardar, onCancelar }) {
         contraseña: "",
       });
     }
-  }, [usuario, token]);
+  }, [usuario]); // ✅ Eliminar dependencia de token
 
   const handleChange = (e) => {
     const { name, value } = e.target;
