@@ -4,10 +4,16 @@ import { pool } from "../config/db.js";
 // =============================
 // OBTENER TODOS LOS LOGS (Solo Admin) - NOMBRE CORREGIDO
 // =============================
-export const getLogs = async (req, res) => {  // ✅ CAMBIADO: getAllLogs → getLogs
+export const getLogs = async (req, res) => {
+  console.log('🔍 GET /api/logs - Iniciando...');
+  console.log('📋 Query params:', req.query);
+  console.log('👤 Usuario:', req.user);
+
   try {
     const { limite = 100, pagina = 1, usuario_id, accion, desde, hasta } = req.query;
     
+    console.log('📊 Params procesados:', { limite, pagina, usuario_id, accion, desde, hasta });
+
     let query = `
       SELECT 
         l.id_log,
@@ -56,7 +62,11 @@ export const getLogs = async (req, res) => {  // ✅ CAMBIADO: getAllLogs → ge
     params.push(parseInt(limite), offset);
     query += ` LIMIT $${paramCounter++} OFFSET $${paramCounter++}`;
 
+    console.log('📝 Query final:', query);
+    console.log('🔢 Params:', params);
+
     const result = await pool.query(query, params);
+    console.log('✅ Query ejecutada - Resultados:', result.rows.length);
 
     // Obtener total de logs para paginación
     let countQuery = `SELECT COUNT(*) FROM logs l WHERE 1=1`;
@@ -80,8 +90,13 @@ export const getLogs = async (req, res) => {  // ✅ CAMBIADO: getAllLogs → ge
       countQuery += ` AND l.fecha <= $${countParamCounter++}`;
     }
 
+    console.log('📊 Count query:', countQuery);
+    console.log('🔢 Count params:', countParams);
+
     const countResult = await pool.query(countQuery, countParams);
     const totalLogs = parseInt(countResult.rows[0].count);
+
+    console.log('📈 Total logs encontrados:', totalLogs);
 
     res.json({
       logs: result.rows,
@@ -91,11 +106,20 @@ export const getLogs = async (req, res) => {  // ✅ CAMBIADO: getAllLogs → ge
       totalPaginas: Math.ceil(totalLogs / parseInt(limite))
     });
 
+    console.log('✅ Respuesta enviada exitosamente');
+
   } catch (error) {
-    console.error("❌ Error al obtener logs:", error);
+    console.error("❌ Error CRÍTICO en getLogs:", error);
+    console.error("📋 Error details:", {
+      message: error.message,
+      stack: error.stack,
+      code: error.code
+    });
+    
     res.status(500).json({ 
       message: "Error interno del servidor",
-      error: error.message 
+      error: error.message,
+      code: error.code
     });
   }
 };
