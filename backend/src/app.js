@@ -1,4 +1,4 @@
-// backend/src/app.js - VERSIÓN LIMPIA
+// backend/src/app.js - ORDEN CORREGIDO
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -14,8 +14,8 @@ import articleRoutes from './routes/article.routes.js';
 import fotoRoutes from './routes/foto.routes.js';
 import categoriaRoutes from './routes/categoria.routes.js';
 import onlineUsersRoutes from './routes/onlineUsers.routes.js';
-import fileRoutes from './routes/file.routes.js';
-import logsRoutes from "./routes/logs.routes.js";
+import logsRoutes from "./routes/logs.routes.js";        // ← MOVER ARRIBA
+import fileRoutes from './routes/file.routes.js';        // ← MOVER ABAJO
 import errorHandler from './middlewares/error.middleware.js';
 
 const app = express();
@@ -43,7 +43,9 @@ app.use(cors(corsOptions));
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(express.json());
 
-// Rutas del sistema
+// ==================== 🚨 ORDEN CRÍTICO CORREGIDO ====================
+
+// Rutas del sistema - ORDEN CORREGIDO
 app.use('/api/auth', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api', rolesRoutes);
@@ -51,9 +53,9 @@ app.use('/api/categorias', categoriaRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/fotos', fotoRoutes);
 app.use("/api/notificaciones", notificacionesRoutes);
-app.use('/api', fileRoutes);
+app.use("/api/logs", logsRoutes);          // ← ✅ LOGS ANTES DE FILE ROUTES
 app.use('/api/admin', onlineUsersRoutes);
-app.use("/api/logs", logsRoutes);
+app.use('/api', fileRoutes);               // ← ✅ FILE ROUTES AL FINAL
 
 // Archivos estáticos
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
