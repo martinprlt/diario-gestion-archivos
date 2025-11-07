@@ -21,7 +21,10 @@ export const apiEndpoints = {
   sendToReview: (id) => `${baseURL}/api/articles/${id}/send-to-review`,     // ✅ NUEVO
   deleteArticle: (id) => `${baseURL}/api/articles/${id}`,                   // ✅ NUEVO
   getArticleById: (id) => `${baseURL}/api/articles/${id}`,                  // ✅ NUEVO
-  
+  articlesForReview: `${API_URL}/api/articles/editor/review`,
+  articlesApproved: `${API_URL}/api/articles/editor/approved`,
+  approveArticle: (id) => `${API_URL}/api/articles/${id}/approve`,
+  rejectArticle: (id) => `${API_URL}/api/articles/${id}/reject`
   
   // Users
   users: `${baseURL}/api/usuarios`,

@@ -19,22 +19,35 @@ function RevisionEditor() {
   const carruselRef = useRef(null);
 
   // 🔹 Obtener artículos
-  const fetchArticulosEnRevision = useCallback(async () => {
+ const fetchArticulosEnRevision = useCallback(async () => {
+  try {
+    setLoading(true);
+    console.log('🔍 Llamando a:', apiEndpoints.articlesForReview);
+    
+    const res = await apiFetch(apiEndpoints.articlesForReview);
+    console.log('📡 Response status:', res.status);
+    console.log('📡 Response ok:', res.ok);
+
+    // Si la respuesta no es JSON, mostrar el error real
+    const text = await res.text();
+    console.log('📦 Response text:', text.substring(0, 200)); // Primeros 200 chars
+
     try {
-      setLoading(true);
-      const res = await apiFetch(apiEndpoints.articlesForReview);
-
-      if (!res.ok) throw new Error("Error al cargar artículos en revisión");
-
-      const data = await res.json();
+      const data = JSON.parse(text);
       setArticulos(data);
       setArticulosFiltrados(data);
-    } catch (err) {
-      setError("Error al cargar artículos en revisión: " + err.message);
-    } finally {
-      setLoading(false);
+    } catch (parseError) {
+      console.error('❌ Error parseando JSON:', parseError);
+      throw new Error('La respuesta no es JSON válido. ¿Endpoint correcto?');
     }
-  }, []);
+
+  } catch (err) {
+    console.error('💥 Error completo:', err);
+    setError("Error al cargar artículos en revisión: " + err.message);
+  } finally {
+    setLoading(false);
+  }
+}, []);
 
   useEffect(() => {
     fetchArticulosEnRevision();

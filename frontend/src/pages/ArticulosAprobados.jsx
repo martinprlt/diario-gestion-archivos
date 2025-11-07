@@ -13,7 +13,8 @@ const ArticulosAprobados = () => {
   useEffect(() => {
     const fetchArticulosAprobados = async () => {
       try {
-        const response = await apiFetch(apiEndpoints.articlesByStatus('aprobado'));
+        // ✅ USAR EL ENDPOINT CORRECTO para editores
+        const response = await apiFetch(apiEndpoints.articlesApproved);
         
         if (!response.ok) {
           throw new Error('Error al cargar artículos aprobados');
@@ -31,6 +32,7 @@ const ArticulosAprobados = () => {
           'No se pudieron cargar los artículos aprobados. ' +
           (err.message || 'Error desconocido')
         );
+        console.error('❌ Error detalles:', err);
       } finally {
         setLoading(false);
       }
@@ -45,7 +47,6 @@ const ArticulosAprobados = () => {
       const data = await response.json();
       
       if (data.success && data.downloadUrl) {
-        // ✅ Forzar descarga para cualquier tipo de archivo
         const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
         window.open(downloadUrl, '_blank');
       } else {
