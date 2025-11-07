@@ -1,8 +1,8 @@
-// 📁 frontend/src/pages/PeriodistaUpload.jsx - CORREGIDO
+// 📁 frontend/src/pages/PeriodistaUpload.jsx - VERSIÓN COMPLETAMENTE CORREGIDA
 import React, { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext.js';
 import { useCategorias } from '../context/CategoriasContext.jsx';
-import { apiEndpoints, apiFetch } from '../config/api.js'; // ✅ USAR apiFetch
+import { apiEndpoints, apiFetch, apiUpload } from '../config/api.js'; // ✅ apiUpload AGREGADO
 import '../assets/styles/periodista-upload.css';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -58,75 +58,75 @@ export default function PeriodistaUpload() {
     }
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  console.log('🚀 handleSubmit iniciado');
+    console.log('🚀 handleSubmit iniciado');
 
-  // Validaciones
-  if (!file && !isModoEdicion) {
-    alert('Por favor, selecciona un archivo');
-    return;
-  }
+    // Validaciones
+    if (!file && !isModoEdicion) {
+      alert('Por favor, selecciona un archivo');
+      return;
+    }
 
-  if (!title.trim()) {
-    alert('Por favor, ingresa un título');
-    return;
-  }
+    if (!title.trim()) {
+      alert('Por favor, ingresa un título');
+      return;
+    }
 
-  if (!category) {
-    alert('Debes seleccionar una categoría');
-    return;
-  }
+    if (!category) {
+      alert('Debes seleccionar una categoría');
+      return;
+    }
 
-  // Preparar FormData
-  const formData = new FormData();
-  if (file) {
-    formData.append('archivo', file);
-    console.log('📎 Archivo agregado:', file.name);
-  }
-  formData.append('titulo', title.trim());
-  formData.append('categoria_id', category);
+    // Preparar FormData
+    const formData = new FormData();
+    if (file) {
+      formData.append('archivo', file);
+      console.log('📎 Archivo agregado:', file.name);
+    }
+    formData.append('titulo', title.trim());
+    formData.append('categoria_id', category);
 
-  if (isModoEdicion && articuloEditando) {
-    formData.append('articulo_id', articuloEditando.id_articulo);
-    console.log('✏️ Modo edición - ID:', articuloEditando.id_articulo);
-  }
+    if (isModoEdicion && articuloEditando) {
+      formData.append('articulo_id', articuloEditando.id_articulo);
+      console.log('✏️ Modo edición - ID:', articuloEditando.id_articulo);
+    }
 
-  console.log('📦 FormData preparado con keys:', [...formData.keys()]);
+    console.log('📦 FormData preparado con keys:', [...formData.keys()]);
 
-  setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
+    setUploadStatus({ loading: true, message: 'Subiendo artículo...' });
 
-  try {
-    console.log('📤 Llamando a apiUpload...');
-    console.log('🌐 URL destino:', apiEndpoints.uploadArticle);
-    
-    // ✅ USAR apiUpload (NO apiFetch)
-    const response = await apiUpload(apiEndpoints.uploadArticle, formData);
+    try {
+      console.log('📤 Llamando a apiUpload...');
+      console.log('🌐 URL destino:', apiEndpoints.uploadArticle);
+      
+      // ✅ USAR apiUpload (NO apiFetch)
+      const response = await apiUpload(apiEndpoints.uploadArticle, formData);
 
-    console.log('📡 Respuesta recibida - Status:', response.status);
+      console.log('📡 Respuesta recibida - Status:', response.status);
 
-    const data = await response.json();
-    console.log('✅ Upload exitoso:', data);
+      const data = await response.json();
+      console.log('✅ Upload exitoso:', data);
 
-    setUploadStatus({ 
-      success: true,
-      message: isModoEdicion 
-        ? '✅ Artículo actualizado correctamente' 
-        : '✅ Artículo subido correctamente' 
-    });
-    setIsSubmitted(true);
-    
-  } catch (err) {
-    console.error('❌ Error completo en handleSubmit:', err);
-    console.error('🔍 Error stack:', err.stack);
-    
-    setUploadStatus({ 
-      error: true, 
-      message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
-    });
-  }
-};
+      setUploadStatus({ 
+        success: true,
+        message: isModoEdicion 
+          ? '✅ Artículo actualizado correctamente' 
+          : '✅ Artículo subido correctamente' 
+      });
+      setIsSubmitted(true);
+      
+    } catch (err) {
+      console.error('❌ Error completo en handleSubmit:', err);
+      console.error('🔍 Error stack:', err.stack);
+      
+      setUploadStatus({ 
+        error: true, 
+        message: err.message || 'Error al subir el artículo. Intenta nuevamente.' 
+      });
+    }
+  };
 
   const handleCancel = () => {
     if (isModoEdicion) {
@@ -147,18 +147,21 @@ const handleSubmit = async (e) => {
     setArticuloEditando(null);
   };
 
-  // 🔍 Función de diagnóstico
+  // 🔍 Función de diagnóstico CORREGIDA
   const testEndpoint = async () => {
     try {
       console.log('🧪 Probando endpoint de upload...');
-      const testResponse = await fetch(apiEndpoints.uploadArticle, {
-        method: 'GET',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      
+      // ✅ Hacer POST vacío en lugar de GET
+      const testFormData = new FormData();
+      testFormData.append('test', 'diagnostico');
+      
+      const testResponse = await apiUpload(apiEndpoints.uploadArticle, testFormData);
       console.log('🔍 Test endpoint status:', testResponse.status);
       console.log('🔍 Test endpoint URL:', apiEndpoints.uploadArticle);
+      
     } catch (error) {
-      console.error('❌ Error en test endpoint:', error);
+      console.log('🔍 Test endpoint - Error esperado (sin archivo):', error.message);
     }
   };
 
