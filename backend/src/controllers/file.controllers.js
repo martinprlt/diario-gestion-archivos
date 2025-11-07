@@ -1,12 +1,10 @@
-// src/controllers/file.controller.js
+// src/controllers/file.controller.js - CON CLOUDINARY
 import { pool } from "../config/db.js";
-import path from "path";
-import fs from "fs";
+import cloudinary from "../config/cloudinary.js";
 import { logAction } from "../helpers/logAction.js";
 
-
 // =============================
-// SUBIR ARTÍCULO (con reemplazo)
+// SUBIR ARTÍCULO A CLOUDINARY
 // =============================
 export const uploadArticle = async (req, res) => {
   try {
@@ -19,6 +17,14 @@ export const uploadArticle = async (req, res) => {
     if (articulo_id) {
       return await reemplazarArticulo(req, res, articulo_id);
     }
+
+    // Subir a Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "auto",
+      folder: "articulos",
+      use_filename: true,
+      unique_filename: true
+    });
 
     const now = new Date();
     let query, values;
@@ -35,35 +41,47 @@ export const uploadArticle = async (req, res) => {
       query = `INSERT INTO articulos (
         titulo, periodista_id, categoria_id, estado,
         tipo_archivo, nombre_archivo, nombre_original,
-        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *;`;
+        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion,
+        cloudinary_url, cloudinary_public_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13) RETURNING *;`;
 
       values = [
         titulo.trim(), req.userId, Number(categoria_id), 'borrador',
         req.file.mimetype, req.file.filename, req.file.originalname,
-        req.file.path, req.file.size, now, now
+        req.file.path, req.file.size, now, now,
+        uploadResult.secure_url, uploadResult.public_id
       ];
     } else {
       query = `INSERT INTO articulos (
         titulo, periodista_id, estado,
         tipo_archivo, nombre_archivo, nombre_original,
-        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion
-      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *;`;
+        ruta_archivo, tamaño_archivo, fecha_creacion, fecha_modificacion,
+        cloudinary_url, cloudinary_public_id
+      ) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *;`;
 
       values = [
         titulo.trim(), req.userId, 'borrador',
         req.file.mimetype, req.file.filename, req.file.originalname,
-        req.file.path, req.file.size, now, now
+        req.file.path, req.file.size, now, now,
+        uploadResult.secure_url, uploadResult.public_id
       ];
     }
 
     const result = await pool.query(query, values);
 
+    // Limpiar archivo local temporal
+    try {
+      const fs = await import('fs');
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.warn("⚠️ No se pudo eliminar archivo temporal:", error.message);
+    }
+
     // 🔹 Log
     await logAction({
       usuario_id: req.userId,
       accion: 'crear',
-      descripcion: `Creó artículo "${titulo}"${categoria_id ? ` en categoría ${categoria_id}` : ''}`
+      descripcion: `Creó artículo "${titulo}" en Cloudinary${categoria_id ? ` en categoría ${categoria_id}` : ''}`
     });
 
     res.status(201).json(result.rows[0]);
@@ -75,7 +93,7 @@ export const uploadArticle = async (req, res) => {
 };
 
 // =============================
-// REEMPLAZAR ARTÍCULO
+// REEMPLAZAR ARTÍCULO EN CLOUDINARY
 // =============================
 const reemplazarArticulo = async (req, res, articulo_id) => {
   try {
@@ -93,9 +111,23 @@ const reemplazarArticulo = async (req, res, articulo_id) => {
       return res.status(400).json({ message: `No se puede reemplazar artículo en estado "${articuloViejo.estado}"` });
     }
 
-    // Eliminar archivo antiguo
-    try { if (fs.existsSync(articuloViejo.ruta_archivo)) fs.unlinkSync(articuloViejo.ruta_archivo); } 
-    catch (error) { console.warn("⚠️ No se pudo eliminar el archivo antiguo:", error.message); }
+    // Eliminar archivo antiguo de Cloudinary si existe
+    if (articuloViejo.cloudinary_public_id) {
+      try {
+        await cloudinary.uploader.destroy(articuloViejo.cloudinary_public_id);
+        console.log("✅ Archivo antiguo eliminado de Cloudinary");
+      } catch (error) {
+        console.warn("⚠️ No se pudo eliminar archivo antiguo de Cloudinary:", error.message);
+      }
+    }
+
+    // Subir nuevo archivo a Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "auto",
+      folder: "articulos",
+      use_filename: true,
+      unique_filename: true
+    });
 
     const now = new Date();
 
@@ -103,24 +135,34 @@ const reemplazarArticulo = async (req, res, articulo_id) => {
       UPDATE articulos 
       SET titulo=$1, categoria_id=$2, tipo_archivo=$3, nombre_archivo=$4,
           nombre_original=$5, ruta_archivo=$6, tamaño_archivo=$7,
-          fecha_modificacion=$8, estado='en_revision'
-      WHERE id_articulo=$9
+          fecha_modificacion=$8, estado='en_revision',
+          cloudinary_url=$9, cloudinary_public_id=$10
+      WHERE id_articulo=$11
       RETURNING *;
     `;
 
     const values = [
       titulo.trim(), categoria_id ? Number(categoria_id) : null,
       req.file.mimetype, req.file.filename, req.file.originalname,
-      req.file.path, req.file.size, now, articulo_id
+      req.file.path, req.file.size, now,
+      uploadResult.secure_url, uploadResult.public_id, articulo_id
     ];
 
     const result = await pool.query(updateQuery, values);
+
+    // Limpiar archivo local temporal
+    try {
+      const fs = await import('fs');
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.warn("⚠️ No se pudo eliminar archivo temporal:", error.message);
+    }
 
     // 🔹 Log
     await logAction({
       usuario_id: req.userId,
       accion: 'reemplazar',
-      descripcion: `Reemplazó artículo ID ${articulo_id} con archivo "${req.file.originalname}"`
+      descripcion: `Reemplazó artículo ID ${articulo_id} en Cloudinary con archivo "${req.file.originalname}"`
     });
 
     res.status(200).json({ success:true, message:'Artículo actualizado y enviado a revisión', articulo: result.rows[0] });
@@ -130,6 +172,178 @@ const reemplazarArticulo = async (req, res, articulo_id) => {
     res.status(500).json({ message: "Error interno del servidor al reemplazar artículo" });
   }
 };
+
+// =============================
+// DESCARGAR ARTÍCULO DESDE CLOUDINARY
+// =============================
+export const downloadArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar rol del usuario
+    const userCheck = await pool.query(
+      `SELECT r.nombre as rol 
+       FROM usuarios u 
+       JOIN roles r ON u.rol_id = r.id_rol 
+       WHERE u.id_usuario = $1`,
+      [req.userId]
+    );
+
+    const isEditor = userCheck.rows.length > 0 && userCheck.rows[0].rol === 'Editor';
+
+    let result;
+    if (isEditor) {
+      result = await pool.query(
+        `SELECT cloudinary_url, nombre_original, tipo_archivo 
+         FROM articulos WHERE id_articulo = $1`,
+        [id]
+      );
+    } else {
+      result = await pool.query(
+        `SELECT cloudinary_url, nombre_original, tipo_archivo 
+         FROM articulos WHERE id_articulo = $1 AND periodista_id = $2`,
+        [id, req.userId]
+      );
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Artículo no encontrado" });
+    }
+
+    const { cloudinary_url, nombre_original } = result.rows[0];
+
+    if (!cloudinary_url) {
+      return res.status(404).json({ message: "Archivo no disponible" });
+    }
+
+    // Redirigir a Cloudinary para descarga
+    res.redirect(cloudinary_url);
+
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'descargar',
+      descripcion: `Descargó artículo ID ${id} desde Cloudinary`
+    });
+
+  } catch (error) {
+    console.error("❌ Error al descargar:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// ==========================
+// VER ARTÍCULO DESDE CLOUDINARY
+// ==========================
+export const viewArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar rol del usuario
+    const userCheck = await pool.query(
+      `SELECT r.nombre as rol 
+       FROM usuarios u 
+       JOIN roles r ON u.rol_id = r.id_rol 
+       WHERE u.id_usuario = $1`,
+      [req.userId]
+    );
+
+    const isEditor = userCheck.rows.length > 0 && userCheck.rows[0].rol === 'Editor';
+
+    let result;
+    if (isEditor) {
+      result = await pool.query(
+        "SELECT cloudinary_url, nombre_original FROM articulos WHERE id_articulo = $1",
+        [id]
+      );
+    } else {
+      result = await pool.query(
+        "SELECT cloudinary_url, nombre_original FROM articulos WHERE id_articulo = $1 AND periodista_id = $2",
+        [id, req.userId]
+      );
+    }
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: "Artículo no encontrado" });
+    }
+
+    const { cloudinary_url } = result.rows[0];
+
+    if (!cloudinary_url) {
+      return res.status(404).json({ message: "Archivo no disponible" });
+    }
+
+    // Redirigir a Cloudinary para visualización
+    res.redirect(cloudinary_url);
+
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'visualizar',
+      descripcion: `Visualizó artículo ID ${id} desde Cloudinary`
+    });
+
+  } catch (error) {
+    console.error("❌ Error al ver archivo:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
+// =============================
+// ELIMINAR ARTÍCULO (CON CLOUDINARY)
+// =============================
+export const deleteArticle = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+
+    if (!id || isNaN(parseInt(id))) {
+      return res.status(400).json({ message: "ID de artículo inválido" });
+    }
+
+    const articleQuery = await pool.query(
+      `SELECT periodista_id, cloudinary_public_id FROM articulos WHERE id_articulo = $1`,
+      [parseInt(id)]
+    );
+
+    if (articleQuery.rows.length === 0) {
+      return res.status(404).json({ message: "Artículo no existe" });
+    }
+
+    if (articleQuery.rows[0].periodista_id !== userId) {
+      return res.status(403).json({ message: "No autorizado para eliminar este artículo" });
+    }
+
+    // Eliminar de Cloudinary si existe
+    const publicId = articleQuery.rows[0].cloudinary_public_id;
+    if (publicId) {
+      try {
+        await cloudinary.uploader.destroy(publicId);
+        console.log("✅ Archivo eliminado de Cloudinary");
+      } catch (error) {
+        console.warn("⚠️ No se pudo eliminar archivo de Cloudinary:", error.message);
+      }
+    }
+
+    await pool.query(
+      `UPDATE articulos 
+       SET estado = 'eliminado', fecha_modificacion = $1 
+       WHERE id_articulo = $2`,
+      [new Date(), parseInt(id)]
+    );
+
+    res.json({ success: true, message: "Artículo eliminado correctamente" });
+
+    await logAction({
+      usuario_id: userId,
+      accion: 'eliminar',
+      descripcion: `Eliminó artículo ID ${id} de Cloudinary`
+    });
+
+  } catch (error) {
+    console.error("Error completo:", error);
+    res.status(500).json({ message: "Error al procesar la eliminación" });
+  }
+};
+
 // =============================
 // OBTENER MIS ARTÍCULOS (MEJORADA)
 // =============================
@@ -162,7 +376,6 @@ export const getMyArticles = async (req, res) => {
   }
 };
 
-
 // =============================
 // OBTENER ARTÍCULO POR ID
 // =============================
@@ -193,6 +406,7 @@ export const getArticleById = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
+
 // =============================
 // ACTUALIZAR ARTÍCULO
 // =============================
@@ -229,177 +443,14 @@ export const updateArticle = async (req, res) => {
     res.json(result.rows[0]);
 
     await logAction({
-  usuario_id: req.userId,
-  accion: 'actualizar',
-  descripcion: `Actualizó artículo ID ${id}. Campos modificados: ${titulo ? 'titulo' : ''} ${estado ? 'estado' : ''}`
-});
-
+      usuario_id: req.userId,
+      accion: 'actualizar',
+      descripcion: `Actualizó artículo ID ${id}. Campos modificados: ${titulo ? 'titulo' : ''} ${estado ? 'estado' : ''}`
+    });
 
   } catch (error) {
     console.error("❌ Error al actualizar artículo:", error);
     res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-// =============================
-// DESCARGAR ARTÍCULO
-// =============================
-export const downloadArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Verificar rol del usuario
-    const userCheck = await pool.query(
-      `SELECT r.nombre as rol 
-       FROM usuarios u 
-       JOIN roles r ON u.rol_id = r.id_rol 
-       WHERE u.id_usuario = $1`,
-      [req.userId]
-    );
-
-    const isEditor = userCheck.rows.length > 0 && userCheck.rows[0].rol === 'Editor';
-
-    let result;
-    if (isEditor) {
-      result = await pool.query(
-        `SELECT ruta_archivo, nombre_original, tipo_archivo 
-         FROM articulos WHERE id_articulo = $1`,
-        [id]
-      );
-    } else {
-      result = await pool.query(
-        `SELECT ruta_archivo, nombre_original, tipo_archivo 
-         FROM articulos WHERE id_articulo = $1 AND periodista_id = $2`,
-        [id, req.userId]
-      );
-    }
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Artículo no encontrado" });
-    }
-
-    const { ruta_archivo, nombre_original, tipo_archivo } = result.rows[0];
-
-    // 🔹 Verificar que el archivo existe físicamente
-    if (!fs.existsSync(ruta_archivo)) {
-      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
-    }
-
-    res.download(ruta_archivo, nombre_original, {
-      headers: { 'Content-Type': tipo_archivo }
-    });
-
-    await logAction({
-  usuario_id: req.userId,
-  accion: 'descargar',
-  descripcion: `Descargó artículo ID ${id}`
-});
-
-
-  } catch (error) {
-    console.error("❌ Error al descargar:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-
-// ==========================
-// Ver artículo (abrir en navegador)
-// ==========================
-export const viewArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Verificar rol del usuario
-    const userCheck = await pool.query(
-      `SELECT r.nombre as rol 
-       FROM usuarios u 
-       JOIN roles r ON u.rol_id = r.id_rol 
-       WHERE u.id_usuario = $1`,
-      [req.userId]
-    );
-
-    const isEditor = userCheck.rows.length > 0 && userCheck.rows[0].rol === 'Editor';
-
-    let result;
-    if (isEditor) {
-      result = await pool.query(
-        "SELECT * FROM articulos WHERE id_articulo = $1",
-        [id]
-      );
-    } else {
-      result = await pool.query(
-        "SELECT * FROM articulos WHERE id_articulo = $1 AND periodista_id = $2",
-        [id, req.userId]
-      );
-    }
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Artículo no encontrado" });
-    }
-
-    const article = result.rows[0];
-
-    // 🔹 Verificar que el archivo existe físicamente
-    if (!fs.existsSync(article.ruta_archivo)) {
-      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
-    }
-
-    res.sendFile(path.resolve(article.ruta_archivo));
-
-    await logAction({
-  usuario_id: req.userId,
-  accion: 'visualizar',
-  descripcion: `Visualizó artículo ID ${id}`
-});
-
-  } catch (error) {
-    console.error("❌ Error al ver archivo:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
-  }
-};
-
-// =============================
-// ELIMINAR ARTÍCULO (SOFT DELETE)
-// =============================
-export const deleteArticle = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId;
-
-    if (!id || isNaN(parseInt(id))) {
-      return res.status(400).json({ message: "ID de artículo inválido" });
-    }
-
-    const articleQuery = await pool.query(
-      `SELECT periodista_id FROM articulos WHERE id_articulo = $1`,
-      [parseInt(id)]
-    );
-
-    if (articleQuery.rows.length === 0) {
-      return res.status(404).json({ message: "Artículo no existe" });
-    }
-
-    if (articleQuery.rows[0].periodista_id !== userId) {
-      return res.status(403).json({ message: "No autorizado para eliminar este artículo" });
-    }
-
-    await pool.query(
-      `UPDATE articulos 
-       SET estado = 'eliminado', fecha_modificacion = $1 
-       WHERE id_articulo = $2`,
-      [new Date(), parseInt(id)]
-    );
-
-    res.json({ success: true, message: "Artículo eliminado correctamente" });
-
-    await logAction({
-  usuario_id: userId,
-  accion: 'eliminar',
-  descripcion: `Eliminó artículo ID ${id}`
-});
-
-  } catch (error) {
-    console.error("Error completo:", error);
-    res.status(500).json({ message: "Error al procesar la eliminación" });
   }
 };
 
@@ -439,7 +490,7 @@ export const sendToReview = async (req, res) => {
       [new Date(), id]
     );
 
-    // Notificar a los editores (SIN las columnas tipo y articulo_id)
+    // Notificar a los editores
     await pool.query(`
       INSERT INTO notificaciones (titulo, mensaje, usuario_destino_id, leido, fecha)
       SELECT 
@@ -471,7 +522,7 @@ export const getArticlesForReview = async (req, res) => {
        FROM usuarios u 
        JOIN roles r ON u.rol_id = r.id_rol 
        WHERE u.id_usuario = $1`,
-      [req.userId] // ✅ Usar req.userId
+      [req.userId]
     );
 
     if (userCheck.rows.length === 0 || userCheck.rows[0].rol !== 'Editor') {
@@ -486,9 +537,8 @@ export const getArticlesForReview = async (req, res) => {
        ORDER BY a.fecha_modificacion DESC`
     );
 
-    // ✅ CORREGIDO: Usar req.userId en lugar de userId
     await logAction({
-      usuario_id: req.userId, // ✅ Cambiado de userId a req.userId
+      usuario_id: req.userId,
       accion: 'visualizar',
       descripcion: `Revisó artículos en revisión como editor`
     });
@@ -567,10 +617,10 @@ export const approveArticle = async (req, res) => {
     });
 
     await logAction({
-  usuario_id: userId,
-  accion: 'aprobar',
-  descripcion: `Aprobó y publicó artículo ID ${id} ("${article.titulo}")`
-});
+      usuario_id: userId,
+      accion: 'aprobar',
+      descripcion: `Aprobó y publicó artículo ID ${id} ("${article.titulo}")`
+    });
 
   } catch (error) {
     console.error("❌ Error al aprobar artículo:", error);
@@ -646,10 +696,10 @@ export const rejectArticle = async (req, res) => {
     });
 
     await logAction({
-  usuario_id: userId,
-  accion: 'rechazar',
-  descripcion: `Rechazó artículo ID ${id} ("${article.titulo}"). Motivo: ${comentario.substring(0, 100)}${comentario.length > 100 ? '...' : ''}`
-});
+      usuario_id: userId,
+      accion: 'rechazar',
+      descripcion: `Rechazó artículo ID ${id} ("${article.titulo}"). Motivo: ${comentario.substring(0, 100)}${comentario.length > 100 ? '...' : ''}`
+    });
 
   } catch (error) {
     console.error("❌ Error al rechazar artículo:", error);

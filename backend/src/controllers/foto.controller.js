@@ -1,11 +1,10 @@
+// src/controllers/foto.controller.js - CON CLOUDINARY
 import { pool } from "../config/db.js";
-import path from "path";
-import fs from "fs";
+import cloudinary from "../config/cloudinary.js";
 import { logAction } from "../helpers/logAction.js";
 
-
 // =============================
-// SUBIR FOTO 
+// SUBIR FOTO A CLOUDINARY
 // =============================
 export const uploadFoto = async (req, res) => {
   try {
@@ -19,14 +18,23 @@ export const uploadFoto = async (req, res) => {
       return res.status(400).json({ message: "Faltan campos obligatorios (título)" });
     }
 
+    // Subir a Cloudinary
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      resource_type: "image",
+      folder: "fotos",
+      use_filename: true,
+      unique_filename: true,
+      quality: "auto:good"
+    });
+
     const now = new Date();
     
-    // ✅ SOLO las columnas necesarias
     const query = `
       INSERT INTO fotos (
         titulo, descripcion, fotografo_id, categoria_id, evento_id,
-        tipo_archivo, fecha, es_global, ruta_archivo, nombre_original
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        tipo_archivo, fecha, es_global, ruta_archivo, nombre_original,
+        cloudinary_url, cloudinary_public_id, tamaño_archivo
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
       RETURNING *;
     `;
 
@@ -39,20 +47,32 @@ export const uploadFoto = async (req, res) => {
       req.file.mimetype,
       now,
       es_global === 'true' || es_global === true,
-      path.join('uploads', 'fotos', req.file.filename).replace(/\\/g, '/'), // Guardar ruta relativa
-      req.file.originalname   // nombre_original (ÚTIL)
+      req.file.path, // Guardar ruta temporal
+      req.file.originalname,
+      uploadResult.secure_url, // URL permanente de Cloudinary
+      uploadResult.public_id,  // ID para gestión en Cloudinary
+      uploadResult.bytes       // Tamaño del archivo
     ];
 
     const result = await pool.query(query, values);
-    console.log("✅ Foto subida con éxito");
+
+    // Limpiar archivo local temporal
+    try {
+      const fs = await import('fs');
+      fs.unlinkSync(req.file.path);
+    } catch (error) {
+      console.warn("⚠️ No se pudo eliminar archivo temporal:", error.message);
+    }
+
+    console.log("✅ Foto subida a Cloudinary con éxito");
 
     res.status(201).json(result.rows[0]);
 
     await logAction({
-  usuario_id: req.userId,
-  accion: 'crear',
-  descripcion: `Subió foto "${titulo}"${categoria_id ? ` en categoría ${categoria_id}` : ''}${es_global ? ' (global)' : ' (personal)'}`
-});
+      usuario_id: req.userId,
+      accion: 'crear',
+      descripcion: `Subió foto "${titulo}" a Cloudinary${categoria_id ? ` en categoría ${categoria_id}` : ''}${es_global ? ' (global)' : ' (personal)'}`
+    });
 
   } catch (error) {
     console.error("❌ Error en uploadFoto:", error);
@@ -72,13 +92,14 @@ export const getMyFotos = async (req, res) => {
        FROM fotos f 
        LEFT JOIN categorias c ON f.categoria_id = c.id_categoria
        WHERE f.fotografo_id = $1
-       ORDER BY f.fecha DESC`, // ← Usa f.fecha en lugar de f.fecha_creacion
+       ORDER BY f.fecha DESC`,
       [fotografo_id]
     );
     
+    // Usar cloudinary_url en lugar de construir URL local
     const fotosConUrl = result.rows.map(foto => ({
       ...foto,
-      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+      url: foto.cloudinary_url || `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
     }));
 
     res.json(fotosConUrl);
@@ -101,13 +122,14 @@ export const getFotosGlobales = async (req, res) => {
        FROM fotos f 
        LEFT JOIN usuarios u ON f.fotografo_id = u.id_usuario
        LEFT JOIN categorias c ON f.categoria_id = c.id_categoria
-       WHERE f.es_global = true -- ✅ filtro clave
+       WHERE f.es_global = true
        ORDER BY f.fecha DESC`
     );
 
+    // Usar cloudinary_url para todas las fotos
     const fotosConUrl = result.rows.map(foto => ({
       ...foto,
-      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`,
+      url: foto.cloudinary_url || `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`,
     }));
 
     res.json(fotosConUrl);
@@ -116,7 +138,6 @@ export const getFotosGlobales = async (req, res) => {
     res.status(500).json({ message: "Error interno del servidor" });
   }
 };
-
 
 // =============================
 // CAMBIAR VISIBILIDAD (Personal ↔ Global)
@@ -137,7 +158,6 @@ export const toggleVisibilidadFoto = async (req, res) => {
 
     const foto = fotoCheck.rows[0];
     
-    // ✅ USAR SOLO COLUMNAS EXISTENTES
     await pool.query(
       `UPDATE fotos 
        SET es_global = $1, fecha = $2
@@ -152,10 +172,10 @@ export const toggleVisibilidadFoto = async (req, res) => {
     });
 
     await logAction({
-  usuario_id: userId,
-  accion: 'actualizar',
-  descripcion: `Cambió visibilidad de foto ID ${id} a ${!foto.es_global ? 'global' : 'personal'}`
-});
+      usuario_id: userId,
+      accion: 'actualizar',
+      descripcion: `Cambió visibilidad de foto ID ${id} a ${!foto.es_global ? 'global' : 'personal'}`
+    });
 
   } catch (error) {
     console.error("❌ Error al cambiar visibilidad:", error);
@@ -164,12 +184,12 @@ export const toggleVisibilidadFoto = async (req, res) => {
 };
 
 // =============================
-// ELIMINAR FOTO
+// ELIMINAR FOTO (CON CLOUDINARY)
 // =============================
 export const deleteFoto = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userId, user } = req; // Obtenemos el usuario completo desde verifyToken
+    const { userId, user } = req;
 
     let fotoCheck;
 
@@ -192,11 +212,22 @@ export const deleteFoto = async (req, res) => {
 
     const foto = fotoCheck.rows[0];
     
-    // Eliminar archivo físico
+    // Eliminar archivo de Cloudinary si existe
+    if (foto.cloudinary_public_id) {
+      try {
+        await cloudinary.uploader.destroy(foto.cloudinary_public_id);
+        console.log("✅ Foto eliminada de Cloudinary:", foto.cloudinary_public_id);
+      } catch (error) {
+        console.warn("⚠️ No se pudo eliminar foto de Cloudinary:", error.message);
+      }
+    }
+
+    // Eliminar archivo físico local si existe
     try {
+      const fs = await import('fs');
       if (fs.existsSync(foto.ruta_archivo)) {
         fs.unlinkSync(foto.ruta_archivo);
-        console.log("🗑️ Archivo eliminado:", foto.ruta_archivo);
+        console.log("🗑️ Archivo local eliminado:", foto.ruta_archivo);
       }
     } catch (error) {
       console.warn("⚠️ No se pudo eliminar el archivo físico:", error.message);
@@ -208,10 +239,10 @@ export const deleteFoto = async (req, res) => {
     res.json({ success: true, message: "Foto eliminada correctamente" });
 
     await logAction({
-  usuario_id: userId,
-  accion: 'eliminar',
-  descripcion: `Eliminó foto ID ${id} ("${foto.titulo}")`
-});
+      usuario_id: userId,
+      accion: 'eliminar',
+      descripcion: `Eliminó foto ID ${id} ("${foto.titulo}") de Cloudinary`
+    });
 
   } catch (error) {
     console.error("❌ Error al eliminar foto:", error);
@@ -245,7 +276,7 @@ export const getFotoById = async (req, res) => {
     const foto = result.rows[0];
     const fotoConUrl = {
       ...foto,
-      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+      url: foto.cloudinary_url || `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
     };
 
     res.json(fotoConUrl);
@@ -256,14 +287,14 @@ export const getFotoById = async (req, res) => {
 };
 
 // =============================
-// DESCARGAR FOTO
+// DESCARGAR FOTO DESDE CLOUDINARY
 // =============================
 export const downloadFoto = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT ruta_archivo, nombre_original 
+      `SELECT cloudinary_url, nombre_original 
        FROM fotos WHERE id_foto = $1`,
       [id]
     );
@@ -272,13 +303,20 @@ export const downloadFoto = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    const { ruta_archivo, nombre_original } = result.rows[0];
+    const { cloudinary_url, nombre_original } = result.rows[0];
 
-    if (!fs.existsSync(ruta_archivo)) {
-      return res.status(404).json({ message: "Archivo no encontrado" });
+    if (!cloudinary_url) {
+      return res.status(404).json({ message: "Foto no disponible en Cloudinary" });
     }
 
-    res.download(ruta_archivo, nombre_original);
+    // Redirigir a Cloudinary para descarga
+    res.redirect(cloudinary_url);
+
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'descargar',
+      descripcion: `Descargó foto ID ${id} desde Cloudinary`
+    });
 
   } catch (error) {
     console.error("❌ Error al descargar:", error);
@@ -286,12 +324,15 @@ export const downloadFoto = async (req, res) => {
   }
 };
 
+// =============================
+// VER FOTO DESDE CLOUDINARY
+// =============================
 export const viewFoto = async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query(
-      `SELECT ruta_archivo, tipo_archivo 
+      `SELECT cloudinary_url, tipo_archivo 
        FROM fotos WHERE id_foto = $1`,
       [id]
     );
@@ -300,27 +341,20 @@ export const viewFoto = async (req, res) => {
       return res.status(404).json({ message: "Foto no encontrada" });
     }
 
-    const { ruta_archivo, tipo_archivo } = result.rows[0];
+    const { cloudinary_url } = result.rows[0];
 
-    if (!fs.existsSync(ruta_archivo)) {
-      return res.status(404).json({ message: "Archivo no encontrado en el servidor" });
+    if (!cloudinary_url) {
+      return res.status(404).json({ message: "Foto no disponible en Cloudinary" });
     }
 
-    // Enviar la imagen directamente
-    res.setHeader('Content-Type', tipo_archivo);
-    res.sendFile(path.resolve(ruta_archivo));
+    // Redirigir a Cloudinary para visualización
+    res.redirect(cloudinary_url);
 
     await logAction({
-  usuario_id: req.userId,
-  accion: 'descargar',
-  descripcion: `Descargó foto ID ${id}`
-});
-
-await logAction({
-  usuario_id: req.userId,
-  accion: 'visualizar',
-  descripcion: `Visualizó foto ID ${id}`
-});
+      usuario_id: req.userId,
+      accion: 'visualizar',
+      descripcion: `Visualizó foto ID ${id} desde Cloudinary`
+    });
 
   } catch (error) {
     console.error("❌ Error al visualizar foto:", error);
@@ -328,6 +362,9 @@ await logAction({
   }
 };
 
+// =============================
+// OBTENER FOTOS FILTRADAS
+// =============================
 export const getFotosFiltradas = async (req, res) => {
   const { categoria } = req.query;
   
@@ -356,14 +393,63 @@ export const getFotosFiltradas = async (req, res) => {
     
     const result = await pool.query(query, params);
     
+    // Usar cloudinary_url para todas las fotos
     const fotosConUrl = result.rows.map(foto => ({
       ...foto,
-      url: `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
+      url: foto.cloudinary_url || `${req.protocol}://${req.get('host')}/${foto.ruta_archivo}`
     }));
 
     res.json(fotosConUrl);
   } catch (error) {
     console.error('❌ Error al obtener fotos filtradas:', error);
     res.status(500).json({ message: "Error al obtener fotos" });
+  }
+};
+
+// =============================
+// ACTUALIZAR FOTO (METADATOS)
+// =============================
+export const updateFoto = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.userId;
+    const { titulo, descripcion, categoria_id } = req.body;
+
+    const fotoCheck = await pool.query(
+      "SELECT * FROM fotos WHERE id_foto = $1 AND fotografo_id = $2",
+      [id, userId]
+    );
+
+    if (fotoCheck.rows.length === 0) {
+      return res.status(404).json({ message: "Foto no encontrada o no autorizada" });
+    }
+
+    const updateQuery = `
+      UPDATE fotos 
+      SET titulo = $1, descripcion = $2, categoria_id = $3, fecha = $4
+      WHERE id_foto = $5
+      RETURNING *
+    `;
+
+    const values = [
+      titulo,
+      descripcion,
+      categoria_id,
+      new Date(),
+      id
+    ];
+
+    const result = await pool.query(updateQuery, values);
+    res.json(result.rows[0]);
+
+    await logAction({
+      usuario_id: req.userId,
+      accion: 'actualizar',
+      descripcion: `Actualizó metadatos de foto ID ${id}`
+    });
+
+  } catch (error) {
+    console.error("❌ Error al actualizar foto:", error);
+    res.status(500).json({ message: "Error interno del servidor" });
   }
 };
