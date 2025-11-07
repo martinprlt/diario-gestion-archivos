@@ -1,8 +1,7 @@
-// src/pages/RevisionEditor.jsx - VERSIÓN FUNCIONAL
 import { useEffect, useState, useContext, useCallback, useRef } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { useCategorias } from "../context/CategoriasContext.jsx";
-import { apiEndpoints, apiFetch } from "../config/api.js";
+import { apiEndpoints, apiFetch } from "../config/api";
 import "../assets/styles/EditorRevision.css";
 
 function RevisionEditor() {
@@ -18,40 +17,39 @@ function RevisionEditor() {
   const { categorias } = useCategorias();
   const carruselRef = useRef(null);
 
-  // 🔹 Obtener artículos en revisión
+  // 🔹 Obtener artículos - CORREGIDO como en Notas
   const fetchArticulosEnRevision = useCallback(async () => {
     try {
       setLoading(true);
-      console.log('🔍 Solicitando artículos en revisión...');
+      console.log('🔄 Solicitando artículos en revisión...');
       
-      const res = await apiFetch(apiEndpoints.articlesForReview);
-      console.log('📡 Estado respuesta:', res.status, res.ok);
-
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('❌ Error del servidor:', errorText);
-        throw new Error(`Error ${res.status}: No se pudieron cargar los artículos`);
+      const response = await apiFetch(apiEndpoints.articlesForReview);
+      
+      if (!response.ok) {
+        throw new Error('Error al cargar artículos en revisión');
       }
 
-      const data = await res.json();
+      const data = await response.json();
       console.log('✅ Artículos recibidos:', data.length);
       
       setArticulos(data);
       setArticulosFiltrados(data);
       setError(null);
     } catch (err) {
-      console.error('💥 Error completo:', err);
-      setError(err.message);
+      console.error('❌ Error cargando artículos:', err);
+      setError('No se pudieron cargar los artículos en revisión');
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchArticulosEnRevision();
-  }, [fetchArticulosEnRevision]);
+    if (token) {
+      fetchArticulosEnRevision();
+    }
+  }, [token, fetchArticulosEnRevision]);
 
-  // 🔹 Filtros
+  // 🔹 Filtros dinámicos
   useEffect(() => {
     let filtrados = [...articulos];
     
@@ -74,7 +72,10 @@ function RevisionEditor() {
     setArticulosFiltrados(filtrados);
   }, [articulos, categoriaFiltro, searchTerm]);
 
-  // 🔹 Manejar decisiones del editor
+  // 🔹 Comentarios y decisiones - CORREGIDO
+  const handleComentarioChange = (id, texto) =>
+    setComentarios((prev) => ({ ...prev, [id]: texto }));
+
   const manejarDecision = async (articuloId, decision) => {
     try {
       const comentario = comentarios[articuloId] || "";
@@ -90,17 +91,17 @@ function RevisionEditor() {
 
       console.log(`📤 Enviando decisión: ${decision} para artículo ${articuloId}`);
       
-      const res = await apiFetch(endpoint, {
+      const response = await apiFetch(endpoint, {
         method: "POST",
         body: JSON.stringify({ comentario }),
       });
 
-      if (!res.ok) {
-        const errorData = await res.json();
+      if (!response.ok) {
+        const errorData = await response.json();
         throw new Error(errorData.message || "Error al procesar la decisión");
       }
 
-      const data = await res.json();
+      const data = await response.json();
       alert(data.message || `Artículo ${decision === "approve" ? "aprobado" : "rechazado"} correctamente`);
       
       // Recargar la lista
@@ -112,39 +113,52 @@ function RevisionEditor() {
     }
   };
 
-  // 🔹 Ver archivo
-  const verArchivo = async (id) => {
+  // 🔹 Ver archivo - CORREGIDO como en Notas
+  const verArchivo = async (id, articulo) => {
     try {
       const response = await apiFetch(apiEndpoints.viewArticle(id));
+      
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+      
       const data = await response.json();
+      console.log('🔍 Respuesta viewArticle:', data);
       
       if (data.success && data.viewUrl) {
+        console.log('🔗 Abriendo URL:', data.viewUrl);
         window.open(data.viewUrl, '_blank');
       } else {
-        throw new Error(data.message || 'Error al visualizar el archivo');
+        throw new Error(data.message || 'Error al visualizar');
       }
     } catch (err) {
       console.error('❌ Error al visualizar:', err);
-      alert(`Error: ${err.message}`);
+      alert(`❌ ${err.message}`);
     }
   };
 
-  // 🔹 Descargar archivo
+  // 🔹 Descargar archivo - CORREGIDO como en Notas
   const descargarArchivo = async (id, nombreOriginal) => {
     try {
       const response = await apiFetch(apiEndpoints.downloadArticle(id));
+      
+      if (!response.ok) {
+        throw new Error('Error en la respuesta del servidor');
+      }
+      
       const data = await response.json();
+      console.log('🔍 Respuesta downloadArticle:', data);
       
       if (data.success && data.downloadUrl) {
-        // Forzar descarga
         const downloadUrl = data.downloadUrl.replace('/upload/', '/upload/fl_attachment/');
+        console.log('🔗 Abriendo URL de descarga:', downloadUrl);
         window.open(downloadUrl, '_blank');
       } else {
-        throw new Error(data.message || 'Error al descargar el archivo');
+        throw new Error(data.message || 'Error al descargar');
       }
     } catch (err) {
       console.error('❌ Error al descargar:', err);
-      alert(`Error: ${err.message}`);
+      alert(`❌ ${err.message}`);
     }
   };
 
@@ -251,7 +265,7 @@ function RevisionEditor() {
                 <div className="archivos">
                   <button 
                     className="btn-ver"
-                    onClick={() => verArchivo(art.id_articulo)}
+                    onClick={() => verArchivo(art.id_articulo, art)}
                   >
                     👁️ Ver
                   </button>

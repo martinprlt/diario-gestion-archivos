@@ -1,5 +1,9 @@
 // src/config/api.js - VERSIÓN CORREGIDA
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// ✅ CORREGIR: Remover slash duplicado
+const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
+const API_URL = RAW_API_URL.replace(/\/$/, ''); // Remover slash final si existe
+
+console.log('🔧 API URL configurada:', API_URL); // Para debug
 
 // Función para hacer fetch con autenticación
 export const apiFetch = async (url, options = {}) => {
@@ -15,15 +19,16 @@ export const apiFetch = async (url, options = {}) => {
   };
 
   try {
+    console.log('🌐 Haciendo request a:', url); // Debug
     const response = await fetch(url, fetchOptions);
     return response;
   } catch (error) {
-    console.error('Error en API fetch:', error);
+    console.error('❌ Error en API fetch:', error);
     throw error;
   }
 };
 
-// ✅ ENDPOINTS CORREGIDOS - SIN ERRORES DE SINTAXIS
+// ✅ ENDPOINTS CORREGIDOS
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
