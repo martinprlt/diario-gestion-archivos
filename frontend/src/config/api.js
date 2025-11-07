@@ -1,90 +1,74 @@
-// frontend/src/config/api.js - CORREGIDO
-// Eliminar cualquier barra final de la API_URL
-const baseURL = (import.meta.env.VITE_API_URL || 'http://localhost:5000').replace(/\/+$/, '');
+// src/config/api.js - VERSIÓN CORREGIDA
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export const API_URL = baseURL;
-
-console.log('🔗 API URL configurada:', API_URL);
-
-export const apiEndpoints = {
-  // Auth
-  login: `${baseURL}/api/auth/login`,
-  forgotPassword: `${baseURL}/api/auth/forgot-password`,
-  resetPassword: `${baseURL}/api/auth/reset-password`,
-  
-  // Articles
-  articles: `${baseURL}/api/articles`,
-  myArticles: `${baseURL}/api/articles/my`,
-  uploadArticle: `${baseURL}/api/articles/upload`,
-  downloadArticle: (id) => `${baseURL}/api/articles/download/${id}`,        // ✅ NUEVO
-  viewArticle: (id) => `${baseURL}/api/articles/view/${id}`,                // ✅ NUEVO
-  sendToReview: (id) => `${baseURL}/api/articles/${id}/send-to-review`,     // ✅ NUEVO
-  deleteArticle: (id) => `${baseURL}/api/articles/${id}`,                   // ✅ NUEVO
-  getArticleById: (id) => `${baseURL}/api/articles/${id}`,                  // ✅ NUEVO
-  articlesForReview: `${API_URL}/api/articles/editor/review`,
-  articlesApproved: `${API_URL}/api/articles/editor/approved`,
-  approveArticle: (id) => `${API_URL}/api/articles/${id}/approve`,
-  rejectArticle: (id) => `${API_URL}/api/articles/${id}/reject`
-  
-  // Users
-  users: `${baseURL}/api/usuarios`,
-  userById: (id) => `${baseURL}/api/usuarios/${id}`,
-  updateUserRole: (id) => `${baseURL}/api/usuarios/${id}/rol`,
-  
-  // Roles
-  roles: `${baseURL}/api/roles`,
-  
-  // Photos
-  photos: `${baseURL}/api/fotos`,
-  uploadPhoto: `${baseURL}/api/fotos/upload`,
-  
-  // Categories
-  categories: `${baseURL}/api/categorias`,
-  
-  // Notifications
-  notifications: `${baseURL}/api/notificaciones`,
-  userNotifications: (usuarioId) => `${baseURL}/api/notificaciones/${usuarioId}`,
-  markNotificationRead: `${baseURL}/api/notificaciones/marcar-leida`,
-  createNotification: `${baseURL}/api/notificaciones/crear`,
-  
-  // Admin
-  onlineUsers: `${baseURL}/api/admin/online-users`,
-  heartbeat: `${baseURL}/api/admin/heartbeat`,
-  logsStats: `${baseURL}/api/logs/stats`,
-  logs: `${baseURL}/api/logs`,
-};
-
-// Helper para fetch con autenticación
+// Función para hacer fetch con autenticación
 export const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem('token');
   
-  const config = {
-    ...options,
+  const fetchOptions = {
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
+      ...(token && { Authorization: `Bearer ${token}` }),
       ...options.headers,
     },
+    ...options,
   };
-  
+
   try {
-    const response = await fetch(url, config);
-    
-    if (response.status === 401) {
-      // Token expirado
-      localStorage.removeItem('token');
-      localStorage.removeItem('usuario');
-      window.location.href = '/login?expired=true';
-      return null;
-    }
-    
+    const response = await fetch(url, fetchOptions);
     return response;
   } catch (error) {
-    console.error('❌ Error de conexión:', error);
+    console.error('Error en API fetch:', error);
     throw error;
   }
 };
 
-// Debug: mostrar endpoints importantes
-console.log('🔗 Login endpoint:', apiEndpoints.login);
-console.log('🔗 Categories endpoint:', apiEndpoints.categories);
+// ✅ ENDPOINTS CORREGIDOS - SIN ERRORES DE SINTAXIS
+export const apiEndpoints = {
+  // Autenticación
+  login: `${API_URL}/api/auth/login`,
+  register: `${API_URL}/api/auth/register`,
+  profile: `${API_URL}/api/auth/profile`,
+  
+  // Usuarios
+  users: `${API_URL}/api/users`,
+  userById: (id) => `${API_URL}/api/users/${id}`,
+  
+  // Fotos
+  uploadFoto: `${API_URL}/api/fotos/upload`,
+  myFotos: `${API_URL}/api/fotos/my`,
+  fotosGlobales: `${API_URL}/api/fotos/global`,
+  fotoById: (id) => `${API_URL}/api/fotos/${id}`,
+  toggleFotoVisibility: (id) => `${API_URL}/api/fotos/${id}/toggle-visibility`,
+  deleteFoto: (id) => `${API_URL}/api/fotos/${id}`,
+  downloadFoto: (id) => `${API_URL}/api/fotos/download/${id}`,
+  viewFoto: (id) => `${API_URL}/api/fotos/view/${id}`,
+  fotosFiltradas: `${API_URL}/api/fotos/filtered`,
+  
+  // Artículos
+  uploadArticle: `${API_URL}/api/articles/upload`,
+  myArticles: `${API_URL}/api/articles/my`,
+  articleById: (id) => `${API_URL}/api/articles/${id}`,
+  updateArticle: (id) => `${API_URL}/api/articles/${id}`,
+  deleteArticle: (id) => `${API_URL}/api/articles/${id}`,
+  downloadArticle: (id) => `${API_URL}/api/articles/download/${id}`,
+  viewArticle: (id) => `${API_URL}/api/articles/view/${id}`,
+  sendToReview: (id) => `${API_URL}/api/articles/${id}/send-to-review`,
+  
+  // Editor endpoints
+  articlesForReview: `${API_URL}/api/articles/editor/review`,
+  articlesApproved: `${API_URL}/api/articles/editor/approved`,
+  approveArticle: (id) => `${API_URL}/api/articles/${id}/approve`,
+  rejectArticle: (id) => `${API_URL}/api/articles/${id}/reject`,
+  
+  // Estados de artículos
+  articlesByEstado: (estado) => `${API_URL}/api/articles/my/${estado}`,
+  
+  // Categorías
+  categorias: `${API_URL}/api/categorias`,
+  
+  // Notificaciones
+  notificaciones: `${API_URL}/api/notificaciones`,
+};
+
+export { API_URL };
