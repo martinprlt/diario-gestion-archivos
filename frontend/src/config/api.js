@@ -1,10 +1,10 @@
-// frontend/src/config/api.js - VERSIÓN CORREGIDA
+// frontend/src/config/api.js - VERSIÓN CORREGIDA CON apiUpload
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
 const API_URL = RAW_API_URL.replace(/\/$/, '');
 
 console.log('🔧 API URL configurada:', API_URL);
 
-// Función para hacer fetch con autenticación
+// ✅ Función para fetch con autenticación (JSON)
 export const apiFetch = async (url, options = {}) => {
   const token = localStorage.getItem('token');
   
@@ -21,11 +21,8 @@ export const apiFetch = async (url, options = {}) => {
     console.log('🌐 Haciendo request a:', url);
     const response = await fetch(url, fetchOptions);
     
-    // ✅ MEJORAR LOGGING DE ERRORES
     if (!response.ok) {
       console.error(`❌ Error ${response.status}: ${response.statusText}`);
-      
-      // Intentar leer el cuerpo como texto para debug
       const text = await response.text();
       console.error('📄 Respuesta del servidor:', text.substring(0, 200));
     }
@@ -37,7 +34,42 @@ export const apiFetch = async (url, options = {}) => {
   }
 };
 
-// ✅ ENDPOINTS COMPLETOS Y CORREGIDOS
+// ✅ NUEVA: Función para uploads de archivos (FormData)
+export const apiUpload = async (url, formData) => {
+  const token = localStorage.getItem('token');
+  
+  if (!token) {
+    throw new Error('No hay token de autenticación');
+  }
+
+  try {
+    console.log('📤 Subiendo archivo a:', url);
+    
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        // ⚠️ NO incluir 'Content-Type' - el navegador lo establece automáticamente para FormData
+      },
+      body: formData
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Error en upload:', response.status, errorText);
+      throw new Error(`Error ${response.status}: ${errorText}`);
+    }
+
+    console.log('✅ Upload exitoso');
+    return response;
+    
+  } catch (error) {
+    console.error('❌ Error en apiUpload:', error);
+    throw error;
+  }
+};
+
+// ✅ ENDPOINTS COMPLETOS
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
@@ -80,8 +112,8 @@ export const apiEndpoints = {
   // Estados de artículos
   articlesByEstado: (estado) => `${API_URL}/api/articles/my/${estado}`,
   
-  // Categorías - ✅ CORREGIDO
-  categories: `${API_URL}/api/categorias`, // ⬅️ CAMBIO: de 'categories' a 'categorias'
+  // Categorías
+  categories: `${API_URL}/api/categorias`,
   
   // Notificaciones
   notifications: `${API_URL}/api/notificaciones`,
@@ -98,7 +130,7 @@ export const apiEndpoints = {
   // Avatar
   uploadAvatar: `${API_URL}/api/upload-avatar`,
   
-  // ✅ AGREGAR: Admin y Chat
+  // Admin y Chat
   onlineUsers: `${API_URL}/api/admin/online-users`,
   heartbeat: `${API_URL}/api/admin/heartbeat`,
 };

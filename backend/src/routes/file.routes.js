@@ -1,38 +1,53 @@
 import express from 'express';
-import { uploadAvatar } from '../config/multer.js'; // Asegúrate de que la ruta es correcta
-import { pool } from '../config/db.js';
-import { verifyToken as authMiddleware } from '../middlewares/auth.middleware.js';
+import {
+  uploadArticle,
+  getMyArticles,
+  getArticleById,
+  updateArticle,
+  downloadArticle,
+  viewArticle,
+  deleteArticle,
+  sendToReview,
+  getArticlesForReview,
+  approveArticle,
+  rejectArticle,
+  getArticlesByEstado,
+  getCategorias,
+  getNotificacionesUsuario,
+  getArticulosFiltrados,
+  getApprovedArticles,
+} from '../controllers/file.controllers.js';
+import { verifyToken, checkEditorRole } from '../middlewares/auth.middleware.js';
+import { upload } from '../config/multer.js';
 
 const router = express.Router();
 
-// Esta es tu ruta existente con el mínimo cambio necesario
-router.post('/upload-avatar', authMiddleware, uploadAvatar.single('avatar'), async (req, res) => {
-  try {
-    const userId = req.userId;
-    
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No se proporcionó imagen' });
-    }
+// ⚠️ CRÍTICO: RUTAS ESPECÍFICAS PRIMERO (antes de /:id)
 
-    // Usamos filename directamente (multer ya le da un nombre único)
-    const avatarUrl = `/avatars/${req.file.filename}`;
+// 1. Rutas globales
+router.get('/categorias', verifyToken, getCategorias);
+router.get('/user/notifications', verifyToken, getNotificacionesUsuario);
+router.get('/', getArticulosFiltrados);
 
-    await pool.query(
-      'UPDATE usuarios SET avatar_url = $1 WHERE id_usuario = $2',
-      [avatarUrl, userId]
-    );
+// 2. Rutas de descarga/visualización (ANTES de /:id)
+router.get('/download/:id', verifyToken, downloadArticle);
+router.get('/view/:id', verifyToken, viewArticle);
 
-    res.json({ 
-      success: true,
-      avatarUrl: avatarUrl
-    });
-  } catch (error) {
-    console.error('Error subiendo avatar:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Error al subir imagen' 
-    });
-  }
-});
+// 3. Rutas de periodistas (ANTES de /:id)
+router.post('/upload', verifyToken, upload.single('archivo'), uploadArticle); // ✅ ANTES de /:id
+router.get('/my', verifyToken, getMyArticles);
+router.get('/my/:estado', verifyToken, getArticlesByEstado);
+router.post('/:id/send-to-review', verifyToken, sendToReview);
+
+// 4. Rutas para editores (ANTES de /:id)
+router.get('/editor/review', verifyToken, checkEditorRole, getArticlesForReview);
+router.get('/editor/approved', verifyToken, checkEditorRole, getApprovedArticles);
+router.post('/:id/approve', verifyToken, checkEditorRole, approveArticle);
+router.post('/:id/reject', verifyToken, checkEditorRole, rejectArticle);
+
+// 5. ✅ RUTAS GENÉRICAS AL FINAL
+router.get('/:id', verifyToken, getArticleById);
+router.put('/:id', verifyToken, updateArticle);
+router.delete('/:id', verifyToken, deleteArticle);
 
 export default router;
