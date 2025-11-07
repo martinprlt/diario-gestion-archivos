@@ -1,4 +1,4 @@
-// backend/src/routes/article.routes.js - VERSIÓN LIMPIA
+// backend/src/routes/article.routes.js - ORDEN CORREGIDO
 import express from 'express';
 import {
   uploadArticle,
@@ -23,32 +23,36 @@ import { upload } from '../config/multer.js';
 
 const router = express.Router();
 
-// Rutas globales sin parámetros
+// ==================== RUTAS ESPECÍFICAS PRIMERO ====================
+
+// 1. Rutas globales sin parámetros
 router.get('/categorias', verifyToken, getCategorias);
 router.get('/user/notifications', verifyToken, getNotificacionesUsuario);
 router.get('/', getArticulosFiltrados);
 
-// Upload - debe ser antes de rutas con parámetros
+// 2. UPLOAD - debe ser antes de rutas con parámetros
 router.post('/upload', verifyToken, upload.single('archivo'), uploadArticle);
 
-// Rutas de periodistas
+// 3. Rutas de periodistas
 router.get('/my', verifyToken, getMyArticles);
 
-// Rutas de editores
+// 4. Rutas de editores
 router.get('/editor/review', verifyToken, checkEditorRole, getArticlesForReview);
 router.get('/editor/approved', verifyToken, checkEditorRole, getApprovedArticles);
 
-// Rutas de descarga/visualización
+// 5. Rutas de descarga/visualización
 router.get('/download/:id', verifyToken, downloadArticle);
 router.get('/view/:id', verifyToken, viewArticle);
 
-// Rutas con parámetros específicos
+// 6. Rutas con parámetros específicos
 router.get('/my/:estado', verifyToken, getArticlesByEstado);
 router.post('/:id/send-to-review', verifyToken, sendToReview);
 router.post('/:id/approve', verifyToken, checkEditorRole, approveArticle);
 router.post('/:id/reject', verifyToken, checkEditorRole, rejectArticle);
 
-// Rutas genéricas al final
+// ==================== RUTAS GENÉRICAS AL FINAL ====================
+// ⚠️ ESTAS DEBEN SER LAS ÚLTIMAS RUTAS
+
 router.get('/:id', verifyToken, getArticleById);
 router.put('/:id', verifyToken, updateArticle);
 router.delete('/:id', verifyToken, deleteArticle);
