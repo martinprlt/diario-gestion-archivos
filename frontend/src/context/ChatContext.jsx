@@ -1,11 +1,10 @@
-// frontend/src/context/ChatContext.jsx - CONFIGURADO PARA RAILWAY
+// frontend/src/context/ChatContext.jsx - MEJORADO
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { io } from "socket.io-client";
 import { API_URL } from "../config/api";
 
 const ChatContext = createContext();
 
-// ✅ PRIMERO el hook personalizado (para Fast Refresh)
 export const useChat = () => {
   const context = useContext(ChatContext);
   if (!context) {
@@ -14,25 +13,23 @@ export const useChat = () => {
   return context;
 };
 
-// ✅ LUEGO el provider
 export const ChatProvider = ({ children, userId }) => {
   const [mensajes, setMensajes] = useState([]);
   const [socket, setSocket] = useState(null);
   const [conectado, setConectado] = useState(false);
+  const [intentosReconexion, setIntentosReconexion] = useState(0);
 
   useEffect(() => {
-    console.log('🔌 Intentando conectar a:', API_URL);
+    console.log('🔌 Iniciando conexión Socket.IO a:', API_URL);
     
     const newSocket = io(API_URL, {
-      // ✅ CRÍTICO PARA RAILWAY
-      transports: ['websocket', 'polling'], // ⬅️ Intentar websocket primero, luego polling
+      transports: ['websocket', 'polling'],
       path: '/socket.io/',
       reconnection: true,
       reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionDelayMax: 10000,
+      reconnectionAttempts: Infinity, // ← Reconectar indefinidamente
       timeout: 20000,
-      // ✅ Debug
       autoConnect: true,
       forceNew: false
     });
@@ -40,42 +37,61 @@ export const ChatProvider = ({ children, userId }) => {
     setSocket(newSocket);
 
     newSocket.on("connect", () => {
-      console.log("🟢 Conectado al chat");
-      console.log("🔌 Transporte usado:", newSocket.io.engine.transport.name);
+      console.log("🟢 Conectado al chat - ID:", newSocket.id);
+      console.log("🔌 Transporte:", newSocket.io.engine.transport.name);
       setConectado(true);
+      setIntentosReconexion(0);
       
       if (userId) {
         console.log("📝 Registrando usuario:", userId);
-        newSocket.emit("registrarUsuario", userId);
+        newSocket.emit("registrarUsuario", parseInt(userId));
       }
     });
 
     newSocket.on("connect_error", (error) => {
       console.error("❌ Error de conexión:", error.message);
-      console.log("🔄 Transporte fallido:", newSocket.io.engine.transport.name);
       setConectado(false);
+      
+      // Intentar reconexión con backoff
+      setTimeout(() => {
+        setIntentosReconexion(prev => prev + 1);
+        if (intentosReconexion < 5) {
+          console.log(`🔄 Intento de reconexión ${intentosReconexion + 1}`);
+          newSocket.connect();
+        }
+      }, Math.min(1000 * Math.pow(2, intentosReconexion), 30000));
     });
 
     newSocket.on("disconnect", (reason) => {
-      console.log("🔴 Desconectado del chat:", reason);
+      console.log("🔴 Desconectado:", reason);
       setConectado(false);
       
-      // Si fue desconexión del servidor, intentar reconectar
-      if (reason === "io server disconnect") {
+      if (reason === 'io server disconnect') {
+        // El servidor forzó la desconexión, reconectar manualmente
         newSocket.connect();
       }
     });
 
     newSocket.on("reconnect", (attemptNumber) => {
       console.log(`🔄 Reconectado (intento ${attemptNumber})`);
+      setConectado(true);
       if (userId) {
-        newSocket.emit("registrarUsuario", userId);
+        newSocket.emit("registrarUsuario", parseInt(userId));
       }
     });
 
+    newSocket.on("reconnect_attempt", (attemptNumber) => {
+      console.log(`🔄 Intentando reconectar... (${attemptNumber})`);
+    });
+
+    newSocket.on("reconnect_failed", () => {
+      console.error("❌ Falló la reconexión después de múltiples intentos");
+    });
+
+    // Manejo de mensajes
     newSocket.on("historial", (historial) => {
-      console.log("📥 Historial recibido:", historial.length, "mensajes");
-      setMensajes(historial);
+      console.log("📥 Historial recibido:", historial?.length || 0, "mensajes");
+      setMensajes(historial || []);
     });
 
     newSocket.on("recibirMensaje", (nuevoMensaje) => {
@@ -85,6 +101,12 @@ export const ChatProvider = ({ children, userId }) => {
 
     newSocket.on("mensajeEnviado", (mensajeConfirmado) => {
       console.log("✅ Mensaje confirmado:", mensajeConfirmado);
+      // Actualizar el mensaje local con los datos del servidor
+      setMensajes((prev) => 
+        prev.map(msg => 
+          msg.tempId === mensajeConfirmado.tempId ? mensajeConfirmado : msg
+        )
+      );
     });
 
     newSocket.on("error_mensaje", (error) => {
@@ -92,47 +114,63 @@ export const ChatProvider = ({ children, userId }) => {
     });
 
     return () => {
-      console.log("🔌 Desconectando socket...");
+      console.log("🔌 Limpiando conexión Socket.IO");
       newSocket.disconnect();
     };
-  }, [userId]);
+  }, [userId, intentosReconexion]);
 
   const enviarMensaje = useCallback((receptorId, contenido) => {
-    if (!socket) {
-      console.error("❌ Socket no disponible");
-      return;
-    }
-    
-    if (!conectado) {
-      console.error("❌ Socket no conectado");
-      return;
+    if (!socket || !conectado) {
+      console.error("❌ Socket no disponible o no conectado");
+      return null;
     }
 
-    const data = { emisorId: userId, receptorId, contenido };
+    const tempId = Date.now(); // ID temporal para optimismo
+    const data = { 
+      emisorId: parseInt(userId), 
+      receptorId: parseInt(receptorId), 
+      contenido: contenido.trim()
+    };
+    
     console.log("📤 Enviando mensaje:", data);
+    
+    // Optimistic update
+    const mensajeOptimista = {
+      id: tempId,
+      emisor_id: parseInt(userId),
+      receptor_id: parseInt(receptorId),
+      contenido: contenido.trim(),
+      fecha: new Date().toISOString(),
+      tempId: tempId // Para identificar luego
+    };
+    
+    setMensajes((prev) => [...prev, mensajeOptimista]);
     socket.emit("enviarMensaje", data);
+    
+    return tempId;
   }, [socket, userId, conectado]);
 
   const solicitarHistorial = useCallback((receptorId) => {
-    if (!socket) {
-      console.error("❌ Socket no disponible");
-      return;
-    }
-    
-    if (!conectado) {
-      console.error("❌ Socket no conectado");
+    if (!socket || !conectado) {
+      console.error("❌ Socket no disponible para solicitar historial");
       return;
     }
 
-    console.log("📥 Solicitando historial con:", receptorId);
-    socket.emit("solicitarHistorial", { emisorId: userId, receptorId });
+    const data = { 
+      emisorId: parseInt(userId), 
+      receptorId: parseInt(receptorId) 
+    };
+    
+    console.log("📥 Solicitando historial:", data);
+    socket.emit("solicitarHistorial", data);
   }, [socket, userId, conectado]);
 
   const value = {
     mensajes, 
     enviarMensaje, 
     solicitarHistorial,
-    conectado // ⬅️ AGREGAR: estado de conexión
+    conectado,
+    intentosReconexion
   };
 
   return (

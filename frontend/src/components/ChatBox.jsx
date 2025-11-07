@@ -1,74 +1,78 @@
-// frontend/src/components/ChatBox.jsx - CORREGIDO
+// frontend/src/components/ChatBox.jsx - MEJORADO
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext.jsx";
-import { Send } from "lucide-react";
+import { Send, Wifi, WifiOff } from "lucide-react";
 
 const ChatBox = ({ receptor, userId }) => {
-  const { mensajes, enviarMensaje, solicitarHistorial, conectado } = useChat();
+  const { mensajes, enviarMensaje, solicitarHistorial, conectado, intentosReconexion } = useChat();
   const [texto, setTexto] = useState("");
+  const [cargando, setCargando] = useState(false);
   const chatEndRef = useRef(null);
 
-  // ✅ Solicitar historial cuando cambia el receptor
+  // Solicitar historial cuando cambia el receptor
   useEffect(() => {
-    if (receptor && receptor.id && userId) {
-      console.log('📥 Solicitando historial al cambiar receptor:', receptor.id);
+    if (receptor?.id && userId) {
+      console.log('🔄 Receptor cambiado, solicitando historial:', receptor.id);
+      setCargando(true);
       solicitarHistorial(receptor.id);
+      
+      // Simular fin de carga (en una app real, esto debería basarse en eventos)
+      setTimeout(() => setCargando(false), 1000);
     }
   }, [receptor?.id, userId, solicitarHistorial]);
 
-  const handleEnviar = () => {
+  const handleEnviar = async () => {
     const textoLimpio = texto.trim();
     
-    if (!textoLimpio) {
-      console.warn('⚠️ No se puede enviar mensaje vacío');
-      return;
-    }
-    
-    if (!receptor || !receptor.id) {
-      console.error('❌ No hay receptor seleccionado');
+    if (!textoLimpio || !receptor?.id || !conectado) {
+      console.warn('⚠️ No se puede enviar mensaje:', { 
+        tieneTexto: !!textoLimpio, 
+        tieneReceptor: !!receptor?.id,
+        conectado 
+      });
       return;
     }
 
-    console.log('📤 Enviando mensaje:', {
-      receptor: receptor.id,
-      contenido: textoLimpio
-    });
-
-    enviarMensaje(receptor.id, textoLimpio);
+    setCargando(true);
     setTexto("");
+    
+    try {
+      await enviarMensaje(receptor.id, textoLimpio);
+    } catch (error) {
+      console.error('❌ Error enviando mensaje:', error);
+    } finally {
+      setCargando(false);
+    }
   };
 
-  // ✅ Filtrar mensajes de esta conversación
-  const mensajesFiltrados = mensajes.filter(
-    (m) =>
-      (m.emisor_id === userId && m.receptor_id === receptor?.id) ||
-      (m.emisor_id === receptor?.id && m.receptor_id === userId)
-  );
+  // Filtrar y ordenar mensajes
+  const mensajesFiltrados = mensajes
+    .filter(m => 
+      (m.emisor_id == userId && m.receptor_id == receptor?.id) ||
+      (m.emisor_id == receptor?.id && m.receptor_id == userId)
+    )
+    .sort((a, b) => new Date(a.fecha || a.fecha_envio) - new Date(b.fecha || b.fecha_envio));
 
-  console.log('💬 Mensajes en conversación:', mensajesFiltrados.length);
-
-  // Función segura para formatear hora
+  // Función mejorada para formatear hora
   const formatearHora = (fechaString) => {
     try {
+      if (!fechaString) return "Ahora";
       const fecha = new Date(fechaString);
-      if (isNaN(fecha.getTime())) {
-        return "Ahora";
-      }
-      return fecha.toLocaleTimeString('es-AR', {
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    } catch (error) {
+      return isNaN(fecha.getTime()) 
+        ? "Ahora" 
+        : fecha.toLocaleTimeString('es-AR', {
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+    } catch {
       return "Ahora";
     }
   };
 
-  // Scroll al final cuando cambien los mensajes
+  // Scroll al final
   useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [mensajesFiltrados.length]); // ⬅️ Dependencia en la cantidad de mensajes
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [mensajesFiltrados]);
 
   if (!receptor) {
     return (
@@ -89,17 +93,21 @@ const ChatBox = ({ receptor, userId }) => {
       {/* Header del chat */}
       <div className="chat-header">
         <div className="chat-header-info">
-          <h3 className="chat-partner-name">{receptor.nombre} {receptor.apellido}</h3>
-          <span className="chat-status">
-            <span className={`status-dot ${conectado ? 'online' : 'offline'}`}></span>
-            {conectado ? 'En línea' : 'Desconectado'}
+          <h3 className="chat-partner-name">
+            {receptor.nombre} {receptor.apellido}
+          </h3>
+          <span className={`chat-status ${conectado ? 'online' : 'offline'}`}>
+            {conectado ? <Wifi size={14} /> : <WifiOff size={14} />}
+            {conectado ? 'En línea' : `Desconectado${intentosReconexion > 0 ? ` (reconectando...)` : ''}`}
           </span>
         </div>
       </div>
 
       {/* Área de mensajes */}
       <div className="chat-messages">
-        {mensajesFiltrados.length === 0 ? (
+        {cargando && mensajesFiltrados.length === 0 ? (
+          <div className="chat-loading">Cargando mensajes...</div>
+        ) : mensajesFiltrados.length === 0 ? (
           <div className="chat-placeholder">
             <div className="placeholder-icon">🌱</div>
             <h3 className="placeholder-title">No hay mensajes todavía</h3>
@@ -108,16 +116,16 @@ const ChatBox = ({ receptor, userId }) => {
             </p>
           </div>
         ) : (
-          mensajesFiltrados.map((m, index) => {
-            const esPropio = m.emisor_id === userId;
-            const hora = formatearHora(m.fecha_envio || m.fecha);
+          mensajesFiltrados.map((m) => {
+            const esPropio = m.emisor_id == userId;
+            const hora = formatearHora(m.fecha || m.fecha_envio);
 
             return (
               <div
-                key={m.id_mensaje || m.id || `msg-${index}`}
+                key={m.id || m.tempId || `msg-${m.fecha}`}
                 className={`message-bubble ${
                   esPropio ? "message-sent" : "message-received"
-                }`}
+                } ${m.tempId ? 'message-pending' : ''}`}
               >
                 {!esPropio && (
                   <div className="message-sender">
@@ -125,7 +133,10 @@ const ChatBox = ({ receptor, userId }) => {
                   </div>
                 )}
                 <div className="message-text">{m.contenido}</div>
-                <div className="message-time">{hora}</div>
+                <div className="message-time">
+                  {hora}
+                  {m.tempId && <span className="message-status">⏳</span>}
+                </div>
               </div>
             );
           })
@@ -141,28 +152,30 @@ const ChatBox = ({ receptor, userId }) => {
           onChange={(e) => setTexto(e.target.value)}
           placeholder={conectado ? "Escribe un mensaje..." : "Conectando..."}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey && texto.trim() && conectado) {
               e.preventDefault();
               handleEnviar();
             }
           }}
           className="chat-input"
-          disabled={!conectado}
+          disabled={!conectado || cargando}
         />
         <button
           onClick={handleEnviar}
-          disabled={!texto.trim() || !conectado}
-          className={`chat-send-btn ${(!texto.trim() || !conectado) ? "inactive" : ""}`}
+          disabled={!texto.trim() || !conectado || cargando}
+          className={`chat-send-btn ${
+            (!texto.trim() || !conectado || cargando) ? "inactive" : ""
+          }`}
         >
           <Send size={18} />
-          <span>Enviar</span>
+          <span>{cargando ? "Enviando..." : "Enviar"}</span>
         </button>
       </div>
 
-      {/* Indicador de estado de conexión */}
+      {/* Indicador de estado */}
       {!conectado && (
         <div className="connection-warning">
-          ⚠️ Desconectado. Intentando reconectar...
+          ⚠️ Desconectado. Reconectando automáticamente...
         </div>
       )}
     </div>
