@@ -146,24 +146,31 @@ function Notas() {
     }
   };
 
-  const handleView = async (id, nota) => {
-    if (!nota?.ruta_archivo) {
-      alert('⚠️ Este artículo no tiene archivo asociado');
-      return;
+ const handleView = async (id, nota) => {
+  try {
+    const response = await apiFetch(apiEndpoints.viewArticle(id));
+    
+    if (!response.ok) {
+      throw new Error('Error en la respuesta del servidor');
     }
-    try {
-      const response = await apiFetch(`${apiEndpoints.articles}/view/${id}`);
-      if (!response.ok) throw new Error('Error al visualizar');
-      const blob = await response.blob();
-
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const viewer = window.open(url, '_blank');
-      if (!viewer) alert('⚠️ Desbloquea ventanas emergentes para ver el archivo');
-    } catch (err) {
-      console.error('❌ Error al visualizar:', err);
-      alert(`❌ ${err.message}`);
+    
+    // ✅ EXTRAER el JSON de la respuesta
+    const data = await response.json();
+    
+    console.log('🔍 Respuesta viewArticle:', data);
+    
+    if (data.success && data.viewUrl) {
+      // ✅ ABRIR la URL de Cloudinary
+      console.log('🔗 Abriendo URL:', data.viewUrl);
+      window.open(data.viewUrl, '_blank');
+    } else {
+      throw new Error(data.message || 'Error al visualizar');
     }
-  };
+  } catch (err) {
+    console.error('❌ Error al visualizar:', err);
+    alert(`❌ ${err.message}`);
+  }
+};
 
   const handleModificar = (nota) => {
     navigate('/periodista-upload', {
