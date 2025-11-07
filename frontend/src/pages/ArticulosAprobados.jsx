@@ -97,6 +97,6 @@ const ArticulosAprobados = () => {
       )}
     </div>
   );
-};a
+};
 
 export default ArticulosAprobados;
