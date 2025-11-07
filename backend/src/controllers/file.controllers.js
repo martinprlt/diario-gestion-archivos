@@ -6,37 +6,90 @@ import { logAction } from "../helpers/logAction.js";
 // =============================
 // SUBIR ARTÍCULO A CLOUDINARY
 // =============================
+// =============================
+// SUBIR ARTÍCULO A CLOUDINARY - CON LOGS
+// =============================
 export const uploadArticle = async (req, res) => {
+  console.log('🔍 ===== UPLOAD ARTICLE INICIADO =====');
+  
   try {
-    const { titulo, categoria_id, articulo_id } = req.body;
+    console.log('1️⃣ Verificando archivo...');
+    if (!req.file) {
+      console.log('❌ No hay archivo en req.file');
+      return res.status(400).json({ message: "No se subió ningún archivo" });
+    }
+    console.log('✅ Archivo recibido:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      path: req.file.path
+    });
 
-    if (!req.file) return res.status(400).json({ message: "No se subió ningún archivo" });
-    if (!titulo) return res.status(400).json({ message: "Faltan campos obligatorios (título)" });
+    console.log('2️⃣ Verificando body...');
+    const { titulo, categoria_id, articulo_id } = req.body;
+    console.log('📝 Body completo:', req.body);
+    console.log('📝 Campos extraídos:', { titulo, categoria_id, articulo_id });
+
+    if (!titulo) {
+      console.log('❌ Falta título');
+      return res.status(400).json({ message: "Faltan campos obligatorios (título)" });
+    }
+    console.log('✅ Título OK');
+
+    console.log('3️⃣ Verificando usuario...');
+    console.log('👤 User ID:', req.userId);
+    if (!req.userId) {
+      console.log('❌ No hay userId en el request');
+      return res.status(401).json({ message: "Usuario no autenticado" });
+    }
 
     // 🔹 Reemplazo
     if (articulo_id) {
+      console.log('🔄 Modo reemplazo - ID artículo:', articulo_id);
       return await reemplazarArticulo(req, res, articulo_id);
     }
 
-    // Subir a Cloudinary
-    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
-      resource_type: "auto",
-      folder: "articulos",
-      use_filename: true,
-      unique_filename: true
+    console.log('4️⃣ Verificando Cloudinary config...');
+    console.log('☁️ Cloudinary config:', {
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY ? '✅' : '❌',
+      api_secret: process.env.CLOUDINARY_API_SECRET ? '✅' : '❌'
     });
 
+    console.log('5️⃣ Subiendo a Cloudinary...');
+    let uploadResult;
+    try {
+      uploadResult = await cloudinary.uploader.upload(req.file.path, {
+        resource_type: "auto",
+        folder: "articulos",
+        use_filename: true,
+        unique_filename: true
+      });
+      console.log('✅ Cloudinary SUCCESS:', {
+        public_id: uploadResult.public_id,
+        secure_url: uploadResult.secure_url,
+        bytes: uploadResult.bytes
+      });
+    } catch (cloudinaryError) {
+      console.error('❌ Error Cloudinary:', cloudinaryError);
+      throw new Error(`Error subiendo a Cloudinary: ${cloudinaryError.message}`);
+    }
+
+    console.log('6️⃣ Preparando query BD...');
     const now = new Date();
     let query, values;
 
     if (categoria_id) {
+      console.log('📂 Verificando categoría...');
       const categoriaCheck = await pool.query(
         'SELECT id_categoria FROM categorias WHERE id_categoria = $1',
         [Number(categoria_id)]
       );
       if (categoriaCheck.rows.length === 0) {
+        console.log('❌ Categoría no existe:', categoria_id);
         return res.status(400).json({ message: "La categoría seleccionada no existe" });
       }
+      console.log('✅ Categoría válida');
 
       query = `INSERT INTO articulos (
         titulo, periodista_id, categoria_id, estado,
@@ -52,6 +105,7 @@ export const uploadArticle = async (req, res) => {
         uploadResult.secure_url, uploadResult.public_id
       ];
     } else {
+      console.log('📝 Sin categoría específica');
       query = `INSERT INTO articulos (
         titulo, periodista_id, estado,
         tipo_archivo, nombre_archivo, nombre_original,
@@ -67,16 +121,31 @@ export const uploadArticle = async (req, res) => {
       ];
     }
 
-    const result = await pool.query(query, values);
+    console.log('📊 Valores para BD:', values);
 
-    // Limpiar archivo local temporal
+    console.log('7️⃣ Ejecutando query en BD...');
+    let result;
     try {
-      const fs = await import('fs');
-      fs.unlinkSync(req.file.path);
-    } catch (error) {
-      console.warn("⚠️ No se pudo eliminar archivo temporal:", error.message);
+      result = await pool.query(query, values);
+      console.log('✅ Query BD OK - ID:', result.rows[0].id_articulo);
+    } catch (dbError) {
+      console.error('❌ Error en BD:', dbError);
+      throw new Error(`Error en base de datos: ${dbError.message}`);
     }
 
+    console.log('8️⃣ Limpiando archivo temporal...');
+    try {
+      const fs = await import('fs');
+      if (fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+        console.log('✅ Archivo temporal limpiado');
+      }
+    } catch (cleanError) {
+      console.warn("⚠️ No se pudo limpiar archivo temporal:", cleanError.message);
+    }
+
+    console.log('🎉 ===== UPLOAD COMPLETADO EXITOSAMENTE =====');
+    
     // 🔹 Log
     await logAction({
       usuario_id: req.userId,
@@ -84,14 +153,37 @@ export const uploadArticle = async (req, res) => {
       descripcion: `Creó artículo "${titulo}" en Cloudinary${categoria_id ? ` en categoría ${categoria_id}` : ''}`
     });
 
-    res.status(201).json(result.rows[0]);
+    res.status(201).json({
+      success: true,
+      articulo: result.rows[0],
+      message: "Artículo subido correctamente"
+    });
 
   } catch (error) {
-    console.error("❌ Error en uploadArticle:", error);
-    res.status(500).json({ message: "Error interno del servidor" });
+    console.error('💥 ===== ERROR EN UPLOAD ARTICLE =====');
+    console.error('❌ Error message:', error.message);
+    console.error('🔍 Error stack:', error.stack);
+    console.error('📋 Error details:', error);
+    
+    // Limpiar archivo temporal en caso de error
+    if (req.file && req.file.path) {
+      try {
+        const fs = await import('fs');
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+          console.log('🧹 Archivo temporal limpiado tras error');
+        }
+      } catch (cleanupError) {
+        console.warn('⚠️ Error limpiando archivo temporal:', cleanupError.message);
+      }
+    }
+
+    res.status(500).json({ 
+      message: "Error interno del servidor",
+      error: error.message
+    });
   }
 };
-
 // =============================
 // REEMPLAZAR ARTÍCULO EN CLOUDINARY
 // =============================
