@@ -4,10 +4,10 @@ import { AuthContext } from "../context/AuthContext.js";
 import UserDrawer from "./UserDrawer";
 import logo from "../assets/imagenes/logo.png";
 import "../assets/styles/navbar.css";
-import { apiFetch, apiEndpoints } from "../config/api"; // ✅ Importar configuración de API
+import { apiFetch, apiEndpoints } from "../config/api";
 
 export default function Navbar() {
-  const { user, token } = useContext(AuthContext);
+  const { user } = useContext(AuthContext);
   const [mostrarNotificaciones, setMostrarNotificaciones] = useState(false);
   const [notificaciones, setNotificaciones] = useState([]);
   const [expandedNotificationId, setExpandedNotificationId] = useState(null);
@@ -55,31 +55,37 @@ export default function Navbar() {
 
   const links = user ? linksPorCategoria[user.categoria] ?? [] : [];
 
-  // Cargar notificaciones
+  // Cargar notificaciones - ✅ CORREGIDO
   useEffect(() => {
-    if (user) {
+    if (user && user.id_usuario) {
       const cargarNotificaciones = async () => {
         try {
-          // ✅ Usar apiFetch y apiEndpoints
+          // ✅ Usar apiEndpoints.userNotifications correctamente
           const res = await apiFetch(apiEndpoints.userNotifications(user.id_usuario));
-          if (!res.ok) throw new Error("Error al cargar notificaciones");
+          
+          if (!res.ok) {
+            throw new Error(`Error ${res.status} al cargar notificaciones`);
+          }
+          
           const data = await res.json();
-          setNotificaciones(data);
+          setNotificaciones(Array.isArray(data) ? data : []);
         } catch (err) {
           console.error("❌ Error al obtener notificaciones:", err);
+          setNotificaciones([]); // Fallback a array vacío
         }
       };
       cargarNotificaciones();
     }
-  }, [user]); // ✅ Eliminar dependencia de token
+  }, [user]);
 
   const marcarComoLeida = async (id) => {
     try {
-      // ✅ Usar apiFetch y apiEndpoints
+      // ✅ Usar apiEndpoints.markNotificationRead
       await apiFetch(apiEndpoints.markNotificationRead, {
         method: "POST",
         body: JSON.stringify({ id_notificacion: id }),
       });
+      
       setNotificaciones((prev) =>
         prev.map((n) =>
           n.id_notificacion === id ? { ...n, leido: true } : n
@@ -192,7 +198,6 @@ export default function Navbar() {
               onClick={() => setIsDrawerOpen(true)}
               title="Abrir/cerrar menú usuario"
             >
-              {/* Solo iniciales */}
               {user?.nombre?.charAt(0) || ""}{user?.apellido?.charAt(0) || ""}
             </div>
 

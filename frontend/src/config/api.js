@@ -1,9 +1,8 @@
-// src/config/api.js - VERSIÓN CORREGIDA
-// ✅ CORREGIR: Remover slash duplicado
+// src/config/api.js - VERSIÓN COMPLETA PARA RAILWAY
 const RAW_API_URL = import.meta.env.VITE_API_URL || 'https://diario-gestion-archivos-production-5c69.up.railway.app';
-const API_URL = RAW_API_URL.replace(/\/$/, ''); // Remover slash final si existe
+const API_URL = RAW_API_URL.replace(/\/$/, ''); // Remover slash final
 
-console.log('🔧 API URL configurada:', API_URL); // Para debug
+console.log('🔧 API URL configurada:', API_URL);
 
 // Función para hacer fetch con autenticación
 export const apiFetch = async (url, options = {}) => {
@@ -19,7 +18,7 @@ export const apiFetch = async (url, options = {}) => {
   };
 
   try {
-    console.log('🌐 Haciendo request a:', url); // Debug
+    console.log('🌐 Haciendo request a:', url);
     const response = await fetch(url, fetchOptions);
     return response;
   } catch (error) {
@@ -28,18 +27,21 @@ export const apiFetch = async (url, options = {}) => {
   }
 };
 
-// ✅ ENDPOINTS CORREGIDOS
+// ✅ ENDPOINTS COMPLETOS
 export const apiEndpoints = {
   // Autenticación
   login: `${API_URL}/api/auth/login`,
-  register: `${API_URL}/api/auth/register`,
-  profile: `${API_URL}/api/auth/profile`,
+  register: `${API_URL}/api/usuarios`,
+  forgotPassword: `${API_URL}/api/auth/forgot-password`,
+  resetPassword: `${API_URL}/api/auth/reset-password`,
   
   // Usuarios
-  users: `${API_URL}/api/users`,
-  userById: (id) => `${API_URL}/api/users/${id}`,
+  users: `${API_URL}/api/usuarios`,
+  userById: (id) => `${API_URL}/api/usuarios/${id}`,
+  updateUserRole: (id) => `${API_URL}/api/usuarios/${id}/rol`,
   
   // Fotos
+  photos: `${API_URL}/api/fotos`,
   uploadFoto: `${API_URL}/api/fotos/upload`,
   myFotos: `${API_URL}/api/fotos/my`,
   fotosGlobales: `${API_URL}/api/fotos/global`,
@@ -48,7 +50,6 @@ export const apiEndpoints = {
   deleteFoto: (id) => `${API_URL}/api/fotos/${id}`,
   downloadFoto: (id) => `${API_URL}/api/fotos/download/${id}`,
   viewFoto: (id) => `${API_URL}/api/fotos/view/${id}`,
-  fotosFiltradas: `${API_URL}/api/fotos/filtered`,
   
   // Artículos
   uploadArticle: `${API_URL}/api/articles/upload`,
@@ -70,10 +71,22 @@ export const apiEndpoints = {
   articlesByEstado: (estado) => `${API_URL}/api/articles/my/${estado}`,
   
   // Categorías
-  categorias: `${API_URL}/api/categorias`,
+  categories: `${API_URL}/api/categorias`,
   
   // Notificaciones
-  notificaciones: `${API_URL}/api/notificaciones`,
+  notifications: `${API_URL}/api/notificaciones`,
+  userNotifications: (userId) => `${API_URL}/api/notificaciones/${userId}`,
+  markNotificationRead: `${API_URL}/api/notificaciones/marcar-leida`,
+  createNotification: `${API_URL}/api/notificaciones/crear`,
+  
+  // Roles
+  roles: `${API_URL}/api/roles`,
+  
+  // Logs (Admin)
+  logs: `${API_URL}/api/logs`,
+  
+  // Avatar
+  uploadAvatar: `${API_URL}/api/upload-avatar`,
 };
 
 export { API_URL };

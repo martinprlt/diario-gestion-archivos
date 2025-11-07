@@ -1,3 +1,4 @@
+// src/routes/foto.routes.js - RUTAS CORREGIDAS
 import express from 'express';
 import {
   uploadFoto,
@@ -15,20 +16,25 @@ import { uploadFoto as uploadMiddleware } from '../config/multer-fotos.js';
 
 const router = express.Router();
 
-router.get('/globales', getFotosGlobales);
+// ==================== RUTAS ESPECÍFICAS PRIMERO ====================
+
+// ✅ Rutas de galería global (ANTES de /:id)
+router.get('/global', getFotosGlobales);
+router.get('/globales', getFotosGlobales); // Alias por si acaso
+
+// Rutas de descarga/visualización (ANTES de /:id)
+router.get('/download/:id', verifyToken, downloadFoto);
+router.get('/view/:id', verifyToken, viewFoto);
+
+// Rutas personales
 router.get('/my', verifyToken, getMyFotos);
 
-
-
-// Rutas para fotógrafos
+// Rutas de acciones
 router.post('/upload', verifyToken, uploadMiddleware.single('archivo'), uploadFoto);
 router.put('/:id/toggle-visibility', verifyToken, toggleVisibilidadFoto);
 router.delete('/:id', verifyToken, deleteFoto);
-router.get('/view/:id', verifyToken, viewFoto);
-router.get('/global', getFotosGlobales);
 
-// Rutas públicas (para periodistas)
+// ==================== RUTAS GENÉRICAS AL FINAL ====================
 router.get('/:id', verifyToken, getFotoById);
-router.get('/download/:id', verifyToken, downloadFoto);
 
 export default router;
