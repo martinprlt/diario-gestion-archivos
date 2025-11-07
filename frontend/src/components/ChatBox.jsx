@@ -1,25 +1,51 @@
-// ChatBox.jsx - VERSIÓN LIMPIA
+// frontend/src/components/ChatBox.jsx - CORREGIDO
 import React, { useState, useRef, useEffect } from "react";
 import { useChat } from "../context/ChatContext.jsx";
 import { Send } from "lucide-react";
 
 const ChatBox = ({ receptor, userId }) => {
-  const { mensajes, enviarMensaje } = useChat();
+  const { mensajes, enviarMensaje, solicitarHistorial, conectado } = useChat();
   const [texto, setTexto] = useState("");
   const chatEndRef = useRef(null);
 
-  const handleEnviar = () => {
-    if (texto.trim()) {
-      enviarMensaje(receptor.id, texto);
-      setTexto("");
+  // ✅ Solicitar historial cuando cambia el receptor
+  useEffect(() => {
+    if (receptor && receptor.id && userId) {
+      console.log('📥 Solicitando historial al cambiar receptor:', receptor.id);
+      solicitarHistorial(receptor.id);
     }
+  }, [receptor?.id, userId, solicitarHistorial]);
+
+  const handleEnviar = () => {
+    const textoLimpio = texto.trim();
+    
+    if (!textoLimpio) {
+      console.warn('⚠️ No se puede enviar mensaje vacío');
+      return;
+    }
+    
+    if (!receptor || !receptor.id) {
+      console.error('❌ No hay receptor seleccionado');
+      return;
+    }
+
+    console.log('📤 Enviando mensaje:', {
+      receptor: receptor.id,
+      contenido: textoLimpio
+    });
+
+    enviarMensaje(receptor.id, textoLimpio);
+    setTexto("");
   };
 
+  // ✅ Filtrar mensajes de esta conversación
   const mensajesFiltrados = mensajes.filter(
     (m) =>
-      (m.emisor_id === userId && m.receptor_id === receptor.id) ||
-      (m.emisor_id === receptor.id && m.receptor_id === userId)
+      (m.emisor_id === userId && m.receptor_id === receptor?.id) ||
+      (m.emisor_id === receptor?.id && m.receptor_id === userId)
   );
+
+  console.log('💬 Mensajes en conversación:', mensajesFiltrados.length);
 
   // Función segura para formatear hora
   const formatearHora = (fechaString) => {
@@ -32,7 +58,6 @@ const ChatBox = ({ receptor, userId }) => {
         hour: '2-digit',
         minute: '2-digit'
       });
-    // eslint-disable-next-line no-unused-vars
     } catch (error) {
       return "Ahora";
     }
@@ -40,18 +65,34 @@ const ChatBox = ({ receptor, userId }) => {
 
   // Scroll al final cuando cambien los mensajes
   useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [mensajesFiltrados]);
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [mensajesFiltrados.length]); // ⬅️ Dependencia en la cantidad de mensajes
+
+  if (!receptor) {
+    return (
+      <div className="chat-box-wrapper">
+        <div className="chat-placeholder">
+          <div className="placeholder-icon">💬</div>
+          <h3 className="placeholder-title">Selecciona un usuario</h3>
+          <p className="placeholder-text">
+            Elige un usuario de la lista para comenzar a chatear
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="chat-box-wrapper">
       {/* Header del chat */}
       <div className="chat-header">
         <div className="chat-header-info">
-          <h3 className="chat-partner-name">{receptor.nombre}</h3>
+          <h3 className="chat-partner-name">{receptor.nombre} {receptor.apellido}</h3>
           <span className="chat-status">
-            <span className="status-dot"></span>
-            En línea
+            <span className={`status-dot ${conectado ? 'online' : 'offline'}`}></span>
+            {conectado ? 'En línea' : 'Desconectado'}
           </span>
         </div>
       </div>
@@ -67,19 +108,21 @@ const ChatBox = ({ receptor, userId }) => {
             </p>
           </div>
         ) : (
-          mensajesFiltrados.map((m) => {
+          mensajesFiltrados.map((m, index) => {
             const esPropio = m.emisor_id === userId;
-            const hora = formatearHora(m.fecha_envio);
+            const hora = formatearHora(m.fecha_envio || m.fecha);
 
             return (
               <div
-                key={m.id_mensaje || m.id}
+                key={m.id_mensaje || m.id || `msg-${index}`}
                 className={`message-bubble ${
                   esPropio ? "message-sent" : "message-received"
                 }`}
               >
                 {!esPropio && (
-                  <div className="message-sender">{receptor.nombre}</div>
+                  <div className="message-sender">
+                    {receptor.nombre} {receptor.apellido}
+                  </div>
                 )}
                 <div className="message-text">{m.contenido}</div>
                 <div className="message-time">{hora}</div>
@@ -96,19 +139,32 @@ const ChatBox = ({ receptor, userId }) => {
           type="text"
           value={texto}
           onChange={(e) => setTexto(e.target.value)}
-          placeholder="Escribe un mensaje..."
-          onKeyDown={(e) => e.key === "Enter" && handleEnviar()}
+          placeholder={conectado ? "Escribe un mensaje..." : "Conectando..."}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleEnviar();
+            }
+          }}
           className="chat-input"
+          disabled={!conectado}
         />
         <button
           onClick={handleEnviar}
-          disabled={!texto.trim()}
-          className={`chat-send-btn ${!texto.trim() ? "inactive" : ""}`}
+          disabled={!texto.trim() || !conectado}
+          className={`chat-send-btn ${(!texto.trim() || !conectado) ? "inactive" : ""}`}
         >
           <Send size={18} />
           <span>Enviar</span>
         </button>
       </div>
+
+      {/* Indicador de estado de conexión */}
+      {!conectado && (
+        <div className="connection-warning">
+          ⚠️ Desconectado. Intentando reconectar...
+        </div>
+      )}
     </div>
   );
 };
